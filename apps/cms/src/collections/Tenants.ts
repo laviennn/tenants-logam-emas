@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { ownerOnly } from '../access/tenantAccess'
+import {  ownerOnly , assignTenantFromUser } from '../access/tenantAccess'
 
 export const Tenants: CollectionConfig = {
   slug: 'tenants',

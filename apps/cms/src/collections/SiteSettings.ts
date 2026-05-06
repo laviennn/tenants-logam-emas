@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { tenantWrite, tenantDelete, isOwner, filterByTenant } from '../access/tenantAccess'
+import {  tenantWrite, tenantDelete, isOwner, filterByTenant , assignTenantFromUser } from '../access/tenantAccess'
 
 export const SiteSettings: CollectionConfig = {
   slug: 'site-settings',
@@ -24,8 +24,11 @@ export const SiteSettings: CollectionConfig = {
       required: true,
       index: true,
       label: 'Tenant',
+      hooks: {
+        beforeValidate: [assignTenantFromUser],
+      },
       admin: {
-        condition: (_, { user }: any) => isOwner(user),
+        condition: (_data: any, _siblingData: any, { user }: any) => isOwner(user),
         description: 'Tenant yang dimiliki settings ini.',
       },
     },

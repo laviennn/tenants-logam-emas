@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { ownerOnly, ownerOrTenantAdmin, filterByTenant, isOwner } from '../access/tenantAccess'
+import {  ownerOnly, ownerOrTenantAdmin, filterByTenant, isOwner , assignTenantFromUser } from '../access/tenantAccess'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -49,6 +49,9 @@ export const Users: CollectionConfig = {
       relationTo: 'tenants',
       required: false,
       index: true,
+      hooks: {
+        beforeValidate: [assignTenantFromUser],
+      },
       admin: {
         description: 'Tenant yang dimiliki user ini. Owner tidak perlu isi field ini.',
         condition: (data) => !data?.roles?.includes('owner'),

@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { tenantWrite, isOwner } from '../access/tenantAccess'
+import {  tenantWrite, isOwner , assignTenantFromUser } from '../access/tenantAccess'
 
 export const Transactions: CollectionConfig = {
   slug: 'transactions',
@@ -23,8 +23,11 @@ export const Transactions: CollectionConfig = {
       required: true,
       index: true,
       label: 'Tenant',
+      hooks: {
+        beforeValidate: [assignTenantFromUser],
+      },
       admin: {
-        condition: (_: any, { user }: any) => isOwner(user),
+        condition: (_data: any, _siblingData: any, { user }: any) => isOwner(user),
         readOnly: true,
         description: 'Diisi otomatis dari frontend saat checkout.',
       },

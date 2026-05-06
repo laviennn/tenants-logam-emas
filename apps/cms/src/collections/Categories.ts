@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { tenantWrite, tenantDelete, isOwner } from '../access/tenantAccess'
+import {  tenantWrite, tenantDelete, isOwner , assignTenantFromUser } from '../access/tenantAccess'
 
 const TENANT_FIELD = {
   name: 'tenant',
@@ -8,8 +8,11 @@ const TENANT_FIELD = {
   required: true,
   index: true,
   label: 'Tenant',
-  admin: {
-    condition: (_: any, { user }: any) => isOwner(user),
+  hooks: {
+        beforeValidate: [assignTenantFromUser],
+      },
+      admin: {
+    condition: (_data: any, _siblingData: any, { user }: any) => isOwner(user),
     description: 'Tenant pemilik kategori ini.',
   },
 }

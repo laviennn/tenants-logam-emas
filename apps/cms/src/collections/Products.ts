@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { tenantWrite, tenantDelete, isOwner } from '../access/tenantAccess'
+import {  tenantWrite, tenantDelete, isOwner , assignTenantFromUser } from '../access/tenantAccess'
 
 export const Products: CollectionConfig = {
   slug: 'products',
@@ -54,8 +54,11 @@ export const Products: CollectionConfig = {
       required: true,
       index: true,
       label: 'Tenant',
+      hooks: {
+        beforeValidate: [assignTenantFromUser],
+      },
       admin: {
-        condition: (_: any, { user }: any) => isOwner(user),
+        condition: (_data: any, _siblingData: any, { user }: any) => isOwner(user),
         description: 'Tenant pemilik produk ini.',
       },
     },

@@ -55,3 +55,18 @@ export const tenantDelete: Access = ({ req: { user } }) => {
   if (isOwner(user)) return true
   return filterByTenant(user) as Where
 }
+
+/** 
+ * Field hook to automatically assign the tenant field for Tenant Admins.
+ * Owners can set this manually via the UI, so it returns the provided value.
+ */
+import type { FieldHook } from 'payload'
+
+export const assignTenantFromUser: FieldHook = async ({ req, value }) => {
+  if (!req.user) return value
+  if (isOwner(req.user)) return value // Owner explicitly sets it via UI
+  
+  // For tenant admins, force the value to their tenant ID
+  const tenantId = typeof req.user.tenant === 'object' ? req.user.tenant?.id : req.user.tenant
+  return tenantId || value
+}
