@@ -16,7 +16,7 @@ type TenantCache = {
 }
 
 const tenantCache = new Map<string, TenantCache>()
-const CACHE_TTL_MS = import.meta.env.DEV ? 5 * 60 * 1000 : 60 * 60 * 1000 // 5min dev, 60min prod
+const CACHE_TTL_MS = import.meta.env.DEV ? 0 : 60 * 60 * 1000 // 0ms in dev for instant updates, 60min prod
 
 /**
  * Resolve tenant from hostname. Cached in module scope for performance.

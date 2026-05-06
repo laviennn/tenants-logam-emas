@@ -72,7 +72,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
                 ) : (
                   <>
                     Logam
-                    <span class='text-white'>Mulia</span>
+                    <span class='text-primary'>Mulia</span>
                   </>
                 )}
               </span>
@@ -88,7 +88,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
             <a
               href={localizePath(link.href, lang)}
               data-i18n={link.key}
-              class='text-gray-900 dark:text-gray-900 hover:text-white dark:hover:text-white px-3 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10'>
+              class='text-gray-900 dark:text-gray-900 px-3 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10'>
               {t(link.key as any)}
             </a>
           ))
@@ -101,7 +101,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
         <!-- Cart -->
         <a
           href='/cart'
-          class='text-gray-900 dark:text-gray-900 hover:text-white relative p-2'>
+          class='text-gray-900 dark:text-gray-900 p-2 hover:bg-black/10 rounded-lg transition-colors'>
           <svg
             xmlns='http://www.w3.org/2000/svg'
             class='h-6 h-6'
@@ -159,7 +159,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
             <a
               href='/login'
               data-i18n='nav.login'
-              class='text-gray-900 dark:text-gray-900 font-black hover:text-white'
+              class='text-gray-900 dark:text-gray-900 font-black hover:opacity-75 transition-opacity'
               >{t('nav.login')}</a
             >
             <a
@@ -175,7 +175,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
             id='profile-dropdown-container'
             class='relative group hidden'>
             <button
-              class='flex items-center text-gray-900 dark:text-gray-900 hover:text-white p-2 focus:outline-none transition-colors'>
+              class='flex items-center text-gray-900 dark:text-gray-900 hover:bg-black/10 p-2 rounded-lg focus:outline-none transition-colors'>
               <svg
                 class='w-6 h-6'
                 fill='none'
@@ -250,7 +250,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
         <!-- Language Dropdown -->
         <div class='relative group'>
           <button
-            class='flex items-center gap-2 text-gray-900 dark:text-gray-900 hover:text-white font-black p-2 text-sm md:text-base transition-colors'>
+            class='flex items-center gap-2 text-gray-900 dark:text-gray-900 hover:bg-black/10 rounded-lg font-black p-2 text-sm md:text-base transition-colors'>
             <span
               id='current-lang-flag'
               class='text-lg'>
@@ -307,7 +307,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
           <a
             href={localizePath(link.href, lang)}
             data-i18n={link.key}
-            class='block text-gray-900 dark:text-gray-900 hover:text-white font-black px-2 py-2 rounded-lg hover:bg-black/5'>
+            class='block text-gray-900 dark:text-gray-900 font-black px-2 py-2 rounded-lg hover:bg-black/5'>
             {t(link.key as any)}
           </a>
         ))

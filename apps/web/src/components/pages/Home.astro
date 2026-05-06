@@ -75,7 +75,7 @@ const formatPrice = (price: number) =>
 const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, size);
 ---
 
-<BaseLayout title={t('nav.home')} tenantId={tenantId} siteSettings={siteSettings}>
+<BaseLayout title={t('nav.home') as string} tenantId={tenantId} tenant={tenant} siteSettings={siteSettings}>
   <!-- Hero Section: Gold Price Card -->
   <section class="py-12 md:py-20 bg-white dark:bg-background-dark">
     <div class="w-full md:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

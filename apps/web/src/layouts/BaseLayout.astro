@@ -18,16 +18,18 @@ interface Props {
   tenantId?: number | string;
   /** Pass pre-fetched siteSettings to avoid double-fetch */
   siteSettings?: any;
+  /** Pass the full tenant object to avoid resolving twice, or it will auto-resolve */
+  tenant?: any;
 }
 
-const { title, description, tenantId: propTenantId, siteSettings: propSiteSettings } = Astro.props;
+const { title, description, tenantId: propTenantId, siteSettings: propSiteSettings, tenant: propTenant } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
 // ── Tenant Resolution ──────────────────────────────────────────
-// Resolve once per request; use cached result if passed from parent
+// Resolve once per request; use cached result if passed from parent or in-memory cache
 const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
-const tenant = propTenantId ? null : await resolveTenant(hostname);
+const tenant = propTenant ?? await resolveTenant(hostname);
 const tenantId = propTenantId ?? tenant?.id;
 
 // ── Site Settings ──────────────────────────────────────────────
@@ -107,7 +109,7 @@ const googleFontUrl = `https://fonts.googleapis.com/css2?family=${fontName.repla
 
     <!-- 🎨 Tenant CSS Custom Properties — injected server-side, no FOUC -->
     <style is:inline set:html={`
-      :root {
+      :root:root {
 ${cssVars}
       }
     `}></style>
