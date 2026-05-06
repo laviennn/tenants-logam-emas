@@ -21,13 +21,14 @@ interface Props {
   logoUrl?: string;
   tenantId?: number | string;
   siteSettings?: any;
+  tenantName?: string;
 }
 
 // Receive from BaseLayout — no extra network call needed
-const { logoUrl, tenantId, siteSettings } = Astro.props;
+const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
 ---
 
-<nav class='bg-primary dark:bg-primary shadow-md sticky top-0 z-50'>
+<nav class='bg-navbar-bg dark:bg-navbar-bg shadow-md sticky top-0 z-50'>
   <div class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
     <div class='flex justify-between items-center h-16 md:h-20'>
       <!-- Left: Hamburger + Logo -->
@@ -66,6 +67,8 @@ const { logoUrl, tenantId, siteSettings } = Astro.props;
               <span class='text-xl md:text-2xl font-black text-gray-900'>
                 {siteSettings?.brandName ? (
                   siteSettings.brandName
+                ) : tenantName ? (
+                  tenantName
                 ) : (
                   <>
                     Logam
@@ -297,7 +300,7 @@ const { logoUrl, tenantId, siteSettings } = Astro.props;
   <!-- Mobile Menu (Fluid Animation via max-height) -->
   <div
     id='mobile-menu'
-    class='md:hidden overflow-hidden transition-[max-height] duration-300 ease-in-out max-h-0 bg-primary dark:bg-primary border-t border-black/10'>
+    class='md:hidden overflow-hidden transition-[max-height] duration-300 ease-in-out max-h-0 bg-navbar-bg dark:bg-navbar-bg border-t border-black/10'>
     <div class='px-4 py-4 space-y-3'>
       {
         navLinks.map((link) => (

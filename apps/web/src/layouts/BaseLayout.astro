@@ -53,8 +53,8 @@ const cssVars = buildTenantCssVars(
 
 // ── SEO ────────────────────────────────────────────────────────
 const siteTitle = title
-  ? `${title} | ${siteSettings?.metaTitle || 'Logam Mulia Gold Antam'}`
-  : (siteSettings?.metaTitle || t('nav.home') + ' | Logam Mulia Gold Antam');
+  ? `${title} | ${siteSettings?.metaTitle || tenant?.name || 'Logam Mulia'}`
+  : (siteSettings?.metaTitle || t('nav.home') + ` | ${tenant?.name || 'Logam Mulia'}`);
 
 const siteDescription = description || siteSettings?.metaDescription || t('services.desc');
 
@@ -129,11 +129,11 @@ const googleFontUrl = `https://fonts.googleapis.com/css2?family=${fontName.repla
     )}
   </head>
   <body class="bg-gray-50 dark:bg-background-dark font-sans text-gray-900 dark:text-white min-h-screen flex flex-col">
-    <Navbar logoUrl={logoUrl} tenantId={tenantId} siteSettings={siteSettings} />
+    <Navbar logoUrl={logoUrl} tenantId={tenantId} siteSettings={siteSettings} tenantName={tenant?.name} />
     <main class="flex-grow">
       <slot />
     </main>
-    <Footer logoUrl={logoUrl} tenantId={tenantId} siteSettings={siteSettings} />
+    <Footer logoUrl={logoUrl} tenantId={tenantId} siteSettings={siteSettings} tenantName={tenant?.name} />
     <Toast />
     <script>
       import { langStore } from '../lib/lang';

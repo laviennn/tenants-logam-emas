@@ -8,10 +8,11 @@ interface Props {
   logoUrl?: string;
   tenantId?: number | string;
   siteSettings?: any;
+  tenantName?: string;
 }
 
 // Receive from BaseLayout — no extra network call needed
-const { logoUrl, tenantId, siteSettings } = Astro.props;
+const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
 ---
 
 <footer
@@ -23,7 +24,7 @@ const { logoUrl, tenantId, siteSettings } = Astro.props;
         <div class='flex items-center gap-2'>
           <span
             class='text-2xl font-bold text-gray-900 dark:text-white tracking-tight'>
-            {siteSettings?.brandName || 'Logam Mulia'}
+            {siteSettings?.brandName || tenantName || 'Logam Mulia'}
           </span>
         </div>
         <p class='text-gray-600 dark:text-gray-400 leading-relaxed max-w-xs'>
@@ -225,7 +226,7 @@ const { logoUrl, tenantId, siteSettings } = Astro.props;
     <div class='flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400'>
       <p>
         © {new Date().getFullYear()}
-        {siteSettings?.brandName || 'Logam Mulia Gold Antam'}. All rights
+        {siteSettings?.brandName || tenantName || 'Logam Mulia'}. All rights
         reserved.
       </p>
       <div class='flex items-center gap-6'>
