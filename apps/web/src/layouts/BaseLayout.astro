@@ -106,11 +106,11 @@ const googleFontUrl = `https://fonts.googleapis.com/css2?family=${fontName.repla
     <link href={googleFontUrl} rel="stylesheet" />
 
     <!-- 🎨 Tenant CSS Custom Properties — injected server-side, no FOUC -->
-    <style is:inline>
+    <style is:inline set:html={`
       :root {
-{cssVars}
+${cssVars}
       }
-    </style>
+    `}></style>
 
     {siteSettings?.googleSearchConsoleCode && (
       <meta name="google-site-verification" content={siteSettings.googleSearchConsoleCode} />
