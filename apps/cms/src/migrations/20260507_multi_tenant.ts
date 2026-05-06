@@ -102,7 +102,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`ALTER TABLE "transactions"  ADD COLUMN IF NOT EXISTS "tenant_id" integer`)
   await db.execute(sql`ALTER TABLE "media"         ADD COLUMN IF NOT EXISTS "tenant_id" integer`)
   await db.execute(sql`ALTER TABLE "users"         ADD COLUMN IF NOT EXISTS "tenant_id" integer`)
-  await db.execute(sql`ALTER TABLE "users"         ADD COLUMN IF NOT EXISTS "roles" jsonb`)
 
   // ── 6. ASSIGN DATA ────────────────────────────────────────────────────────────
   await db.execute(sql`UPDATE "categories"  SET "tenant_id" = (SELECT id FROM "tenants" WHERE slug = 'logam-mulia-antam' LIMIT 1) WHERE "tenant_id" IS NULL`)
@@ -111,7 +110,13 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`UPDATE "testimonials" SET "tenant_id" = (SELECT id FROM "tenants" WHERE slug = 'logam-mulia-antam' LIMIT 1) WHERE "tenant_id" IS NULL`)
   await db.execute(sql`UPDATE "reviews"     SET "tenant_id" = (SELECT id FROM "tenants" WHERE slug = 'logam-mulia-antam' LIMIT 1) WHERE "tenant_id" IS NULL`)
   await db.execute(sql`UPDATE "transactions" SET "tenant_id" = (SELECT id FROM "tenants" WHERE slug = 'logam-mulia-antam' LIMIT 1) WHERE "tenant_id" IS NULL`)
-  await db.execute(sql`UPDATE "users" SET "roles" = '["owner"]'::jsonb WHERE "roles" IS NULL`)
+
+  // Assign Owner role to all existing users via users_roles table
+  await db.execute(sql`
+    INSERT INTO "users_roles" ("order", "parent_id", "value")
+    SELECT 1, id, 'owner' FROM "users"
+    ON CONFLICT DO NOTHING
+  `)
 
   // ── 7. NOT NULL constraints ───────────────────────────────────────────────────
   // Use EXCEPTION approach — no parameterized DO blocks
