@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionTitle from '../SectionTitle.astro';
+
+interface Props {
+  lang: 'id' | 'en' | 'my';
+}
+
+const { lang } = Astro.props;
+
+const content = {
+  id: {
+    title: "Kebijakan Privasi",
+    intro: "Kami sangat menghargai privasi Anda. Halaman ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi data pribadi Anda.",
+    sections: [
+      {
+        title: "Pengumpulan Data",
+        desc: "Kami mengumpulkan informasi yang Anda berikan saat melakukan transaksi, seperti nama, alamat, dan nomor telepon untuk keperluan pengiriman dan verifikasi."
+      },
+      {
+        title: "Penggunaan Data",
+        desc: "Data Anda digunakan semata-mata untuk memproses pesanan, meningkatkan layanan kami, dan memberikan informasi terkait promosi yang relevan."
+      },
+      {
+        title: "Keamanan",
+        desc: "Kami menerapkan standar keamanan enkripsi SSL untuk melindungi transaksi Anda dan data pribadi dari akses yang tidak sah."
+      }
+    ]
+  },
+  en: {
+    title: "Privacy Policy",
+    intro: "We highly value your privacy. This page explains how we collect, use, and protect your personal data.",
+    sections: [
+      {
+        title: "Data Collection",
+        desc: "We collect information you provide during transactions, such as name, address, and phone number for shipping and verification purposes."
+      },
+      {
+        title: "Data Usage",
+        desc: "Your data is used solely to process orders, improve our services, and provide relevant promotional information."
+      },
+      {
+        title: "Security",
+        desc: "We implement SSL encryption security standards to protect your transactions and personal data from unauthorized access."
+      }
+    ]
+  },
+  my: {
+    title: "Dasar Privasi",
+    intro: "Kami amat menghargai privasi anda. Halaman ini menjelaskan bagaimana kami mengumpul, menggunakan, dan melindungi data peribadi anda.",
+    sections: [
+      {
+        title: "Pengumpulan Data",
+        desc: "Kami mengumpul maklumat yang anda berikan semasa transaksi, seperti nama, alamat, dan nombor telefon untuk tujuan penghantaran dan pengesahan."
+      },
+      {
+        title: "Penggunaan Data",
+        desc: "Data anda digunakan semata-mata untuk memproses pesanan, menambah baik perkhidmatan kami, dan memberikan maklumat promosi yang berkaitan."
+      },
+      {
+        title: "Keselamatan",
+        desc: "Kami melaksanakan piawaian keselamatan penyulitan SSL untuk melindungi transaksi anda dan data peribadi daripada akses yang tidak dibenarkan."
+      }
+    ]
+  }
+};
+
+const page = content[lang];
+---
+
+<BaseLayout title={page.title}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 min-h-[70vh]">
+    <div class="mb-12">
+      <SectionTitle title={page.title} />
+      <p class="text-gray-500 dark:text-gray-400 font-medium text-center max-w-2xl mx-auto mt-4">
+        {page.intro}
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-surface-dark p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 prose prose-gray dark:prose-invert max-w-none">
+      {page.sections.map(section => (
+        <>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{section.title}</h2>
+          <p class="text-gray-600 dark:text-gray-400 mb-8">
+            {section.desc}
+          </p>
+        </>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,26 @@
+---
+interface Props {
+  title: string;
+  subtitle?: string;
+  align?: 'left' | 'center' | 'right';
+  className?: string;
+  i18nTitle?: string;
+  i18nSubtitle?: string;
+}
+
+const { title, subtitle, align = 'center', className = '', i18nTitle, i18nSubtitle } = Astro.props;
+
+const alignmentClass = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+}[align];
+---
+
+<div class={`mb-8 ${alignmentClass} ${className}`}>
+  {subtitle && <p data-i18n={i18nSubtitle} class="text-primary font-semibold tracking-wider uppercase text-sm mb-2">{subtitle}</p>}
+  <h2 data-i18n={i18nTitle} class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+    {title}
+  </h2>
+  <div class={`w-24 h-1 bg-primary mt-4 rounded ${align === 'center' ? 'mx-auto' : align === 'right' ? 'ml-auto' : ''}`}></div>
+</div>

@@ -1,0 +1,7 @@
+{
+  "name": "logam-muliagold-antam",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}

@@ -1,0 +1,50 @@
+---
+interface Props {
+  content: any;
+}
+
+const { content } = Astro.props;
+
+function renderNode(node: any): string {
+  if (!node) return '';
+
+  if (node.type === 'text') {
+    let text = node.text;
+    if (node.format & 1) text = `<strong>${text}</strong>`;
+    if (node.format & 2) text = `<em>${text}</em>`;
+    if (node.format & 4) text = `<span style="text-decoration: line-through">${text}</span>`;
+    if (node.format & 8) text = `<u>${text}</u>`;
+    return text;
+  }
+
+  const children = node.children ? node.children.map(renderNode).join('') : '';
+
+  switch (node.type) {
+    case 'root':
+      return `<div class="lexical-root">${children}</div>`;
+    case 'paragraph':
+      return `<p class="mb-4">${children}</p>`;
+    case 'heading':
+      const level = node.tag.replace('h', '');
+      return `<h${level} class="font-black text-gray-900 dark:text-white mb-4 mt-8">${children}</h${level}>`;
+    case 'list':
+      const Tag = node.tag === 'ol' ? 'ol' : 'ul';
+      const listClass = node.tag === 'ol' ? 'list-decimal ml-6 mb-4' : 'list-disc ml-6 mb-4';
+      return `<${Tag} class="${listClass}">${children}</${Tag}>`;
+    case 'listitem':
+      return `<li class="mb-2">${children}</li>`;
+    case 'quote':
+      return `<blockquote class="border-l-4 border-primary pl-4 italic my-6 text-gray-500">${children}</blockquote>`;
+    case 'link':
+      return `<a href="${node.fields?.url}" class="text-primary hover:underline" target="${node.fields?.newTab ? '_blank' : '_self'}">${children}</a>`;
+    default:
+      return children;
+  }
+}
+
+const html = content?.root ? renderNode(content.root) : '';
+---
+
+<div class="prose prose-lg dark:prose-invert max-w-none prose-headings:font-black prose-a:text-primary">
+  <Fragment set:html={html} />
+</div>

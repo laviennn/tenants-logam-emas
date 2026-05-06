@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionTitle from '../SectionTitle.astro';
+
+interface Props {
+  lang: 'id' | 'en' | 'my';
+}
+
+const { lang } = Astro.props;
+
+const content = {
+  id: {
+    title: "Syarat dan Ketentuan",
+    intro: "Harap baca syarat dan ketentuan ini dengan seksama sebelum menggunakan layanan kami.",
+    sections: [
+      {
+        title: "Ketentuan Penggunaan",
+        desc: "Dengan mengakses website ini, Anda menyetujui untuk terikat oleh syarat dan ketentuan layanan kami serta semua hukum yang berlaku."
+      },
+      {
+        title: "Transaksi & Pembayaran",
+        desc: "Semua transaksi logam mulia bersifat final. Harga emas dapat berubah sewaktu-waktu mengikuti harga pasar global."
+      },
+      {
+        title: "Pengiriman",
+        desc: "Kami bertanggung jawab atas pengiriman barang hingga sampai ke alamat tujuan yang sah sesuai dengan jaminan asuransi pihak ketiga."
+      }
+    ]
+  },
+  en: {
+    title: "Terms of Service",
+    intro: "Please read these terms and conditions carefully before using our services.",
+    sections: [
+      {
+        title: "Terms of Use",
+        desc: "By accessing this website, you agree to be bound by our terms of service and all applicable laws."
+      },
+      {
+        title: "Transactions & Payments",
+        desc: "All gold transactions are final. Gold prices are subject to change at any time following global market rates."
+      },
+      {
+        title: "Shipping",
+        desc: "We are responsible for the delivery of goods to the valid destination address in accordance with third-party insurance guarantees."
+      }
+    ]
+  },
+  my: {
+    title: "Syarat dan Terma",
+    intro: "Sila baca terma dan syarat ini dengan teliti sebelum menggunakan perkhidmatan kami.",
+    sections: [
+      {
+        title: "Syarat Penggunaan",
+        desc: "Dengan mengakses laman web ini, anda bersetuju untuk terikat dengan terma perkhidmatan kami dan semua undang-undang yang berkenaan."
+      },
+      {
+        title: "Transaksi & Pembayaran",
+        desc: "Semua transaksi emas adalah muktamad. Harga emas tertakluk kepada perubahan pada bila-bila masa mengikut kadar pasaran global."
+      },
+      {
+        title: "Penghantaran",
+        desc: "Kami bertanggungjawab terhadap penghantaran barangan ke alamat destinasi yang sah mengikut jaminan insurans pihak ketiga."
+      }
+    ]
+  }
+};
+
+const page = content[lang];
+---
+
+<BaseLayout title={page.title}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 min-h-[70vh]">
+    <div class="mb-12">
+      <SectionTitle title={page.title} />
+      <p class="text-gray-500 dark:text-gray-400 font-medium text-center max-w-2xl mx-auto mt-4">
+        {page.intro}
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-surface-dark p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 prose prose-gray dark:prose-invert max-w-none">
+      {page.sections.map(section => (
+        <>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{section.title}</h2>
+          <p class="text-gray-600 dark:text-gray-400 mb-8">
+            {section.desc}
+          </p>
+        </>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

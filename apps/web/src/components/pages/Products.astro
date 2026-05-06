@@ -1,0 +1,270 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionTitle from '../SectionTitle.astro';
+import ProductCard from '../ProductCard.astro';
+import { useTranslations } from '../../i18n/utils';
+
+interface Props {
+  lang: 'id' | 'en' | 'my';
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+
+// ── Build Time Fetching (SSG) ──────────────────────────────
+const [categoriesRes, productsRes] = await Promise.all([
+  fetch(`${CMS_URL}/api/categories?limit=100`, { cache: 'no-store' }),
+  fetch(`${CMS_URL}/api/products?limit=1000&sort=-createdAt`, { cache: 'no-store' })
+]);
+
+const categoriesData = await categoriesRes.json();
+const productsData = await productsRes.json();
+
+const categories = categoriesData.docs || [];
+
+const getImageUrl = (image: any, size: string = 'card') => {
+  if (!image) return '/img/emas_hero.jpeg';
+  let url = image.sizes?.[size]?.url || image.url;
+  if (!url) return '/img/emas_hero.jpeg';
+
+  if (url.startsWith('/api/media/file/')) {
+    const filename = url.split('/').pop();
+    const projectRef = 'gonlvunbqxfwogpnncdn'; 
+    return `https://${projectRef}.supabase.co/storage/v1/object/public/media/${filename}`;
+  }
+
+  if (url.startsWith('http')) return url;
+  return `${CMS_URL}${url}`;
+};
+
+const allProducts = (productsData.docs || []).map((p: any) => ({
+  id: p.id,
+  name: p.name,
+  price: p.price,
+  strikePrice: p.strikePrice,
+  rating: p.rating || 5,
+  soldCount: p.soldCount || 0,
+  category: String(p.category?.id || p.category || ''), 
+  image: getImageUrl(p.image, 'card'),
+  createdAt: p.createdAt
+}));
+---
+
+<BaseLayout title={t('nav.products')}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <SectionTitle title={t('nav.products')} subtitle={t('products.subtitle')} i18nTitle="nav.products" i18nSubtitle="products.subtitle" />
+    
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6 mt-8">
+      <!-- Filters (Category Chips) -->
+      <div id="category-filters" class="flex items-center gap-2 overflow-x-auto pb-4 lg:pb-0 w-full no-scrollbar">
+        <button 
+          data-category="" 
+          class="cat-filter px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 border bg-gray-900 text-white border-gray-900 shadow-md"
+          data-i18n="products.all_categories"
+        >
+          {t('products.all_categories')}
+        </button>
+        {categories.map((cat: any) => (
+          <button 
+            data-category={String(cat.id)}
+            class="cat-filter px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 border bg-white dark:bg-surface-dark border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary"
+          >
+            {cat.name}
+          </button>
+        ))}
+      </div>
+
+      <!-- Custom Sorting Dropdown -->
+      <div class="relative w-full sm:w-64 group">
+        <label data-i18n="products.sort_by" class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1 block">{t('products.sort_by')}</label>
+        <div class="relative">
+          <select 
+            id="sort-select"
+            class="appearance-none w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-800 rounded-xl px-5 py-3 pr-10 text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer shadow-sm"
+          >
+            <option data-i18n="products.sort_newest" value="newest">{t('products.sort_newest')}</option>
+            <option data-i18n="products.sort_price_asc" value="price-asc">{t('products.sort_price_asc')}</option>
+            <option data-i18n="products.sort_price_desc" value="price-desc">{t('products.sort_price_desc')}</option>
+            <option data-i18n="products.sort_name_asc" value="name-asc">{t('products.sort_name_asc')}</option>
+            <option data-i18n="products.sort_name_desc" value="name-desc">{t('products.sort_name_desc')}</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[500px]">
+      <div class="col-span-full flex justify-center py-20">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    </div>
+
+    <!-- Modern Pagination -->
+    <div id="pagination-container" class="mt-20 flex justify-center hidden"></div>
+  </div>
+</BaseLayout>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
+<script id="products-data" type="application/json" set:html={JSON.stringify(allProducts)}></script>
+
+<script>
+  import { langStore } from '../../lib/lang';
+  import { ui } from '../../i18n/ui';
+
+  const productsDataScript = document.getElementById('products-data');
+  const allProducts = productsDataScript ? JSON.parse(productsDataScript.textContent || '[]') : [];
+
+  let currentLang = document.documentElement.lang || 'id';
+  const ITEMS_PER_PAGE = 8;
+  let currentCategory = '';
+  let currentSort = 'price-asc';
+  let currentPage = 1;
+
+  const grid = document.getElementById('product-grid');
+  const pagination = document.getElementById('pagination-container');
+  const sortSelect = document.getElementById('sort-select');
+  const catButtons = document.querySelectorAll('.cat-filter');
+
+  function formatPrice(price) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
+  }
+
+  function renderProducts() {
+    let filtered = allProducts.filter(p => !currentCategory || String(p.category) === String(currentCategory));
+
+    if (currentSort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
+    else if (currentSort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+    else if (currentSort === 'name-asc') filtered.sort((a, b) => a.name.localeCompare(b.name));
+    else if (currentSort === 'name-desc') filtered.sort((a, b) => b.name.localeCompare(a.name));
+    else filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
+
+    if (paginated.length === 0) {
+      grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-24 opacity-50">
+        <div class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center text-4xl mb-4">🔍</div>
+        <p class="text-gray-500 font-bold">${(ui[currentLang as keyof typeof ui] as any)['products.not_found']}</p>
+      </div>`;
+      pagination.classList.add('hidden');
+      return;
+    }
+
+    grid.innerHTML = paginated.map(p => {
+      const discountPercent = p.strikePrice ? Math.round(((p.strikePrice - p.price) / p.strikePrice) * 100) : 0;
+      return `
+      <div class="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-md transition-all duration-300 group flex flex-col h-full relative">
+        <a href="/products/${p.id}" class="absolute inset-0 z-10" aria-label="View ${p.name}"></a>
+        
+        ${discountPercent > 0 ? `
+          <div class="absolute top-3 left-3 z-20 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-sm pointer-events-none">
+            -${discountPercent}%
+          </div>
+        ` : ''}
+
+        <div class="relative aspect-square overflow-hidden bg-gray-50 dark:bg-gray-900 p-4">
+          <img src="${p.image}" alt="${p.name}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+        </div>
+        <div class="p-4 flex flex-col flex-grow relative z-20">
+          <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 h-10 group-hover:text-primary transition-colors">${p.name}</h3>
+          <div class="flex items-center gap-1 mb-2">
+            <div class="flex text-yellow-400">
+              ${[1,2,3,4,5].map(i => `<svg class="w-3.5 h-3.5 ${i <= Math.floor(p.rating) ? 'fill-current' : 'text-gray-300'}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`).join('')}
+            </div>
+            <span class="text-[10px] text-gray-400 font-medium">(${p.rating.toFixed(1)}) (${p.soldCount})</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            ${p.strikePrice ? `<span class="text-xs text-gray-400 line-through decoration-gray-400">${formatPrice(p.strikePrice)}</span>` : ''}
+            <div class="text-lg font-black text-[#d97706]">${formatPrice(p.price)}</div>
+          </div>
+          <div class="mt-auto space-y-2">
+            <button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-bold transition-all" onclick="window.dispatchEvent(new CustomEvent('add-to-cart', {detail: ${JSON.stringify(p).replace(/"/g, '&quot;')}}))">
+              ${(ui[currentLang as keyof typeof ui] as any)['index.cart']}
+            </button>
+            <button class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white text-sm font-bold transition-all shadow-sm" onclick="window.dispatchEvent(new CustomEvent('buy-now', {detail: ${JSON.stringify(p).replace(/"/g, '&quot;')}}))">
+              ${(ui[currentLang as keyof typeof ui] as any)['index.buy']}
+            </button>
+          </div>
+        </div>
+      </div>
+    `; }).join('');
+
+    if (totalPages > 1) {
+      pagination.classList.remove('hidden');
+      pagination.innerHTML = `
+        <nav class="inline-flex items-center bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-800 p-1 rounded-2xl shadow-sm">
+          <button class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : ''}" onclick="changePage(${currentPage - 1})">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          </button>
+          <div class="flex items-center px-2 gap-1">
+            ${Array.from({ length: totalPages }).map((_, i) => `
+              <button class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm ${currentPage === i + 1 ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}" onclick="changePage(${i + 1})">
+                ${i + 1}
+              </button>
+            `).join('')}
+          </div>
+          <button class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 ${currentPage === totalPages ? 'opacity-30 cursor-not-allowed' : ''}" onclick="changePage(${currentPage + 1})">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+        </nav>
+      `;
+    } else { pagination.classList.add('hidden'); }
+  }
+
+  (window as any).changePage = (p: number) => {
+    if (p < 1 || p > Math.ceil(allProducts.filter((x: any) => !currentCategory || String(x.category) === String(currentCategory)).length / ITEMS_PER_PAGE)) return;
+    currentPage = p;
+    renderProducts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const urlParams = new URLSearchParams(window.location.search);
+  currentCategory = urlParams.get('category') || '';
+  currentSort = urlParams.get('sort') || 'price-asc';
+  
+  sortSelect.value = currentSort;
+  catButtons.forEach(btn => {
+    if (String(btn.dataset.category) === String(currentCategory)) {
+      btn.classList.add('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-md');
+      btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+    } else {
+      btn.classList.remove('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-md');
+      btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+    }
+  });
+
+  sortSelect.addEventListener('change', (e) => { currentSort = e.target.value; currentPage = 1; renderProducts(); });
+
+  catButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentCategory = btn.dataset.category;
+      currentPage = 1;
+      catButtons.forEach(b => {
+        b.classList.remove('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-md');
+        b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+      });
+      btn.classList.add('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-md');
+      btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+      renderProducts();
+    });
+  });
+
+  window.addEventListener('add-to-cart', (e) => { if (window.addToCart) window.addToCart(e.detail); });
+  renderProducts();
+</script>
+
+<script>
+  import { addToCart } from '../../lib/cart';
+  (window as any).addToCart = addToCart;
+  window.addEventListener('buy-now', (e: any) => { addToCart(e.detail); window.location.href = '/checkout'; });
+</script>

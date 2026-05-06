@@ -1,0 +1,58 @@
+---
+// src/components/Toast.astro
+---
+
+<div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+<script>
+  function showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    // Use direct tailwind classes instead of @apply in <style>
+    toast.className = 'pointer-events-auto flex items-center gap-3 bg-white dark:bg-surface-dark border border-gray-100 dark:border-white/5 shadow-2xl rounded-2xl p-4 min-w-[300px] transform transition-all duration-500 translate-y-4 opacity-0';
+    
+    const icon = type === 'success' 
+      ? '<div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500 text-xl">✅</div>'
+      : '<div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 text-xl">❌</div>';
+
+    toast.innerHTML = `
+      ${icon}
+      <div class="flex-1">
+        <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-0.5">${type === 'success' ? 'Berhasil' : 'Pemberitahuan'}</p>
+        <p class="text-sm font-bold text-gray-900 dark:text-white">${message}</p>
+      </div>
+      <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    `;
+
+    container.appendChild(toast);
+
+    // Trigger animation
+    setTimeout(() => {
+      toast.classList.remove('translate-y-4', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+    }, 10);
+
+    // Auto remove
+    const remove = () => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-[-20px]', 'opacity-0');
+      setTimeout(() => toast.remove(), 500);
+    };
+
+    const timeout = setTimeout(remove, 3000);
+
+    toast.querySelector('button')?.addEventListener('click', () => {
+      clearTimeout(timeout);
+      remove();
+    });
+  }
+
+  // Listen for custom cart events
+  window.addEventListener('cart-toast', (e: any) => {
+    showToast(e.detail.message, e.detail.type);
+  });
+</script>

@@ -1,0 +1,202 @@
+---
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+interface Props {
+  currentPrice: number;
+}
+
+const { currentPrice } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<div class="relative group max-w-5xl mx-auto mt-8">
+  <!-- Subtle background glow -->
+  <div class="absolute -inset-4 bg-gradient-to-r from-amber-100 to-amber-50 dark:from-amber-900/20 dark:to-primary/10 rounded-[3rem] blur-2xl opacity-60 transition-opacity duration-500"></div>
+  
+  <div class="relative bg-white dark:bg-surface-dark rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-800 p-8 md:p-10 flex flex-col md:flex-row gap-8 md:gap-12">
+    
+    <!-- Left Column (Inputs) -->
+    <div class="flex-1 space-y-8 flex flex-col justify-center">
+      
+      <!-- Gram Input -->
+      <div>
+        <label for="calc-grams" data-i18n="calc.grams" class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">
+          {t('calc.grams')}
+        </label>
+        <div class="relative flex items-center bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all shadow-sm">
+          <input 
+            type="number" 
+            id="calc-grams" 
+            value="1" 
+            step="0.01"
+            min="0.01"
+            class="w-full bg-transparent border-0 px-6 py-4 outline-none font-black text-2xl text-gray-900 dark:text-white focus:ring-0"
+          />
+          <div class="flex items-center px-4 bg-transparent">
+            <span class="text-gray-400 font-black text-lg mr-4">GR</span>
+            <div class="flex flex-col border-l border-gray-200 dark:border-gray-700 pl-3">
+              <button id="gram-up" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors py-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
+              </button>
+              <button id="gram-down" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors py-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purchase Price Input -->
+      <div>
+        <label for="calc-purchase" data-i18n="calc.purchase_price" class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">
+          {t('calc.purchase_price')}
+        </label>
+        <div class="relative flex items-center bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all shadow-sm">
+          <div class="pl-6 font-black text-xl text-[#d97706]/60 select-none">Rp</div>
+          <input 
+            type="number" 
+            id="calc-purchase" 
+            value={currentPrice} 
+            class="w-full bg-transparent border-0 px-4 py-4 outline-none font-black text-3xl text-gray-900 dark:text-white focus:ring-0"
+          />
+        </div>
+      </div>
+
+      <!-- Range Input -->
+      <div class="pt-2">
+        <label class="flex justify-between items-end mb-4">
+          <span data-i18n="calc.increase_simulate" class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('calc.increase_simulate')}</span>
+          <span id="range-val-display" class="text-[#d97706] font-black text-lg leading-none">15%</span>
+        </label>
+        <input 
+          type="range" 
+          id="calc-range" 
+          min="1" 
+          max="100" 
+          value="15" 
+          class="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer accent-[#d97706] focus:outline-none"
+        />
+        <div class="flex justify-between mt-3 text-[10px] font-bold text-gray-400">
+          <span>1%</span>
+          <span>100%</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column (Results) -->
+    <div class="flex-1 bg-gray-50/80 dark:bg-gray-800/30 rounded-[2rem] p-8 md:p-10 flex flex-col border border-gray-100 dark:border-gray-700/50 relative">
+      
+      <div class="mb-8">
+        <p data-i18n="calc.current_value" class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2">{t('calc.current_value')}</p>
+        <h3 id="res-current" class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">Rp2.500.000</h3>
+      </div>
+
+      <div class="mb-10">
+        <p data-i18n="calc.profit_loss" class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2">{t('calc.profit_loss')}</p>
+        <div class="flex items-center gap-3">
+          <h3 id="res-profit" class="text-2xl md:text-3xl font-black text-green-500 italic tracking-tight">Rp0</h3>
+          <div id="res-profit-bg" class="px-3 py-1 bg-green-100 dark:bg-green-500/20 rounded-full border border-green-200 dark:border-green-500/30">
+            <span id="res-profit-pct" class="text-xs font-black text-green-600 dark:text-green-400 tracking-tight">+0.00%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-8 mt-auto">
+        <div class="flex items-center justify-between mb-3">
+          <p data-i18n="calc.estimated_value" class="text-[10px] uppercase tracking-widest font-bold text-gray-400 leading-tight max-w-[150px]">{t('calc.estimated_value')}</p>
+          <div class="w-8 h-8 rounded-md bg-[#fef3c7] dark:bg-amber-900/30 flex items-center justify-center text-[#d97706]">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"></path></svg>
+          </div>
+        </div>
+        <h3 id="res-estimate" class="text-4xl md:text-5xl font-black text-[#d97706] italic mb-8 tracking-tight">Rp2.875.000</h3>
+        
+        <p data-i18n="calc.future_potential" class="text-[9px] text-center font-bold text-gray-300 dark:text-gray-600 uppercase tracking-widest">{t('calc.future_potential')}</p>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<style>
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+  
+  #res-current, #res-profit, #res-estimate {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+</style>
+
+<script define:vars={{ currentPrice }}>
+  const inputGrams = document.getElementById('calc-grams');
+  const inputPurchase = document.getElementById('calc-purchase');
+  const inputRange = document.getElementById('calc-range');
+  const rangeDisplay = document.getElementById('range-val-display');
+  
+  const resCurrent = document.getElementById('res-current');
+  const resProfit = document.getElementById('res-profit');
+  const resProfitPct = document.getElementById('res-profit-pct');
+  const resProfitBg = document.getElementById('res-profit-bg');
+  const resEstimate = document.getElementById('res-estimate');
+
+  const formatIDR = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+
+  const calculate = () => {
+    const grams = parseFloat(inputGrams.value) || 0;
+    const purchasePrice = parseFloat(inputPurchase.value) || 0;
+    const increasePct = parseFloat(inputRange.value) || 0;
+
+    rangeDisplay.innerText = `${increasePct}%`;
+
+    const totalInvestment = grams * purchasePrice;
+    const currentValue = grams * currentPrice;
+    const profit = currentValue - totalInvestment;
+    const profitPct = totalInvestment > 0 ? (profit / totalInvestment) * 100 : 0;
+
+    const estimatedValue = currentValue * (1 + increasePct / 100);
+
+    if(resCurrent) resCurrent.innerText = formatIDR(currentValue);
+    
+    if(resProfit) {
+      resProfit.innerText = formatIDR(profit);
+      resProfit.className = `text-3xl font-black tracking-tight italic ${profit >= 0 ? 'text-green-500' : 'text-red-500'}`;
+    }
+    
+    if(resProfitPct) {
+      resProfitPct.innerText = `${profitPct >= 0 ? '+' : ''}${profitPct.toFixed(2)}%`;
+      resProfitPct.className = `text-sm font-black tracking-tighter ${profit >= 0 ? 'text-green-500' : 'text-red-500'}`;
+    }
+
+    if(resProfitBg) {
+      resProfitBg.className = `px-3 py-1 rounded-full border transition-colors duration-500 ${profit >= 0 ? 'bg-green-100 border-green-200 dark:bg-green-500/20 dark:border-green-500/30' : 'bg-red-100 border-red-200 dark:bg-red-500/20 dark:border-red-500/30'}`;
+    }
+
+    if(resEstimate) resEstimate.innerText = formatIDR(estimatedValue);
+  };
+
+  inputGrams?.addEventListener('input', calculate);
+  inputPurchase?.addEventListener('input', calculate);
+  inputRange?.addEventListener('input', calculate);
+
+  document.getElementById('gram-up')?.addEventListener('click', () => {
+    inputGrams.value = (parseFloat(inputGrams.value) + 1).toString();
+    calculate();
+  });
+  document.getElementById('gram-down')?.addEventListener('click', () => {
+    if(parseFloat(inputGrams.value) > 1) {
+      inputGrams.value = (parseFloat(inputGrams.value) - 1).toString();
+      calculate();
+    }
+  });
+
+  // Initial calculation
+  calculate();
+</script>

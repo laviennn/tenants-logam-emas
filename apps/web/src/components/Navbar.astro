@@ -1,0 +1,519 @@
+---
+import {
+  getLangFromUrl,
+  useTranslations,
+  languages,
+  localizePath,
+} from '../i18n/utils';
+import { getSiteSettings } from '../lib/cms';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const pathname = Astro.url.pathname;
+const currentPath = pathname.replace(`/${lang}`, '');
+
+const navLinks = [
+  { key: 'nav.home', href: '/' },
+  { key: 'nav.products', href: '/products' },
+  { key: 'nav.track', href: '/track-order' },
+];
+
+interface Props {
+  logoUrl?: string;
+}
+
+const { logoUrl } = Astro.props;
+const siteSettings = await getSiteSettings(lang);
+---
+
+<nav class='bg-primary dark:bg-primary shadow-md sticky top-0 z-50'>
+  <div class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+    <div class='flex justify-between items-center h-16 md:h-20'>
+      <!-- Left: Hamburger + Logo -->
+      <div class='flex items-center h-full lg:w-1/4'>
+        <button
+          id='mobile-menu-btn'
+          class='md:hidden p-2 mr-2 text-gray-900 dark:text-gray-900 hover:text-white focus:outline-none'
+          aria-label='Toggle menu'>
+          <svg
+            class='w-6 h-6'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'>
+            <path
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              stroke-width='2'
+              d='M4 6h16M4 12h16M4 18h16'
+            ></path>
+          </svg>
+        </button>
+        <a
+          href={localizePath('/', lang)}
+          class='flex items-center h-full py-3'>
+          {
+            logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={siteSettings?.brandName || 'Logo'}
+                class='h-12 md:h-16 w-auto object-contain transition-transform duration-300 hover:scale-105'
+                loading='eager'
+                fetchpriority='high'
+                decoding='async'
+              />
+            ) : (
+              <span class='text-xl md:text-2xl font-black text-gray-900'>
+                {siteSettings?.brandName ? (
+                  siteSettings.brandName
+                ) : (
+                  <>
+                    Logam
+                    <span class='text-white'>Mulia</span>
+                  </>
+                )}
+              </span>
+            )
+          }
+        </a>
+      </div>
+
+      <!-- Desktop Menu -->
+      <div class='hidden md:flex flex-1 justify-center space-x-6 lg:space-x-8'>
+        {
+          navLinks.map((link) => (
+            <a
+              href={localizePath(link.href, lang)}
+              data-i18n={link.key}
+              class='text-gray-900 dark:text-gray-900 hover:text-white dark:hover:text-white px-3 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10'>
+              {t(link.key as any)}
+            </a>
+          ))
+        }
+      </div>
+
+      <!-- Right Section: Cart, Dark Mode, Auth, Lang -->
+      <div
+        class='flex items-center justify-end space-x-2 md:space-x-4 lg:w-1/4'>
+        <!-- Cart -->
+        <a
+          href='/cart'
+          class='text-gray-900 dark:text-gray-900 hover:text-white relative p-2'>
+          <svg
+            xmlns='http://www.w3.org/2000/svg'
+            class='h-6 h-6'
+            fill='none'
+            viewBox='0 0 24 24'
+            stroke='currentColor'>
+            <path
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              stroke-width='2'
+              d='M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z'
+            ></path>
+          </svg>
+          <span
+            id='cart-count'
+            class='absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full hidden'
+            >0</span
+          >
+        </a>
+
+        <!-- Dark Mode Toggle -->
+        <button
+          id='theme-toggle'
+          type='button'
+          class='text-gray-900 dark:text-gray-900 hover:bg-black/10 rounded-lg text-sm p-2'>
+          <svg
+            id='theme-toggle-dark-icon'
+            class='hidden w-5 h-5'
+            fill='currentColor'
+            viewBox='0 0 20 20'
+            xmlns='http://www.w3.org/2000/svg'
+            ><path
+              d='M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z'
+            ></path></svg
+          >
+          <svg
+            id='theme-toggle-light-icon'
+            class='hidden w-5 h-5'
+            fill='currentColor'
+            viewBox='0 0 20 20'
+            xmlns='http://www.w3.org/2000/svg'
+            ><path
+              d='M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z'
+              fill-rule='evenodd'
+              clip-rule='evenodd'
+            ></path></svg
+          >
+        </button>
+
+        <!-- Auth Buttons (Desktop) -->
+        <div class='hidden md:block'>
+          <div
+            id='auth-buttons'
+            class='flex items-center space-x-4'>
+            <a
+              href='/login'
+              data-i18n='nav.login'
+              class='text-gray-900 dark:text-gray-900 font-black hover:text-white'
+              >{t('nav.login')}</a
+            >
+            <a
+              href='/register'
+              data-i18n='nav.register'
+              class='bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-md font-black transition-colors whitespace-nowrap shadow-lg'
+              >{t('nav.register')}</a
+            >
+          </div>
+
+          <!-- Profile Dropdown (Hidden by default) -->
+          <div
+            id='profile-dropdown-container'
+            class='relative group hidden'>
+            <button
+              class='flex items-center text-gray-900 dark:text-gray-900 hover:text-white p-2 focus:outline-none transition-colors'>
+              <svg
+                class='w-6 h-6'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+                ><path
+                  stroke-linecap='round'
+                  stroke-linejoin='round'
+                  stroke-width='2'
+                  d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+                ></path></svg
+              >
+            </button>
+            <div
+              class='absolute right-0 md:left-0 md:right-auto top-full pt-2 w-48 hidden group-hover:block z-50'>
+              <!-- Hover Bridge -->
+              <div class='absolute inset-x-0 -top-2 h-2'></div>
+              <div
+                class='bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden ring-1 ring-black/5'>
+                <div
+                  class='px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50'>
+                  <p
+                    class='text-[10px] uppercase tracking-widest font-bold text-white mb-0.5'>
+                    Masuk sebagai
+                  </p>
+                  <p
+                    id='profile-email'
+                    class='text-xs font-bold text-gray-900 dark:text-white truncate'>
+                  </p>
+                </div>
+                <div class='p-1'>
+                  <a
+                    href='/track-order'
+                    class='flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary rounded-xl transition-colors'>
+                    <svg
+                      class='w-4 h-4'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                      ><path
+                        stroke-linecap='round'
+                        stroke-linejoin='round'
+                        stroke-width='2'
+                        d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
+                      ></path></svg
+                    >
+                    Pesanan Saya
+                  </a>
+                  <button
+                    id='btn-logout'
+                    class='w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors'>
+                    <svg
+                      class='w-4 h-4'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                      ><path
+                        stroke-linecap='round'
+                        stroke-linejoin='round'
+                        stroke-width='2'
+                        d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'
+                      ></path></svg
+                    >
+                    Keluar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Language Dropdown -->
+        <div class='relative group'>
+          <button
+            class='flex items-center gap-2 text-gray-900 dark:text-gray-900 hover:text-white font-black p-2 text-sm md:text-base transition-colors'>
+            <span
+              id='current-lang-flag'
+              class='text-lg'>
+              {lang === 'id' ? '🇮🇩' : lang === 'en' ? '🇬🇧' : '🇲🇾'}
+            </span>
+            <span
+              id='current-lang-label'
+              class='uppercase tracking-wide'>
+              {lang.toUpperCase()}
+            </span>
+            <svg
+              class='w-4 h-4 opacity-50'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+              ><path
+                stroke-linecap='round'
+                stroke-linejoin='round'
+                stroke-width='2'
+                d='M19 9l-7 7-7-7'
+              ></path></svg
+            >
+          </button>
+          <div
+            class='absolute right-0 top-full pt-2 w-36 hidden group-hover:block z-50'>
+            <!-- Hover Bridge -->
+            <div class='absolute inset-x-0 -top-2 h-2'></div>
+            <div
+              class='bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden p-1 ring-1 ring-black/5'>
+              {
+                Object.entries(languages).map(([key, label]) => (
+                  <button
+                    type='button'
+                    data-lang-key={key}
+                    class='btn-lang w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary rounded-xl transition-all'>
+                    <span>{label}</span>
+                  </button>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu (Fluid Animation via max-height) -->
+  <div
+    id='mobile-menu'
+    class='md:hidden overflow-hidden transition-[max-height] duration-300 ease-in-out max-h-0 bg-primary dark:bg-primary border-t border-black/10'>
+    <div class='px-4 py-4 space-y-3'>
+      {
+        navLinks.map((link) => (
+          <a
+            href={localizePath(link.href, lang)}
+            data-i18n={link.key}
+            class='block text-gray-900 dark:text-gray-900 hover:text-white font-black px-2 py-2 rounded-lg hover:bg-black/5'>
+            {t(link.key as any)}
+          </a>
+        ))
+      }
+      <div
+        id='mobile-auth-buttons'
+        class='border-t border-gray-200 dark:border-gray-700 pt-3 flex flex-col space-y-2'>
+        <a
+          href='/login'
+          data-i18n='nav.login'
+          class='block text-gray-900 dark:text-gray-900 font-black px-2 py-2'
+          >{t('nav.login')}</a
+        >
+        <a
+          href='/register'
+          data-i18n='nav.register'
+          class='block bg-gray-900 text-white text-center px-4 py-2 rounded-lg font-black shadow-md'
+          >{t('nav.register')}</a
+        >
+      </div>
+      <div
+        id='mobile-profile-section'
+        class='border-t border-gray-200 dark:border-gray-700 pt-3 flex flex-col space-y-2 hidden'>
+        <div class='px-2 py-2'>
+          <p class='text-xs text-white'>Masuk sebagai</p>
+          <p
+            id='mobile-profile-email'
+            class='text-sm font-medium text-gray-900 dark:text-white truncate'>
+          </p>
+        </div>
+        <button
+          id='btn-mobile-logout'
+          class='block text-left text-red-600 font-medium px-2 py-1'
+          >Keluar</button
+        >
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  import { cartStore } from '../lib/cart';
+
+  const cartCountEl = document.getElementById('cart-count');
+
+  cartStore.subscribe((cart) => {
+    if (cartCountEl) {
+      const totalItems = Object.values(cart).reduce(
+        (acc, item) => acc + (Number(item.quantity) || 0),
+        0,
+      );
+      cartCountEl.innerText = totalItems.toString();
+      if (totalItems > 0) {
+        cartCountEl.classList.remove('hidden');
+      } else {
+        cartCountEl.classList.add('hidden');
+      }
+    }
+  });
+
+  // Mobile menu logic
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  let isMenuOpen = false;
+
+  mobileMenuBtn?.addEventListener('click', () => {
+    isMenuOpen = !isMenuOpen;
+    if (isMenuOpen) {
+      if (mobileMenu)
+        mobileMenu.style.maxHeight = mobileMenu.scrollHeight + 'px';
+    } else {
+      if (mobileMenu) mobileMenu.style.maxHeight = '0px';
+    }
+  });
+
+  // Dark mode toggle logic
+  const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+  const themeToggleLightIcon = document.getElementById(
+    'theme-toggle-light-icon',
+  );
+  const themeToggleBtn = document.getElementById('theme-toggle');
+
+  if (
+    localStorage.getItem('color-theme') === 'dark' ||
+    (!('color-theme' in localStorage) &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches)
+  ) {
+    themeToggleLightIcon?.classList.remove('hidden');
+    document.documentElement.classList.add('dark');
+  } else {
+    themeToggleDarkIcon?.classList.remove('hidden');
+    document.documentElement.classList.remove('dark');
+  }
+
+  themeToggleBtn?.addEventListener('click', function () {
+    themeToggleDarkIcon?.classList.toggle('hidden');
+    themeToggleLightIcon?.classList.toggle('hidden');
+
+    if (localStorage.getItem('color-theme')) {
+      if (localStorage.getItem('color-theme') === 'light') {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('color-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('color-theme', 'light');
+      }
+    } else {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('color-theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('color-theme', 'dark');
+      }
+    }
+  });
+
+  // Auth Listener
+  import { supabase } from '../lib/supabase';
+
+  const authButtons = document.getElementById('auth-buttons');
+  const profileDropdown = document.getElementById('profile-dropdown-container');
+  const profileEmail = document.getElementById('profile-email');
+  const mobileAuthButtons = document.getElementById('mobile-auth-buttons');
+  const mobileProfileSection = document.getElementById(
+    'mobile-profile-section',
+  );
+  const mobileProfileEmail = document.getElementById('mobile-profile-email');
+
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) {
+      if (authButtons) authButtons.classList.add('hidden');
+      if (mobileAuthButtons) mobileAuthButtons.classList.add('hidden');
+
+      if (profileDropdown) profileDropdown.classList.remove('hidden');
+      if (mobileProfileSection) mobileProfileSection.classList.remove('hidden');
+
+      if (profileEmail) profileEmail.innerText = session.user.email || '';
+      if (mobileProfileEmail)
+        mobileProfileEmail.innerText = session.user.email || '';
+    } else {
+      if (authButtons) authButtons.classList.remove('hidden');
+      if (mobileAuthButtons) mobileAuthButtons.classList.remove('hidden');
+
+      if (profileDropdown) profileDropdown.classList.add('hidden');
+      if (mobileProfileSection) mobileProfileSection.classList.add('hidden');
+    }
+  });
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.reload();
+  };
+
+  document
+    .getElementById('btn-logout')
+    ?.addEventListener('click', handleLogout);
+  document
+    .getElementById('btn-mobile-logout')
+    ?.addEventListener('click', handleLogout);
+
+  // Client-side Localization Store Logic
+  import { langStore, type Language } from '../lib/lang';
+  import { languages } from '../i18n/utils';
+
+  const currentLangLabel = document.getElementById('current-lang-label');
+  const currentLangFlag = document.getElementById('current-lang-flag');
+  langStore.subscribe((lang) => {
+    if (currentLangLabel) {
+      currentLangLabel.innerText = lang.toUpperCase();
+    }
+    if (currentLangFlag) {
+      currentLangFlag.innerText =
+        lang === 'id' ? '🇮🇩' : lang === 'en' ? '🇬🇧' : '🇲🇾';
+    }
+  });
+
+  document.querySelectorAll('.btn-lang').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const target = e.currentTarget as HTMLButtonElement;
+      const key = target.getAttribute('data-lang-key') as string;
+      if (key) {
+        const currentPath = window.location.pathname;
+        const parts = currentPath.split('/');
+
+        // Check if current path already has a lang prefix
+        const locales = ['en', 'my']; // 'id' is default (no prefix)
+        let newPath = '';
+
+        if (locales.includes(parts[1])) {
+          // Current is /en/... or /my/...
+          if (key === 'id') {
+            newPath = '/' + parts.slice(2).join('/');
+          } else {
+            parts[1] = key;
+            newPath = parts.join('/');
+          }
+        } else {
+          // Current is / (id)
+          if (key === 'id') {
+            newPath = currentPath;
+          } else {
+            newPath = '/' + key + currentPath;
+          }
+        }
+
+        // Clean up double slashes
+        newPath = newPath.replace(/\/+/g, '/');
+        window.location.href = newPath;
+      }
+    });
+  });
+</script>

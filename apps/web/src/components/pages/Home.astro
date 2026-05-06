@@ -1,0 +1,381 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionTitle from '../SectionTitle.astro';
+import ProductCard from '../ProductCard.astro';
+import GoldCalculator from '../GoldCalculator.astro';
+import TestimonialSection from '../TestimonialSection.astro';
+import ArticleSection from '../ArticleSection.astro';
+import WhyChooseUs from '../WhyChooseUs.astro';
+import { useTranslations } from '../../i18n/utils';
+import { getImageUrl, getCopywriting } from '../../lib/cms';
+
+interface Props {
+  lang: 'id' | 'en' | 'my';
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+// ── Fetch Data from Payload CMS ─────────────────────────────
+const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+
+// 1. Fetch Gold Price
+let goldPrice = 1500000;
+let goldPriceData: any = {};
+try {
+  const goldPriceRes = await fetch(`${CMS_URL}/api/globals/gold-price`, { cache: 'no-store' });
+  if (goldPriceRes.ok) {
+    goldPriceData = await goldPriceRes.json();
+    goldPrice = goldPriceData.currentPrice || 1500000;
+  } else {
+    console.error(`[Astro Build] Failed to fetch gold price. Status: ${goldPriceRes.status}`);
+  }
+} catch (e) {
+  console.error('[Astro Build] Error fetching gold price:', e);
+}
+
+// 2. Fetch Featured Products (via Copywriting relationship)
+let featuredProducts = [];
+// 5. Fetch Copywriting
+const copywriting = await getCopywriting(lang);
+
+if (copywriting?.featuredProducts && copywriting.featuredProducts.length > 0) {
+  featuredProducts = copywriting.featuredProducts;
+} else {
+  // Fallback to legacy isFeatured flag if global is empty
+  try {
+    const featuredRes = await fetch(`${CMS_URL}/api/products?where[isFeatured][equals]=true&limit=6`, { cache: 'no-store' });
+    if (featuredRes.ok) {
+      const featuredData = await featuredRes.json();
+      featuredProducts = featuredData.docs || [];
+    }
+  } catch (e) {
+    console.error('[Astro Build] Error fetching fallback featured products:', e);
+  }
+}
+
+// 3. Fetch Categories (Sorted by sortOrder then name)
+let categories = [];
+try {
+  const categoriesRes = await fetch(`${CMS_URL}/api/categories?sort=sortOrder,name&limit=10`, { cache: 'no-store' });
+  if (categoriesRes.ok) {
+    const categoriesData = await categoriesRes.json();
+    categories = categoriesData.docs || [];
+  } else {
+    console.error(`[Astro Build] Failed to fetch categories. Status: ${categoriesRes.status}`);
+  }
+} catch (e) {
+  console.error('[Astro Build] Error fetching categories:', e);
+}
+
+// 4. Fetch Latest 8 Products (Sorted by sortOrder, then createdAt)
+let latestProducts = [];
+try {
+  const latestProductsRes = await fetch(`${CMS_URL}/api/products?sort=sortOrder,-createdAt&limit=8`, { cache: 'no-store' });
+  if (latestProductsRes.ok) {
+    const latestProductsData = await latestProductsRes.json();
+    latestProducts = latestProductsData.docs || [];
+  } else {
+    console.error(`[Astro Build] Failed to fetch latest products. Status: ${latestProductsRes.status}`);
+  }
+} catch (e) {
+  console.error('[Astro Build] Error fetching latest products:', e);
+}
+
+const formatPrice = (price: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
+
+const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, size);
+---
+
+<BaseLayout title={t('nav.home')}>
+  <!-- Hero Section: Gold Price Card -->
+  <section class="py-12 md:py-20 bg-white dark:bg-background-dark">
+    <div class="w-full md:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="w-full md:max-w-xs">
+        <div class="bg-white dark:bg-surface-dark rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-8 text-center flex flex-col items-center transition-transform hover:scale-[1.02]">
+          <div class="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+             <img src="https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=50" class="w-8 h-8 rounded-full object-cover" alt="Gold Icon" />
+          </div>
+          <h3 data-i18n="index.gold_price_today" class="text-gray-900 dark:text-white font-bold text-lg mb-1">{t('index.gold_price_today')}</h3>
+          <p data-i18n="index.global_market" class="text-gray-400 text-sm mb-6">{t('index.global_market')}</p>
+          
+          <div class="mb-1 flex flex-col items-center gap-1">
+            {goldPriceData.strikePrice && (
+              <span class="text-sm text-gray-400 line-through font-medium">{formatPrice(goldPriceData.strikePrice)}</span>
+            )}
+            <span class="text-3xl font-black text-[#d97706]">{formatPrice(goldPrice)}</span>
+          </div>
+          <p data-i18n="index.per_gram" class="text-gray-400 text-xs uppercase tracking-widest font-medium">{t('index.per_gram')}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Produk Unggulan -->
+  <section class="py-12 bg-white dark:bg-background-dark overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between mb-8">
+        <h2 data-i18n="index.featured_products" class="text-2xl font-bold text-gray-900 dark:text-white border-l-4 border-primary pl-4">{t('index.featured_products')}</h2>
+        <div class="flex gap-2">
+          <button id="feat-prev" class="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          </button>
+          <button id="feat-next" class="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+        </div>
+      </div>
+      
+      <div id="featured-slider" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide scroll-smooth">
+        {featuredProducts.length > 0 ? (
+          featuredProducts.map((product: any) => {
+            const discountPercent = product.strikePrice ? Math.round(((product.strikePrice - product.price) / product.strikePrice) * 100) : 0;
+            return (
+              <div class="flex-shrink-0 w-full md:w-[calc(50%-12px)] snap-center">
+                <div class="group relative overflow-hidden rounded-3xl bg-gray-100 dark:bg-gray-800 aspect-[4/5] md:aspect-[16/9] shadow-sm">
+                  <a href={`/products/${product.id}`} class="absolute inset-0 z-10" aria-label={`View ${product.name}`}></a>
+                  
+                  {discountPercent > 0 && (
+                    <div class="absolute top-4 left-4 z-30 bg-red-600 text-white text-xs font-black px-3 py-1 rounded-xl shadow-lg pointer-events-none">
+                      <span data-i18n="index.discount">{t('index.discount')}</span> {discountPercent}%
+                    </div>
+                  )}
+
+                  <img 
+                    src={_getImageUrl(product.image, 'large')} 
+                    alt={product.name}
+                    class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  
+                  <!-- Overlay Info: Mobile (Visible) vs Desktop (Hover) -->
+                  <div class="absolute inset-0 bg-black/50 md:bg-black/40 backdrop-blur-[1px] md:backdrop-blur-[2px] opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center text-center p-4 md:p-6 z-20 pointer-events-none group-hover:pointer-events-auto">
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-1 md:mb-2">{product.name}</h3>
+                    
+                    <div class="flex text-yellow-400 mb-2 md:mb-4">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <svg class={`w-3 h-3 md:w-4 md:h-4 ${i < Math.floor(product.rating || 5) ? 'fill-current' : 'text-white/30'}`} viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                      ))}
+                      <span class="text-[8px] md:text-[10px] text-white/80 ml-1 md:ml-2 font-medium">({(product.rating || 5).toFixed(1)}) ({product.soldCount || 0})</span>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-0 md:gap-1 mb-3 md:mb-6">
+                      {product.strikePrice && (
+                        <span class="text-xs md:text-sm text-white/60 line-through">{formatPrice(product.strikePrice)}</span>
+                      )}
+                      <span class="text-xl md:text-2xl font-black text-primary">{formatPrice(product.price)}</span>
+                    </div>
+
+                    <div class="flex gap-2 md:gap-3 relative z-30 pointer-events-auto">
+                      <button data-action="add-cart" data-id={product.id} data-name={product.name} data-price={product.price} data-image={_getImageUrl(product.image, 'thumbnail')} data-i18n="index.cart" class="px-4 md:px-6 py-1.5 md:py-2 rounded-xl border border-white text-white font-bold text-xs md:text-sm hover:bg-white hover:text-black transition-all">{t('index.cart')}</button>
+                      <button data-action="buy-now" data-id={product.id} data-name={product.name} data-price={product.price} data-image={_getImageUrl(product.image, 'thumbnail')} data-i18n="index.buy" class="px-4 md:px-6 py-1.5 md:py-2 rounded-xl bg-primary text-white font-bold text-xs md:text-sm hover:bg-[#b45309] transition-all shadow-lg shadow-primary/20">{t('index.buy')}</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div class="w-full py-20 text-center text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl">
+            <span data-i18n="index.no_featured_products">{t('index.no_featured_products')}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Kategori Produk -->
+  <section class="py-12 bg-white dark:bg-background-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 data-i18n="index.product_categories" class="text-2xl font-bold text-gray-900 dark:text-white mb-8 border-l-4 border-primary pl-4">{t('index.product_categories')}</h2>
+      
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {categories.map((cat: any) => (
+          <a href={`/products?category=${cat.id}`} class="group">
+            <div class="relative rounded-2xl overflow-hidden bg-primary aspect-[4/3] mb-3 shadow-md border border-gray-100 dark:border-gray-800">
+              {cat.image?.url ? (
+                <img 
+                  src={_getImageUrl(cat.image, 'thumbnail')} 
+                  alt={cat.name}
+                  class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                />
+              ) : (
+                <div class="absolute inset-0 flex items-center justify-center p-6 text-center">
+                  <span class="text-white font-black text-xl leading-tight uppercase">{cat.name}</span>
+                </div>
+              )}
+              <div class="absolute top-0 right-0 w-12 h-12 bg-[#d97706] translate-x-6 -translate-y-6 rotate-45 group-hover:scale-125 transition-transform"></div>
+            </div>
+            <p class="text-center font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">{cat.name}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Produk Terbaru -->
+  <section class="py-12 bg-white dark:bg-background-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between mb-8 border-l-4 border-primary pl-4">
+        <h2 data-i18n="index.latest_products" class="text-2xl font-bold text-gray-900 dark:text-white">{t('index.latest_products')}</h2>
+        <a href="/products" class="text-primary font-bold text-sm hover:underline flex items-center gap-1">
+          <span data-i18n="index.view_all">{t('index.view_all')}</span> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </a>
+      </div>
+      
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        {latestProducts.map((product: any) => (
+          <ProductCard 
+            id={product.id}
+            name={product.name}
+            price={product.price}
+            strikePrice={product.strikePrice}
+            rating={product.rating}
+            soldCount={product.soldCount}
+            image={_getImageUrl(product.image, 'card')}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Layanan Kami -->
+  <section class="relative py-24 bg-gray-900 bg-[url('/img/emas_hero.jpeg')] bg-cover bg-center bg-fixed">
+    <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-sm"></div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+      <h2 data-i18n="hero.services" class="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">
+        {copywriting?.heroTitle || t('hero.services')}
+      </h2>
+      <p data-i18n="services.desc" class="text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
+        {copywriting?.servicesDescription || t('services.desc')}
+      </p>
+    </div>
+  </section>
+
+  <!-- Kelebihan Menyimpan Emas -->
+  <section class="py-20 bg-white dark:bg-surface-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <SectionTitle title={copywriting?.advantagesTitle || t('advantages.title')} />
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-12">
+        {copywriting?.advantages && copywriting.advantages.map((adv: any) => (
+          <div class="bg-gray-50 dark:bg-gray-800/50 p-8 rounded-2xl hover:-translate-y-1 transition-transform duration-300 border border-gray-100 dark:border-gray-800">
+            <div class="w-14 h-14 bg-primary/20 dark:bg-primary/10 rounded-xl flex items-center justify-center text-3xl mb-6 shadow-sm border border-primary/30">
+              {adv.icon}
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">{adv.title}</h3>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">{adv.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Gold Calculator Section -->
+  <section class="py-20 bg-gray-50 dark:bg-gray-900/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-12">
+        <h2 class="text-amber-500 font-black text-2xl mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+          <span data-i18n="index.gold_calculator_title">{t('index.gold_calculator_title')}</span>
+        </h2>
+        <p data-i18n="index.gold_calculator_desc" class="text-gray-500 font-medium">{t('index.gold_calculator_desc')}</p>
+      </div>
+
+      <div class="max-w-4xl">
+        <h3 data-i18n="calc.title" class="text-xl font-black text-gray-900 dark:text-white mb-8">{t('calc.title')}</h3>
+        <GoldCalculator currentPrice={goldPrice} />
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="py-24 bg-white dark:bg-background-dark overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 data-i18n="index.testimonials_title" class="text-3xl md:text-4xl font-black text-amber-500 mb-2">{t('index.testimonials_title')}</h2>
+        <p data-i18n="index.testimonials_desc" class="text-gray-500 font-medium italic">{t('index.testimonials_desc')}</p>
+      </div>
+      
+      <TestimonialSection />
+    </div>
+  </section>
+
+  <!-- News/Articles Section -->
+  <section class="py-24 bg-gray-50 dark:bg-gray-900/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-black text-amber-500 mb-2">{t('news.title')}</h2>
+        <p class="text-gray-500 font-medium">{t('news.subtitle')}</p>
+      </div>
+      
+      <ArticleSection />
+    </div>
+  </section>
+
+  <!-- Mengapa Memilih Kami -->
+  <WhyChooseUs />
+</BaseLayout>
+
+<style>
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<script>
+  import { addToCart } from '../../lib/cart';
+  
+  const initFeaturedSlider = () => {
+    const slider = document.getElementById('featured-slider');
+    const btnPrev = document.getElementById('feat-prev');
+    const btnNext = document.getElementById('feat-next');
+
+    if (slider && btnPrev && btnNext) {
+      btnNext.addEventListener('click', () => {
+        slider.scrollLeft += slider.clientWidth;
+      });
+      btnPrev.addEventListener('click', () => {
+        slider.scrollLeft -= slider.clientWidth;
+      });
+    }
+  };
+  
+  const setupButtons = () => {
+    document.querySelectorAll('button[data-action="add-cart"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const target = e.currentTarget as HTMLButtonElement;
+        addToCart({
+          id: target.dataset.id || '',
+          name: target.dataset.name || '',
+          price: Number(target.dataset.price) || 0,
+          image: target.dataset.image || ''
+        });
+      });
+    });
+
+    document.querySelectorAll('button[data-action="buy-now"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const target = e.currentTarget as HTMLButtonElement;
+        addToCart({
+          id: target.dataset.id || '',
+          name: target.dataset.name || '',
+          price: Number(target.dataset.price) || 0,
+          image: target.dataset.image || ''
+        });
+        window.location.href = '/checkout';
+      });
+    });
+  };
+
+  initFeaturedSlider();
+  setupButtons();
+</script>

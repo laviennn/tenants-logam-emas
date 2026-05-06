@@ -1,0 +1,21 @@
+---
+import ProductDetail from '../../../components/pages/ProductDetail.astro';
+
+export async function getStaticPaths() {
+  const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+  const locales = ['en', 'my'];
+  const res = await fetch(`${CMS_URL}/api/products?limit=1000`);
+  const data = await res.json();
+  const products = data.docs || [];
+  
+  return locales.flatMap((lang) => {
+    return products.map((product: any) => ({
+      params: { lang, id: product.id.toString() },
+      props: { product, lang },
+    }));
+  });
+}
+
+const { product, lang } = Astro.props;
+---
+<ProductDetail product={product} lang={lang as any} />

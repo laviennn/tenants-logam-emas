@@ -1,0 +1,43 @@
+---
+import { getLangFromUrl } from '../i18n/utils';
+import { getCopywriting } from '../lib/cms';
+
+const lang = getLangFromUrl(Astro.url);
+
+// Fetch Global Data from the merged Copywriting global
+const copywriting = await getCopywriting(lang);
+
+// Use data from copywriting global or fallback to local defaults
+const title = copywriting?.whyTitle || 'Mengapa Memilih Kami?';
+const subtitle = copywriting?.whySubtitle || 'Kami memiliki keunggulan yang memberikan nilai tambah untuk investasi Anda';
+const features = copywriting?.whyFeatures || [];
+---
+
+<section class="py-24 bg-white dark:bg-background-dark">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-4">
+        {title}
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 font-medium max-w-2xl mx-auto text-lg">
+        {subtitle}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+      {features && features.map((feature: any) => (
+        <div class="group bg-gray-50 dark:bg-gray-800/40 p-8 rounded-[2rem] border border-gray-100 dark:border-gray-800 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 flex flex-col items-center text-center">
+          <div class="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-sm border border-gray-100 dark:border-gray-700 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+            {feature.icon}
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">
+            {feature.title}
+          </h3>
+          <p class="text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+            {feature.description}
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

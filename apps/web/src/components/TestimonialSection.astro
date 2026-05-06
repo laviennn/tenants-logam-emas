@@ -1,0 +1,130 @@
+---
+import { getImageUrl } from '../lib/cms';
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+interface Testimonial {
+  reviewerName: string;
+  location?: string;
+  avatar?: any;
+  image?: any;
+  starRating: number;
+  reviewText: string;
+  createdAt: string;
+}
+
+const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+let testimonials: Testimonial[] = [];
+try {
+  const res = await fetch(`${CMS_URL}/api/testimonials?locale=${lang}&limit=10`, { cache: 'no-store' });
+  if (res.ok) {
+    const data = await res.json();
+    testimonials = data.docs || [];
+  }
+} catch (e) {
+  console.error("Failed to fetch testimonials", e);
+}
+
+const formatDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString(lang === 'id' ? 'id-ID' : lang === 'my' ? 'ms-MY' : 'en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};
+---
+
+<div class="relative px-4 sm:px-0">
+  <div id="testimonial-slider" class="flex gap-8 overflow-x-auto pb-16 snap-x scrollbar-hide">
+    {testimonials.length > 0 ? testimonials.map((test) => (
+      <div class="flex-shrink-0 w-[320px] md:w-[450px] snap-center bg-white dark:bg-surface-dark p-8 md:p-10 rounded-[3rem] shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-white/5 flex flex-col group/card">
+        <!-- Header: Avatar & Info -->
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 border-2 border-primary/20 shadow-inner group-hover/card:scale-110 transition-transform duration-500">
+              {test.avatar ? (
+                <img src={getImageUrl(test.avatar, 'thumbnail')} alt={test.reviewerName} class="w-full h-full object-cover" />
+              ) : (
+                <div class="w-full h-full flex items-center justify-center text-primary font-black text-2xl uppercase">
+                  {test.reviewerName.charAt(0)}
+                </div>
+              )}
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-black text-gray-900 dark:text-white leading-tight">{test.reviewerName}</h4>
+
+              </div>
+              <p class="text-xs text-gray-400 font-bold mt-1 tracking-wide uppercase">{test.location || ''}</p>
+            </div>
+          </div>
+          
+          <div class="text-right">
+             <p class="text-[10px] font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest">{formatDate(test.createdAt)}</p>
+          </div>
+        </div>
+        
+        <!-- Rating -->
+        <div class="flex text-amber-400 gap-1.5 mb-6">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <svg class={`w-5 h-5 ${i < test.starRating ? 'fill-current' : 'text-gray-200 dark:text-gray-800'}`} viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+          ))}
+        </div>
+
+        <!-- Content -->
+        <p class="text-gray-600 dark:text-gray-400 leading-relaxed text-lg font-medium mb-8 flex-grow italic">
+          "{test.reviewText}"
+        </p>
+
+        <!-- Testimonial Image (Optional) -->
+        {test.image && (
+          <div class="mb-6 rounded-[1.5rem] overflow-hidden border-4 border-white dark:border-gray-800 shadow-lg transform group-hover/card:rotate-1 transition-transform duration-500 bg-gray-50 dark:bg-gray-900">
+            <img 
+              src={test.image.url.startsWith('http') ? test.image.url : `${CMS_URL}${test.image.url}`} 
+              alt="Testimonial Proof" 
+              class="w-full h-auto max-h-[400px] object-contain"
+              loading="lazy"
+            />
+          </div>
+        )}
+        
+
+      </div>
+    )) : (
+      <div class="w-full py-20 text-center text-gray-400 bg-gray-50 dark:bg-gray-900/50 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-white/5">
+        <p class="font-black uppercase tracking-widest">Belum ada ulasan pelanggan.</p>
+      </div>
+    )}
+  </div>
+
+  <!-- Progress Bar Indicator -->
+  <div class="max-w-[200px] mx-auto h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+    <div id="testimonial-progress" class="h-full bg-primary transition-all duration-300" style="width: 10%;"></div>
+  </div>
+</div>
+
+<style>
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<script>
+  const slider = document.getElementById('testimonial-slider');
+  const progress = document.getElementById('testimonial-progress');
+
+  if (slider && progress) {
+    slider.addEventListener('scroll', () => {
+      const scrollPercentage = (slider.scrollLeft / (slider.scrollWidth - slider.clientWidth)) * 100;
+      progress.style.width = `${Math.max(10, scrollPercentage)}%`;
+    });
+  }
+</script>

@@ -1,0 +1,109 @@
+---
+import '../styles/global.css';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import Toast from '../components/Toast.astro';
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+import { getSiteSettings, getImageUrl } from '../lib/cms';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const siteSettings = await getSiteSettings(lang);
+const logoUrl = siteSettings?.logo ? getImageUrl(siteSettings.logo) : '';
+
+const siteTitle = title 
+  ? `${title} | ${siteSettings?.metaTitle || 'Logam Mulia Gold Antam'}` 
+  : (siteSettings?.metaTitle || t('nav.home') + ' | Logam Mulia Gold Antam');
+
+const siteDescription = description || siteSettings?.metaDescription || t('services.desc');
+---
+
+<!DOCTYPE html>
+<html lang={lang} class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{siteTitle}</title>
+    <meta name="description" content={siteDescription} />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content={siteTitle} />
+    <meta property="og:description" content={siteDescription} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url} />
+    <meta property="og:image" content={new URL('/img/og_image.webp', Astro.url)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={siteTitle} />
+    <meta name="twitter:description" content={siteDescription} />
+    <meta name="twitter:image" content={new URL('/img/og_image.webp', Astro.url)} />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#D4AF37" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    {siteSettings?.googleSearchConsoleCode && (
+      <meta name="google-site-verification" content={siteSettings.googleSearchConsoleCode} />
+    )}
+
+    {siteSettings?.googleAnalyticsId && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${siteSettings.googleAnalyticsId}`} />
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', `${siteSettings.googleAnalyticsId}`);
+        </script>
+      </>
+    )}
+  </head>
+  <body class="bg-gray-50 dark:bg-background-dark font-sans text-gray-900 dark:text-white min-h-screen flex flex-col">
+    <Navbar logoUrl={logoUrl} />
+    <main class="flex-grow">
+      <slot />
+    </main>
+    <Footer logoUrl={logoUrl} />
+    <Toast />
+    <script>
+      import { langStore } from '../lib/lang';
+      import { ui } from '../i18n/ui';
+
+      // Synchronize store with server-detected language
+      const serverLang = document.documentElement.lang as any;
+      if (serverLang) {
+        langStore.set(serverLang);
+      }
+
+      langStore.subscribe((lang) => {
+        document.documentElement.lang = lang;
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+          const key = el.getAttribute('data-i18n');
+          if (key && ui[lang] && (ui[lang] as any)[key]) {
+            el.textContent = (ui[lang] as any)[key];
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

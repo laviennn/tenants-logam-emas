@@ -1,0 +1,8 @@
+#!/usr/bin/expect -f
+set timeout -1
+spawn npx create-payload-app@latest ./apps/cms -t blank --no-deps --no-agent --db postgres
+expect "Enter PostgreSQL connection string"
+send "\r"
+expect "Payload secret"
+send "\r"
+expect eof

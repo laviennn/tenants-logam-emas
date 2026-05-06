@@ -1,0 +1,165 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionTitle from '../../components/SectionTitle.astro';
+import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={t('cart.title')}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <SectionTitle title={t('cart.title')} i18nTitle="cart.title" />
+    
+    <div id="cart-container" class="grid grid-cols-1 lg:grid-cols-12 gap-12 hidden mt-8">
+      <!-- Cart List -->
+      <div class="lg:col-span-8">
+        <div class="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <!-- Items inject via JS -->
+          <div id="cart-items" class="space-y-4">
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="lg:col-span-4">
+        <div class="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 sticky top-24">
+          <h3 data-i18n="cart.summary_title" class="text-lg font-bold mb-6 text-gray-900 dark:text-white">{t('cart.summary_title')}</h3>
+          
+          <div class="space-y-3 mb-6">
+            <div class="flex justify-between text-gray-600 dark:text-gray-400 text-sm">
+              <span data-i18n="cart.subtotal">{t('cart.subtotal')}</span>
+              <span id="summary-subtotal" class="font-medium text-gray-900 dark:text-white">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center pt-2">
+              <span data-i18n="cart.total_price" class="text-base font-bold text-[#d97706]">{t('cart.total_price')}</span>
+              <span id="summary-grandtotal" class="text-xl font-extrabold text-[#d97706]">Rp 0</span>
+            </div>
+          </div>
+
+          <a data-i18n="cart.buy_now" href="/checkout" class="block w-full bg-[#f59e0b] hover:bg-[#d97706] text-white text-center font-bold py-3.5 px-4 rounded-xl transition-colors shadow-sm">
+            Checkout
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="text-center py-24 hidden">
+      <div class="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+      </div>
+      <h3 data-i18n="cart.empty_title" class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('cart.empty_title')}</h3>
+      <p data-i18n="cart.empty_desc" class="text-gray-500 mb-8 max-w-md mx-auto">{t('cart.empty_desc')}</p>
+      <a data-i18n="cart.view_products" href="/products" class="inline-flex bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-lg transition-colors">{t('cart.view_products')}</a>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { cartStore, removeFromCart, updateQuantity } from '../../lib/cart';
+  import { langStore } from '../../lib/lang';
+  import { ui } from '../../i18n/ui';
+  
+  const formatCurrency = (val: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+  
+  let currentLang = 'id';
+  
+  const renderCart = () => {
+    const cart = cartStore.get();
+    const itemsContainer = document.getElementById('cart-items');
+    const items = Object.values(cart);
+    
+    if (items.length === 0) {
+      document.getElementById('cart-container')?.classList.add('hidden');
+      document.getElementById('empty-state')?.classList.remove('hidden');
+      return;
+    }
+    
+    document.getElementById('cart-container')?.classList.remove('hidden');
+    document.getElementById('empty-state')?.classList.add('hidden');
+    
+    let total = 0;
+    let count = 0;
+    
+    if(itemsContainer) {
+      itemsContainer.innerHTML = items.map(item => {
+        const safePrice = Number(item.price) || 0;
+        const safeQty = Number(item.quantity) || 0;
+        
+        total += safePrice * safeQty;
+        count += safeQty;
+        return `
+          <div class="flex p-4 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-2xl items-center relative">
+            <img src="${item.image}" alt="${item.name}" class="w-24 h-24 object-cover rounded-xl bg-gray-50 dark:bg-gray-800 flex-shrink-0" />
+            
+            <div class="ml-4 flex-1">
+              <h4 class="font-semibold text-gray-900 dark:text-white text-sm md:text-base line-clamp-1">${item.name}</h4>
+              <p class="text-[#d97706] font-bold mt-1 text-sm md:text-base">${formatCurrency(safePrice)}</p>
+              
+              <div class="flex items-center mt-3">
+                <div class="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
+                  <button class="btn-qty-minus px-2.5 py-1 text-gray-500 hover:text-[#d97706] transition-colors" data-id="${item.id}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                  </button>
+                  <input type="number" readonly value="${item.quantity}" class="w-10 text-center bg-transparent border-0 text-gray-900 dark:text-white font-medium p-0 text-sm focus:ring-0" />
+                  <button class="btn-qty-plus px-2.5 py-1 text-gray-500 hover:text-[#d97706] transition-colors" data-id="${item.id}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <button class="btn-remove absolute right-4 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-600 transition-colors p-2" data-id="${item.id}" aria-label="Hapus">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    const countEl = document.getElementById('summary-count');
+    if(countEl) countEl.innerText = count.toString();
+    
+    const subtotalEl = document.getElementById('summary-subtotal');
+    if(subtotalEl) subtotalEl.innerText = formatCurrency(total);
+    
+    const gtEl = document.getElementById('summary-grandtotal');
+    if(gtEl) gtEl.innerText = formatCurrency(total);
+    
+    // Attach events
+    document.querySelectorAll('.btn-qty-minus').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLButtonElement).dataset.id;
+        if(id) {
+          const item = cartStore.get()[id];
+          if(item) updateQuantity(id, (Number(item.quantity) || 0) - 1);
+        }
+      });
+    });
+    
+    document.querySelectorAll('.btn-qty-plus').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLButtonElement).dataset.id;
+        if(id) {
+          const item = cartStore.get()[id];
+          if(item) updateQuantity(id, (Number(item.quantity) || 0) + 1);
+        }
+      });
+    });
+    
+    document.querySelectorAll('.btn-remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLButtonElement).dataset.id;
+        if(id) removeFromCart(id);
+      });
+    });
+  };
+
+  langStore.subscribe((lang) => {
+    currentLang = lang;
+    renderCart();
+  });
+  
+  cartStore.subscribe(renderCart);
+</script>

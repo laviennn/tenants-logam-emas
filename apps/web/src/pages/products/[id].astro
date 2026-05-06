@@ -1,0 +1,43 @@
+---
+import ProductDetail from '../../components/pages/ProductDetail.astro';
+
+export async function getStaticPaths() {
+  const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+  
+  try {
+    console.log(`[Astro Build] Fetching products from: ${CMS_URL}/api/products`);
+    const res = await fetch(`${CMS_URL}/api/products?limit=1000`);
+    
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[Astro Build] Failed to fetch products. Status: ${res.status}. Body: ${text.slice(0, 100)}`);
+      return [];
+    }
+
+    const data = await res.json();
+    const docs = data.docs || [];
+    return docs.map((p: any) => ({
+      params: { id: p.id.toString() },
+      props: { product: p },
+    }));
+  } catch (error) {
+    console.error(`[Astro Build] Error in getStaticPaths (products):`, error);
+    return [];
+  }
+}
+
+const { id } = Astro.params;
+let { product } = Astro.props;
+
+// Di localhost (mode server), Astro.props akan kosong. Kita ambil data secara Live.
+if (!product && id) {
+  const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+  const res = await fetch(`${CMS_URL}/api/products/${id}?locale=id`);
+  if (res.ok) {
+    product = await res.json();
+  }
+}
+
+if (!product) return Astro.redirect('/404');
+---
+<ProductDetail product={product} lang="id" />
