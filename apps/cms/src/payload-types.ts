@@ -352,6 +352,14 @@ export interface SiteSetting {
   tenant?: (number | null) | Tenant;
   logo?: (number | null) | Media;
   /**
+   * Ikon browser dalam format SVG (Modern).
+   */
+  faviconSvg?: (number | null) | Media;
+  /**
+   * Ikon browser dalam format ICO (Kompatibilitas lama).
+   */
+  faviconIco?: (number | null) | Media;
+  /**
    * Nama brand untuk Navbar, Footer, dan Copyright
    */
   brandName: string;
@@ -841,6 +849,8 @@ export interface ReviewsSelect<T extends boolean = true> {
 export interface SiteSettingsSelect<T extends boolean = true> {
   tenant?: T;
   logo?: T;
+  faviconSvg?: T;
+  faviconIco?: T;
   brandName?: T;
   metaTitle?: T;
   metaDescription?: T;

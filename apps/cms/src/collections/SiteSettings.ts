@@ -42,6 +42,26 @@ export const SiteSettings: CollectionConfig = {
       label: 'Logo',
     },
     {
+      name: 'faviconSvg',
+      type: 'upload',
+      relationTo: 'media',
+      required: false,
+      label: 'Favicon (SVG)',
+      admin: {
+        description: 'Ikon browser dalam format SVG (Modern).',
+      },
+    },
+    {
+      name: 'faviconIco',
+      type: 'upload',
+      relationTo: 'media',
+      required: false,
+      label: 'Favicon (ICO)',
+      admin: {
+        description: 'Ikon browser dalam format ICO (Kompatibilitas lama).',
+      },
+    },
+    {
       name: 'brandName',
       type: 'text',
       required: true,
