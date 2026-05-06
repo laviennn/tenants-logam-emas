@@ -1,23 +1,31 @@
 import type { CollectionConfig } from 'payload'
-// import { triggerVercelRebuild } from '../utils/rebuild'
+import { tenantWrite, tenantDelete, isOwner } from '../access/tenantAccess'
 
 export const Testimonials: CollectionConfig = {
   slug: 'testimonials',
   admin: {
     useAsTitle: 'reviewerName',
-    defaultColumns: ['reviewerName', 'location', 'starRating', 'createdAt'],
-  },
-  hooks: {
-    // afterChange: [() => triggerVercelRebuild()],
-    // afterDelete: [() => triggerVercelRebuild()],
+    defaultColumns: ['reviewerName', 'tenant', 'location', 'starRating', 'createdAt'],
+    group: '📰 Konten',
   },
   access: {
     read: () => true,
-    create: ({ req: { user } }) => !!user,
-    update: ({ req: { user } }) => !!user,
-    delete: ({ req: { user } }) => !!user,
+    create: tenantWrite,
+    update: tenantWrite,
+    delete: tenantDelete,
   },
   fields: [
+    {
+      name: 'tenant',
+      type: 'relationship',
+      relationTo: 'tenants',
+      required: true,
+      index: true,
+      label: 'Tenant',
+      admin: {
+        condition: (_: any, { user }: any) => isOwner(user),
+      },
+    },
     {
       name: 'reviewerName',
       type: 'text',
@@ -38,9 +46,6 @@ export const Testimonials: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
       required: false,
-      admin: {
-        description: 'Profile picture of the reviewer',
-      },
     },
     {
       name: 'starRating',

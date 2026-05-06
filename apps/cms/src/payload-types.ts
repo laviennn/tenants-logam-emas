@@ -67,14 +67,18 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    tenants: Tenant;
     users: User;
     media: Media;
     categories: Category;
     products: Product;
-    transactions: Transaction;
+    reviews: Review;
+    'site-settings': SiteSetting;
+    'gold-price': GoldPrice;
+    copywriting: Copywriting;
     articles: Article;
     testimonials: Testimonial;
-    reviews: Review;
+    transactions: Transaction;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,14 +86,18 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
+    tenants: TenantsSelect<false> | TenantsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
-    transactions: TransactionsSelect<false> | TransactionsSelect<true>;
+    reviews: ReviewsSelect<false> | ReviewsSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'gold-price': GoldPriceSelect<false> | GoldPriceSelect<true>;
+    copywriting: CopywritingSelect<false> | CopywritingSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
-    reviews: ReviewsSelect<false> | ReviewsSelect<true>;
+    transactions: TransactionsSelect<false> | TransactionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -99,16 +107,8 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('id' | 'en' | 'my') | ('id' | 'en' | 'my')[];
-  globals: {
-    'site-settings': SiteSetting;
-    'gold-price': GoldPrice;
-    copywriting: Copywriting;
-  };
-  globalsSelect: {
-    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
-    'gold-price': GoldPriceSelect<false> | GoldPriceSelect<true>;
-    copywriting: CopywritingSelect<false> | CopywritingSelect<true>;
-  };
+  globals: {};
+  globalsSelect: {};
   locale: 'id' | 'en' | 'my';
   widgets: {
     collections: CollectionsWidget;
@@ -138,12 +138,71 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Kelola semua tenant (website) dalam sistem. Hanya Owner yang bisa mengakses menu ini.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants".
+ */
+export interface Tenant {
+  id: number;
+  /**
+   * Contoh: Logam Mulia Antam
+   */
+  name: string;
+  /**
+   * Contoh: logam-mulia-antam. Tidak boleh ada spasi.
+   */
+  slug: string;
+  isActive?: boolean | null;
+  /**
+   * Tambahkan semua domain yang dipakai tenant ini (termasuk www dan non-www). Index digunakan untuk query cepat.
+   */
+  domains: {
+    /**
+     * Contoh: www.logammulia-antam.com atau localhost:4321
+     */
+    domain: string;
+    id?: string | null;
+  }[];
+  /**
+   * Domain utama untuk canonical URL. Contoh: www.logammulia-antam.com
+   */
+  primaryDomain?: string | null;
+  /**
+   * Warna utama brand. Contoh: #D4AF37
+   */
+  primaryColor?: string | null;
+  primaryDarkColor?: string | null;
+  secondaryColor?: string | null;
+  backgroundDarkColor?: string | null;
+  surfaceDarkColor?: string | null;
+  /**
+   * Default sama dengan primary color
+   */
+  navbarBgColor?: string | null;
+  buttonColor?: string | null;
+  fontFamily?: ('Inter' | 'Poppins' | 'Roboto' | 'Outfit' | 'Plus Jakarta Sans' | 'Nunito') | null;
+  /**
+   * URL untuk trigger rebuild Vercel saat konten berubah.
+   */
+  vercelDeployHookUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
-  roles?: ('admin' | 'editor' | 'customer')[] | null;
+  /**
+   * Owner dapat mengakses semua tenant. Admin hanya bisa akses data tenant-nya.
+   */
+  roles: ('owner' | 'admin' | 'editor' | 'customer')[];
+  /**
+   * Tenant yang dimiliki user ini. Owner tidak perlu isi field ini.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -169,6 +228,7 @@ export interface User {
  */
 export interface Media {
   id: number;
+  tenant?: (number | null) | Tenant;
   alt: string;
   updatedAt: string;
   createdAt: string;
@@ -214,6 +274,10 @@ export interface Media {
  */
 export interface Category {
   id: number;
+  /**
+   * Tenant pemilik kategori ini.
+   */
+  tenant?: (number | null) | Tenant;
   name: string;
   image?: (number | null) | Media;
   /**
@@ -229,6 +293,10 @@ export interface Category {
  */
 export interface Product {
   id: number;
+  /**
+   * Tenant pemilik produk ini.
+   */
+  tenant?: (number | null) | Tenant;
   name: string;
   image: number | Media;
   gallery?:
@@ -253,6 +321,201 @@ export interface Product {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews".
+ */
+export interface Review {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  product: number | Product;
+  userName: string;
+  rating: number;
+  comment: string;
+  /**
+   * Optional testimonial image
+   */
+  image?: (number | null) | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Pengaturan situs per tenant: SEO, kontak, pembayaran, pengiriman.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  /**
+   * Tenant yang dimiliki settings ini.
+   */
+  tenant?: (number | null) | Tenant;
+  logo?: (number | null) | Media;
+  /**
+   * Nama brand untuk Navbar, Footer, dan Copyright
+   */
+  brandName: string;
+  metaTitle: string;
+  metaDescription?: string | null;
+  /**
+   * Gambar OG untuk social sharing. Ukuran ideal 1200x630px. Jika kosong, akan menggunakan gambar default.
+   */
+  ogImage?: (number | null) | Media;
+  googleSearchConsoleCode?: string | null;
+  googleAnalyticsId?: string | null;
+  /**
+   * Mulai dengan kode negara, contoh: 6281234567890
+   */
+  whatsappNumber: string;
+  email?: string | null;
+  address?: string | null;
+  /**
+   * Teks singkat di bagian footer.
+   */
+  footerAbout?: string | null;
+  shippingMethods?:
+    | {
+        name: string;
+        price: number;
+        id?: string | null;
+      }[]
+    | null;
+  paymentChannels?:
+    | {
+        bankName: string;
+        accountName: string;
+        accountNumber: string;
+        logo?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Contoh: https://facebook.com/namapage
+   */
+  facebook?: string | null;
+  /**
+   * Contoh: https://instagram.com/namaakun
+   */
+  instagram?: string | null;
+  /**
+   * Contoh: https://x.com/namaakun
+   */
+  twitter?: string | null;
+  /**
+   * Contoh: https://tiktok.com/@namaakun
+   */
+  tiktok?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Harga emas live per tenant.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gold-price".
+ */
+export interface GoldPrice {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  currentPrice: number;
+  /**
+   * Harga asli sebelum diskon untuk tampilan coret.
+   */
+  strikePrice?: number | null;
+  discount?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Teks copywriting halaman per tenant.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "copywriting".
+ */
+export interface Copywriting {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  heroTitle: string;
+  servicesDescription: string;
+  advantagesTitle: string;
+  advantages?:
+    | {
+        icon: string;
+        title: string;
+        description: string;
+        id?: string | null;
+      }[]
+    | null;
+  whyTitle: string;
+  whySubtitle: string;
+  whyFeatures?:
+    | {
+        icon: string;
+        title: string;
+        description: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Pilih dan urutkan produk yang akan tampil di bagian Unggulan di halaman depan.
+   */
+  featuredProducts?: (number | Product)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles".
+ */
+export interface Article {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  title: string;
+  featuredImage?: (number | null) | Media;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  author?: string | null;
+  publishDate?: string | null;
+  viewCount?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials".
+ */
+export interface Testimonial {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  reviewerName?: string | null;
+  /**
+   * City or Region (e.g., Jakarta, Makassar)
+   */
+  location?: string | null;
+  avatar?: (number | null) | Media;
+  starRating: number;
+  reviewText?: string | null;
+  /**
+   * Photo of the product or testimony
+   */
+  image?: (number | null) | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Transaksi yang dibuat oleh pelanggan saat checkout.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -260,6 +523,10 @@ export interface Product {
  */
 export interface Transaction {
   id: number;
+  /**
+   * Diisi otomatis dari frontend saat checkout.
+   */
+  tenant?: (number | null) | Tenant;
   /**
    * Generated automatically at checkout
    */
@@ -299,76 +566,6 @@ export interface Transaction {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "articles".
- */
-export interface Article {
-  id: number;
-  title: string;
-  featuredImage?: (number | null) | Media;
-  content: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  author?: string | null;
-  publishDate?: string | null;
-  viewCount?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "testimonials".
- */
-export interface Testimonial {
-  id: number;
-  reviewerName?: string | null;
-  /**
-   * City or Region (e.g., Jakarta, Makassar)
-   */
-  location?: string | null;
-  /**
-   * Profile picture of the reviewer
-   */
-  avatar?: (number | null) | Media;
-  starRating: number;
-  reviewText?: string | null;
-  /**
-   * Photo of the product or testimony
-   */
-  image?: (number | null) | Media;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "reviews".
- */
-export interface Review {
-  id: number;
-  product: number | Product;
-  userName: string;
-  rating: number;
-  comment: string;
-  /**
-   * Optional testimonial image
-   */
-  image?: (number | null) | Media;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -392,6 +589,10 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'tenants';
+        value: number | Tenant;
+      } | null)
+    | ({
         relationTo: 'users';
         value: number | User;
       } | null)
@@ -408,8 +609,20 @@ export interface PayloadLockedDocument {
         value: number | Product;
       } | null)
     | ({
-        relationTo: 'transactions';
-        value: number | Transaction;
+        relationTo: 'reviews';
+        value: number | Review;
+      } | null)
+    | ({
+        relationTo: 'site-settings';
+        value: number | SiteSetting;
+      } | null)
+    | ({
+        relationTo: 'gold-price';
+        value: number | GoldPrice;
+      } | null)
+    | ({
+        relationTo: 'copywriting';
+        value: number | Copywriting;
       } | null)
     | ({
         relationTo: 'articles';
@@ -420,8 +633,8 @@ export interface PayloadLockedDocument {
         value: number | Testimonial;
       } | null)
     | ({
-        relationTo: 'reviews';
-        value: number | Review;
+        relationTo: 'transactions';
+        value: number | Transaction;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -467,10 +680,38 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants_select".
+ */
+export interface TenantsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  isActive?: T;
+  domains?:
+    | T
+    | {
+        domain?: T;
+        id?: T;
+      };
+  primaryDomain?: T;
+  primaryColor?: T;
+  primaryDarkColor?: T;
+  secondaryColor?: T;
+  backgroundDarkColor?: T;
+  surfaceDarkColor?: T;
+  navbarBgColor?: T;
+  buttonColor?: T;
+  fontFamily?: T;
+  vercelDeployHookUrl?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
   roles?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -493,6 +734,7 @@ export interface UsersSelect<T extends boolean = true> {
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  tenant?: T;
   alt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -545,6 +787,7 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "categories_select".
  */
 export interface CategoriesSelect<T extends boolean = true> {
+  tenant?: T;
   name?: T;
   image?: T;
   sortOrder?: T;
@@ -556,6 +799,7 @@ export interface CategoriesSelect<T extends boolean = true> {
  * via the `definition` "products_select".
  */
 export interface ProductsSelect<T extends boolean = true> {
+  tenant?: T;
   name?: T;
   image?: T;
   gallery?:
@@ -578,9 +822,137 @@ export interface ProductsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews_select".
+ */
+export interface ReviewsSelect<T extends boolean = true> {
+  tenant?: T;
+  product?: T;
+  userName?: T;
+  rating?: T;
+  comment?: T;
+  image?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  tenant?: T;
+  logo?: T;
+  brandName?: T;
+  metaTitle?: T;
+  metaDescription?: T;
+  ogImage?: T;
+  googleSearchConsoleCode?: T;
+  googleAnalyticsId?: T;
+  whatsappNumber?: T;
+  email?: T;
+  address?: T;
+  footerAbout?: T;
+  shippingMethods?:
+    | T
+    | {
+        name?: T;
+        price?: T;
+        id?: T;
+      };
+  paymentChannels?:
+    | T
+    | {
+        bankName?: T;
+        accountName?: T;
+        accountNumber?: T;
+        logo?: T;
+        id?: T;
+      };
+  facebook?: T;
+  instagram?: T;
+  twitter?: T;
+  tiktok?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gold-price_select".
+ */
+export interface GoldPriceSelect<T extends boolean = true> {
+  tenant?: T;
+  currentPrice?: T;
+  strikePrice?: T;
+  discount?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "copywriting_select".
+ */
+export interface CopywritingSelect<T extends boolean = true> {
+  tenant?: T;
+  heroTitle?: T;
+  servicesDescription?: T;
+  advantagesTitle?: T;
+  advantages?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  whyTitle?: T;
+  whySubtitle?: T;
+  whyFeatures?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  featuredProducts?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles_select".
+ */
+export interface ArticlesSelect<T extends boolean = true> {
+  tenant?: T;
+  title?: T;
+  featuredImage?: T;
+  content?: T;
+  author?: T;
+  publishDate?: T;
+  viewCount?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials_select".
+ */
+export interface TestimonialsSelect<T extends boolean = true> {
+  tenant?: T;
+  reviewerName?: T;
+  location?: T;
+  avatar?: T;
+  starRating?: T;
+  reviewText?: T;
+  image?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "transactions_select".
  */
 export interface TransactionsSelect<T extends boolean = true> {
+  tenant?: T;
   orderId?: T;
   status?: T;
   customerDetails?:
@@ -608,47 +980,6 @@ export interface TransactionsSelect<T extends boolean = true> {
   paymentProofUrl?: T;
   trackingNumber?: T;
   supabaseUserId?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "articles_select".
- */
-export interface ArticlesSelect<T extends boolean = true> {
-  title?: T;
-  featuredImage?: T;
-  content?: T;
-  author?: T;
-  publishDate?: T;
-  viewCount?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "testimonials_select".
- */
-export interface TestimonialsSelect<T extends boolean = true> {
-  reviewerName?: T;
-  location?: T;
-  avatar?: T;
-  starRating?: T;
-  reviewText?: T;
-  image?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "reviews_select".
- */
-export interface ReviewsSelect<T extends boolean = true> {
-  product?: T;
-  userName?: T;
-  rating?: T;
-  comment?: T;
-  image?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -691,183 +1022,6 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings".
- */
-export interface SiteSetting {
-  id: number;
-  logo?: (number | null) | Media;
-  /**
-   * Brand name for Navbar, Footer, and Copyright
-   */
-  brandName: string;
-  metaTitle: string;
-  metaDescription?: string | null;
-  /**
-   * Copywriting for the About Us section in the Footer
-   */
-  footerAbout?: string | null;
-  /**
-   * Global WhatsApp number (start with country code, e.g., 62812...)
-   */
-  whatsappNumber: string;
-  email: string;
-  address?: string | null;
-  googleSearchConsoleCode?: string | null;
-  googleAnalyticsId?: string | null;
-  shippingMethods?:
-    | {
-        name: string;
-        price: number;
-        id?: string | null;
-      }[]
-    | null;
-  paymentChannels?:
-    | {
-        bankName: string;
-        accountName: string;
-        accountNumber: string;
-        logo?: (number | null) | Media;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "gold-price".
- */
-export interface GoldPrice {
-  id: number;
-  /**
-   * Current price of 1 gram of gold (in IDR)
-   */
-  currentPrice: number;
-  /**
-   * Original price (harga coret) for display (in IDR)
-   */
-  strikePrice?: number | null;
-  /**
-   * Discount amount (in IDR)
-   */
-  discount?: number | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "copywriting".
- */
-export interface Copywriting {
-  id: number;
-  heroTitle: string;
-  servicesDescription: string;
-  advantagesTitle: string;
-  advantages?:
-    | {
-        icon: string;
-        title: string;
-        description: string;
-        id?: string | null;
-      }[]
-    | null;
-  whyTitle: string;
-  whySubtitle: string;
-  whyFeatures?:
-    | {
-        icon: string;
-        title: string;
-        description: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Pilih dan urutkan produk yang akan tampil di bagian Unggulan di halaman depan.
-   */
-  featuredProducts?: (number | Product)[] | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings_select".
- */
-export interface SiteSettingsSelect<T extends boolean = true> {
-  logo?: T;
-  brandName?: T;
-  metaTitle?: T;
-  metaDescription?: T;
-  footerAbout?: T;
-  whatsappNumber?: T;
-  email?: T;
-  address?: T;
-  googleSearchConsoleCode?: T;
-  googleAnalyticsId?: T;
-  shippingMethods?:
-    | T
-    | {
-        name?: T;
-        price?: T;
-        id?: T;
-      };
-  paymentChannels?:
-    | T
-    | {
-        bankName?: T;
-        accountName?: T;
-        accountNumber?: T;
-        logo?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "gold-price_select".
- */
-export interface GoldPriceSelect<T extends boolean = true> {
-  currentPrice?: T;
-  strikePrice?: T;
-  discount?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "copywriting_select".
- */
-export interface CopywritingSelect<T extends boolean = true> {
-  heroTitle?: T;
-  servicesDescription?: T;
-  advantagesTitle?: T;
-  advantages?:
-    | T
-    | {
-        icon?: T;
-        title?: T;
-        description?: T;
-        id?: T;
-      };
-  whyTitle?: T;
-  whySubtitle?: T;
-  whyFeatures?:
-    | T
-    | {
-        icon?: T;
-        title?: T;
-        description?: T;
-        id?: T;
-      };
-  featuredProducts?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

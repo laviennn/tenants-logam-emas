@@ -1,14 +1,30 @@
 import type { CollectionConfig } from 'payload'
+import { tenantWrite, tenantDelete, isOwner } from '../access/tenantAccess'
 
 export const Media: CollectionConfig = {
   slug: 'media',
+  admin: {
+    group: '📁 Media',
+    defaultColumns: ['filename', 'tenant', 'alt', 'updatedAt'],
+  },
   access: {
     read: () => true,
-    create: ({ req: { user } }) => !!user,
-    update: ({ req: { user } }) => !!user,
-    delete: ({ req: { user } }) => !!user,
+    create: tenantWrite,
+    update: tenantWrite,
+    delete: tenantDelete,
   },
   fields: [
+    {
+      name: 'tenant',
+      type: 'relationship',
+      relationTo: 'tenants',
+      required: false, // Optional since some media is shared (OG images, logos)
+      index: true,
+      label: 'Tenant',
+      admin: {
+        condition: (_: any, { user }: any) => isOwner(user),
+      },
+    },
     {
       name: 'alt',
       type: 'text',

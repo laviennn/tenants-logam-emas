@@ -1,20 +1,34 @@
 import type { CollectionConfig } from 'payload'
+import { tenantWrite, isOwner } from '../access/tenantAccess'
 
 export const Transactions: CollectionConfig = {
   slug: 'transactions',
   admin: {
     useAsTitle: 'orderId',
     description: 'Transaksi yang dibuat oleh pelanggan saat checkout.',
-    defaultColumns: ['orderId', 'customerDetails_name', 'total', 'status', 'createdAt'],
-    group: 'Penjualan',
+    defaultColumns: ['orderId', 'tenant', 'customerDetails_name', 'total', 'status', 'createdAt'],
+    group: '💼 Penjualan',
   },
   access: {
     read: () => true,
-    create: () => true, // Allows frontend checkout to POST
-    update: ({ req: { user } }) => !!user, // Only admin can update
-    delete: ({ req: { user } }) => !!user,
+    create: () => true, // Frontend checkout posts here
+    update: tenantWrite,
+    delete: tenantWrite,
   },
   fields: [
+    {
+      name: 'tenant',
+      type: 'relationship',
+      relationTo: 'tenants',
+      required: true,
+      index: true,
+      label: 'Tenant',
+      admin: {
+        condition: (_: any, { user }: any) => isOwner(user),
+        readOnly: true,
+        description: 'Diisi otomatis dari frontend saat checkout.',
+      },
+    },
     {
       name: 'orderId',
       type: 'text',
@@ -44,11 +58,7 @@ export const Transactions: CollectionConfig = {
         { name: 'name', type: 'text', label: 'Nama Lengkap' },
         { name: 'email', type: 'email', label: 'Email' },
         { name: 'phone', type: 'text', label: 'No. WhatsApp' },
-        {
-          name: 'address',
-          type: 'textarea',
-          label: 'Alamat Lengkap',
-        },
+        { name: 'address', type: 'textarea', label: 'Alamat Lengkap' },
       ],
     },
     {
@@ -63,34 +73,11 @@ export const Transactions: CollectionConfig = {
         { name: 'priceAtPurchase', type: 'number', label: 'Harga saat beli (Rp)' },
       ],
     },
-    {
-      name: 'shippingMethod',
-      type: 'text',
-      label: 'Jasa Pengiriman',
-    },
-    {
-      name: 'shippingCost',
-      type: 'number',
-      label: 'Ongkos Kirim (Rp)',
-      defaultValue: 0,
-    },
-    {
-      name: 'paymentChannel',
-      type: 'text',
-      label: 'Channel Pembayaran (Bank)',
-    },
-    {
-      name: 'subtotal',
-      type: 'number',
-      label: 'Subtotal (Rp)',
-      required: true,
-    },
-    {
-      name: 'total',
-      type: 'number',
-      label: 'Total Transaksi (Rp)',
-      required: true,
-    },
+    { name: 'shippingMethod', type: 'text', label: 'Jasa Pengiriman' },
+    { name: 'shippingCost', type: 'number', label: 'Ongkos Kirim (Rp)', defaultValue: 0 },
+    { name: 'paymentChannel', type: 'text', label: 'Channel Pembayaran (Bank)' },
+    { name: 'subtotal', type: 'number', label: 'Subtotal (Rp)', required: true },
+    { name: 'total', type: 'number', label: 'Total Transaksi (Rp)', required: true },
     {
       name: 'paymentProofUrl',
       type: 'text',
@@ -113,8 +100,10 @@ export const Transactions: CollectionConfig = {
   hooks: {
     afterChange: [
       async ({ doc }) => {
-        console.log(`[Transactions] New/updated transaction: ${doc.orderId} | Status: ${doc.status} | Total: Rp ${doc.total?.toLocaleString('id-ID')}`);
-      }
-    ]
-  }
+        console.log(
+          `[Transactions] ${doc.orderId} | Status: ${doc.status} | Total: Rp ${doc.total?.toLocaleString('id-ID')}`,
+        )
+      },
+    ],
+  },
 }

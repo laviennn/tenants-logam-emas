@@ -1,23 +1,31 @@
 import type { CollectionConfig } from 'payload'
-// import { triggerVercelRebuild } from '../utils/rebuild'
+import { tenantWrite, isOwner } from '../access/tenantAccess'
 
 export const Reviews: CollectionConfig = {
   slug: 'reviews',
   admin: {
     useAsTitle: 'userName',
-    defaultColumns: ['userName', 'product', 'rating', 'createdAt'],
-  },
-  hooks: {
-    // afterChange: [() => triggerVercelRebuild()],
-    // afterDelete: [() => triggerVercelRebuild()],
+    defaultColumns: ['userName', 'tenant', 'product', 'rating', 'createdAt'],
+    group: '📰 Konten',
   },
   access: {
     read: () => true,
-    create: () => true, // Anyone can submit a review
-    update: ({ req: { user } }) => !!user, // Only admins can update
-    delete: ({ req: { user } }) => !!user, // Only admins can delete
+    create: () => true, // Public can submit reviews
+    update: tenantWrite,
+    delete: tenantWrite,
   },
   fields: [
+    {
+      name: 'tenant',
+      type: 'relationship',
+      relationTo: 'tenants',
+      required: true,
+      index: true,
+      label: 'Tenant',
+      admin: {
+        condition: (_: any, { user }: any) => isOwner(user),
+      },
+    },
     {
       name: 'product',
       type: 'relationship',

@@ -12,13 +12,19 @@ interface Testimonial {
   createdAt: string;
 }
 
+interface Props {
+  tenantId?: number | string;
+}
+
 const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const { tenantId } = Astro.props;
+const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
 
 let testimonials: Testimonial[] = [];
 try {
-  const res = await fetch(`${CMS_URL}/api/testimonials?locale=${lang}&limit=10`, { cache: 'no-store' });
+  const res = await fetch(`${CMS_URL}/api/testimonials?locale=${lang}&limit=10${tenantFilter}`, { cache: 'no-store' });
   if (res.ok) {
     const data = await res.json();
     testimonials = data.docs || [];

@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionTitle from '../SectionTitle.astro';
 import ProductCard from '../ProductCard.astro';
 import { useTranslations } from '../../i18n/utils';
+import { resolveTenant, getSiteSettings, getImageUrl } from '../../lib/cms';
 
 interface Props {
   lang: 'id' | 'en' | 'my';
@@ -13,31 +14,23 @@ const t = useTranslations(lang);
 
 const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
 
-// ── Build Time Fetching (SSG) ──────────────────────────────
+// ── Resolve Tenant (cached) ────────────────────────────────────
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+const tenantId = tenant?.id;
+const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
+const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
+
+// ── Parallel Fetch ─────────────────────────────────────────────
 const [categoriesRes, productsRes] = await Promise.all([
-  fetch(`${CMS_URL}/api/categories?limit=100`, { cache: 'no-store' }),
-  fetch(`${CMS_URL}/api/products?limit=1000&sort=-createdAt`, { cache: 'no-store' })
+  fetch(`${CMS_URL}/api/categories?limit=100${tenantFilter}`, { cache: 'no-store' }),
+  fetch(`${CMS_URL}/api/products?limit=1000&sort=-createdAt${tenantFilter}`, { cache: 'no-store' })
 ]);
 
-const categoriesData = await categoriesRes.json();
-const productsData = await productsRes.json();
+const categoriesData = categoriesRes.ok ? await categoriesRes.json() : { docs: [] };
+const productsData = productsRes.ok ? await productsRes.json() : { docs: [] };
 
 const categories = categoriesData.docs || [];
-
-const getImageUrl = (image: any, size: string = 'card') => {
-  if (!image) return '/img/emas_hero.jpeg';
-  let url = image.sizes?.[size]?.url || image.url;
-  if (!url) return '/img/emas_hero.jpeg';
-
-  if (url.startsWith('/api/media/file/')) {
-    const filename = url.split('/').pop();
-    const projectRef = 'gonlvunbqxfwogpnncdn'; 
-    return `https://${projectRef}.supabase.co/storage/v1/object/public/media/${filename}`;
-  }
-
-  if (url.startsWith('http')) return url;
-  return `${CMS_URL}${url}`;
-};
 
 const allProducts = (productsData.docs || []).map((p: any) => ({
   id: p.id,
@@ -46,13 +39,13 @@ const allProducts = (productsData.docs || []).map((p: any) => ({
   strikePrice: p.strikePrice,
   rating: p.rating || 5,
   soldCount: p.soldCount || 0,
-  category: String(p.category?.id || p.category || ''), 
+  category: String(p.category?.id || p.category || ''),
   image: getImageUrl(p.image, 'card'),
   createdAt: p.createdAt
 }));
 ---
 
-<BaseLayout title={t('nav.products')}>
+<BaseLayout title={t('nav.products')} tenantId={tenantId} siteSettings={siteSettings}>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <SectionTitle title={t('nav.products')} subtitle={t('products.subtitle')} i18nTitle="nav.products" i18nSubtitle="products.subtitle" />
     

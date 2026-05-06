@@ -1,12 +1,23 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+import { resolveTenant, getSiteSettings } from '../../lib/cms';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+const tenantId = tenant?.id;
+const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
 ---
 
-<BaseLayout title={t('nav.track')}>
+<!-- Bridge tenantId to client JS -->
+<script is:inline define:vars={{ tenantId }}>
+  window.__tenantId = tenantId;
+</script>
+
+<BaseLayout title={t('nav.track')} tenantId={tenantId} siteSettings={siteSettings}>
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 min-h-[70vh]">
     <!-- Header -->
     <div class="mb-10 text-center md:text-left">
@@ -139,6 +150,9 @@ const t = useTranslations(lang);
   import { supabase } from '../../lib/supabase';
   import { CMS_URL } from '../../lib/cms';
 
+  const tenantIdVar = (window as any).__tenantId;
+  const tenantFilter = tenantIdVar ? `&where[tenant][equals]=${tenantIdVar}` : '';
+
   const form = document.getElementById('track-form');
   const input = document.getElementById('track-input') as HTMLInputElement;
   const btn = document.getElementById('track-btn') as HTMLButtonElement;
@@ -154,7 +168,7 @@ const t = useTranslations(lang);
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       try {
-        const res = await fetch(`${CMS_URL}/api/transactions?where[supabaseUserId][equals]=${session.user.id}&sort=-createdAt&limit=5`);
+        const res = await fetch(`${CMS_URL}/api/transactions?where[supabaseUserId][equals]=${session.user.id}${tenantFilter}&sort=-createdAt&limit=5`);
         const data = await res.json();
         
         if (data.docs && data.docs.length > 0) {
@@ -220,7 +234,7 @@ const t = useTranslations(lang);
 
     try {
       // Query CMS API (or query by orderId or trackingNumber)
-      const res = await fetch(`${CMS_URL}/api/transactions?where[or][0][orderId][equals]=${query}&where[or][1][trackingNumber][equals]=${query}`);
+      const res = await fetch(`${CMS_URL}/api/transactions?where[or][0][orderId][equals]=${query}&where[or][1][trackingNumber][equals]=${query}${tenantFilter}`);
       const data = await res.json();
 
       if (data.docs && data.docs.length > 0) {

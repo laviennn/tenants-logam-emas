@@ -7,7 +7,13 @@ import TestimonialSection from '../TestimonialSection.astro';
 import ArticleSection from '../ArticleSection.astro';
 import WhyChooseUs from '../WhyChooseUs.astro';
 import { useTranslations } from '../../i18n/utils';
-import { getImageUrl, getCopywriting } from '../../lib/cms';
+import {
+  resolveTenant,
+  getSiteSettings,
+  getGoldPrice,
+  getCopywriting,
+  getImageUrl,
+} from '../../lib/cms';
 
 interface Props {
   lang: 'id' | 'en' | 'my';
@@ -16,78 +22,60 @@ interface Props {
 const { lang } = Astro.props;
 const t = useTranslations(lang);
 
-// ── Fetch Data from Payload CMS ─────────────────────────────
 const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
 
-// 1. Fetch Gold Price
-let goldPrice = 1500000;
-let goldPriceData: any = {};
-try {
-  const goldPriceRes = await fetch(`${CMS_URL}/api/globals/gold-price`, { cache: 'no-store' });
-  if (goldPriceRes.ok) {
-    goldPriceData = await goldPriceRes.json();
-    goldPrice = goldPriceData.currentPrice || 1500000;
-  } else {
-    console.error(`[Astro Build] Failed to fetch gold price. Status: ${goldPriceRes.status}`);
-  }
-} catch (e) {
-  console.error('[Astro Build] Error fetching gold price:', e);
-}
+// ── 1. Resolve Tenant (cached) ───────────────────────────────
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+const tenantId = tenant?.id;
 
-// 2. Fetch Featured Products (via Copywriting relationship)
-let featuredProducts = [];
-// 5. Fetch Copywriting
-const copywriting = await getCopywriting(lang);
+// ── 2. Parallel Fetch All Data for Performance ────────────────
+const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
 
-if (copywriting?.featuredProducts && copywriting.featuredProducts.length > 0) {
+const [siteSettings, goldPriceData, copywriting, categoriesData, latestProductsData] =
+  await Promise.all([
+    tenantId ? getSiteSettings(tenantId, lang) : Promise.resolve(null),
+    tenantId ? getGoldPrice(tenantId) : Promise.resolve(null),
+    tenantId ? getCopywriting(tenantId, lang) : Promise.resolve(null),
+    fetch(`${CMS_URL}/api/categories?sort=sortOrder,name&limit=10${tenantFilter}`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { docs: [] })
+      .catch(() => ({ docs: [] })),
+    fetch(`${CMS_URL}/api/products?sort=sortOrder,-createdAt&limit=8${tenantFilter}`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { docs: [] })
+      .catch(() => ({ docs: [] })),
+  ]);
+
+const goldPrice: number = goldPriceData?.currentPrice || 1500000;
+const categories: any[] = categoriesData?.docs || [];
+const latestProducts: any[] = latestProductsData?.docs || [];
+
+// ── 3. Featured Products from Copywriting ─────────────────────
+let featuredProducts: any[] = [];
+if (copywriting?.featuredProducts?.length > 0) {
   featuredProducts = copywriting.featuredProducts;
-} else {
-  // Fallback to legacy isFeatured flag if global is empty
+} else if (tenantId) {
+  // Fallback to isFeatured flag
   try {
-    const featuredRes = await fetch(`${CMS_URL}/api/products?where[isFeatured][equals]=true&limit=6`, { cache: 'no-store' });
+    const featuredRes = await fetch(
+      `${CMS_URL}/api/products?where[isFeatured][equals]=true${tenantFilter}&limit=6`,
+      { cache: 'no-store' }
+    );
     if (featuredRes.ok) {
-      const featuredData = await featuredRes.json();
-      featuredProducts = featuredData.docs || [];
+      const d = await featuredRes.json();
+      featuredProducts = d.docs || [];
     }
   } catch (e) {
-    console.error('[Astro Build] Error fetching fallback featured products:', e);
+    console.error('[Home] Error fetching featured products:', e);
   }
 }
 
-// 3. Fetch Categories (Sorted by sortOrder then name)
-let categories = [];
-try {
-  const categoriesRes = await fetch(`${CMS_URL}/api/categories?sort=sortOrder,name&limit=10`, { cache: 'no-store' });
-  if (categoriesRes.ok) {
-    const categoriesData = await categoriesRes.json();
-    categories = categoriesData.docs || [];
-  } else {
-    console.error(`[Astro Build] Failed to fetch categories. Status: ${categoriesRes.status}`);
-  }
-} catch (e) {
-  console.error('[Astro Build] Error fetching categories:', e);
-}
-
-// 4. Fetch Latest 8 Products (Sorted by sortOrder, then createdAt)
-let latestProducts = [];
-try {
-  const latestProductsRes = await fetch(`${CMS_URL}/api/products?sort=sortOrder,-createdAt&limit=8`, { cache: 'no-store' });
-  if (latestProductsRes.ok) {
-    const latestProductsData = await latestProductsRes.json();
-    latestProducts = latestProductsData.docs || [];
-  } else {
-    console.error(`[Astro Build] Failed to fetch latest products. Status: ${latestProductsRes.status}`);
-  }
-} catch (e) {
-  console.error('[Astro Build] Error fetching latest products:', e);
-}
-
-const formatPrice = (price: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
 
 const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, size);
 ---
 
-<BaseLayout title={t('nav.home')}>
+<BaseLayout title={t('nav.home')} tenantId={tenantId} siteSettings={siteSettings}>
   <!-- Hero Section: Gold Price Card -->
   <section class="py-12 md:py-20 bg-white dark:bg-background-dark">
     <div class="w-full md:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -100,7 +88,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
           <p data-i18n="index.global_market" class="text-gray-400 text-sm mb-6">{t('index.global_market')}</p>
           
           <div class="mb-1 flex flex-col items-center gap-1">
-            {goldPriceData.strikePrice && (
+            {goldPriceData?.strikePrice && (
               <span class="text-sm text-gray-400 line-through font-medium">{formatPrice(goldPriceData.strikePrice)}</span>
             )}
             <span class="text-3xl font-black text-[#d97706]">{formatPrice(goldPrice)}</span>
@@ -297,7 +285,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
         <p data-i18n="index.testimonials_desc" class="text-gray-500 font-medium italic">{t('index.testimonials_desc')}</p>
       </div>
       
-      <TestimonialSection />
+      <TestimonialSection tenantId={tenantId} />
     </div>
   </section>
 
@@ -309,12 +297,12 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
         <p class="text-gray-500 font-medium">{t('news.subtitle')}</p>
       </div>
       
-      <ArticleSection />
+      <ArticleSection tenantId={tenantId} />
     </div>
   </section>
 
   <!-- Mengapa Memilih Kami -->
-  <WhyChooseUs />
+  <WhyChooseUs tenantId={tenantId} copywriting={copywriting} />
 </BaseLayout>
 
 <style>

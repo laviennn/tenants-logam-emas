@@ -2,18 +2,24 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionTitle from '../../components/SectionTitle.astro';
 import { getLangFromUrl, useTranslations } from '../../i18n/utils';
-import { getSiteSettings, getImageUrl } from '../../lib/cms';
+import { resolveTenant, getSiteSettings, getImageUrl } from '../../lib/cms';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
-const siteSettings = (await getSiteSettings(lang)) || {
+
+// ── Resolve Tenant ────────────────────────────────────────
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+const tenantId = tenant?.id;
+
+const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) || {
   shippingMethods: [],
   paymentChannels: [],
   whatsappNumber: '6281234567890',
 };
 ---
 
-<BaseLayout title='Checkout'>
+<BaseLayout title='Checkout' tenantId={tenantId} siteSettings={siteSettings}>
   <div class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12'>
     <SectionTitle
       title={t('checkout.title')}
@@ -602,10 +608,18 @@ const siteSettings = (await getSiteSettings(lang)) || {
   </div>
 </BaseLayout>
 
+<!-- Bridge: pass tenantId from server to client -->
+<script is:inline define:vars={{ tenantId }}>
+  window.__tenantId = tenantId;
+</script>
+
 <script>
   import { cartStore } from '../../lib/cart';
   import { supabase } from '../../lib/supabase';
   import { CMS_URL, getImageUrl } from '../../lib/cms';
+
+  // tenantId passed from server via window.__tenantId
+  const tenantIdVar = (window as any).__tenantId;
 
   console.log('[Checkout] Initializing with CMS_URL:', CMS_URL);
 
@@ -1019,6 +1033,7 @@ const siteSettings = (await getSiteSettings(lang)) || {
         data: { session },
       } = await supabase.auth.getSession();
       const payloadTransaction = {
+        tenant: tenantIdVar || undefined,
         orderId,
         status: uploadError ? 'Pending' : 'Paid',
         customerDetails: {

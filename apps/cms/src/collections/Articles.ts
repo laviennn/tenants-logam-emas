@@ -1,22 +1,31 @@
 import type { CollectionConfig } from 'payload'
-// import { triggerVercelRebuild } from '../utils/rebuild'
+import { tenantWrite, tenantDelete, isOwner } from '../access/tenantAccess'
 
 export const Articles: CollectionConfig = {
   slug: 'articles',
   admin: {
     useAsTitle: 'title',
-  },
-  hooks: {
-    // afterChange: [() => triggerVercelRebuild()],
-    // afterDelete: [() => triggerVercelRebuild()],
+    group: '📰 Konten',
+    defaultColumns: ['title', 'tenant', 'publishDate'],
   },
   access: {
     read: () => true,
-    create: ({ req: { user } }) => !!user,
-    update: ({ req: { user } }) => !!user,
-    delete: ({ req: { user } }) => !!user,
+    create: tenantWrite,
+    update: tenantWrite,
+    delete: tenantDelete,
   },
   fields: [
+    {
+      name: 'tenant',
+      type: 'relationship',
+      relationTo: 'tenants',
+      required: true,
+      index: true,
+      label: 'Tenant',
+      admin: {
+        condition: (_: any, { user }: any) => isOwner(user),
+      },
+    },
     {
       name: 'title',
       type: 'text',
@@ -47,9 +56,7 @@ export const Articles: CollectionConfig = {
       name: 'viewCount',
       type: 'number',
       defaultValue: 0,
-      admin: {
-        readOnly: true,
-      },
+      admin: { readOnly: true },
     },
   ],
 }

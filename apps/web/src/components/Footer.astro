@@ -1,11 +1,17 @@
 ---
 import { getLangFromUrl, useTranslations, localizePath } from '../i18n/utils';
-import { getSiteSettings } from '../lib/cms';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-const siteSettings = await getSiteSettings(lang);
+interface Props {
+  logoUrl?: string;
+  tenantId?: number | string;
+  siteSettings?: any;
+}
+
+// Receive from BaseLayout — no extra network call needed
+const { logoUrl, tenantId, siteSettings } = Astro.props;
 ---
 
 <footer

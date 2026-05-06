@@ -1,17 +1,29 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #D4AF37;
-  --color-primary-dark: #b5952f;
-  --color-secondary: #FFDF00;
-  --color-background-dark: #121212;
-  --color-surface-dark: #1e1e1e;
+  /* Defaults — overridden at runtime by tenant CSS vars injected in BaseLayout <head> */
+  --color-primary: var(--color-primary, #D4AF37);
+  --color-primary-dark: var(--color-primary-dark, #b5952f);
+  --color-secondary: var(--color-secondary, #FFDF00);
+  --color-background-dark: var(--color-background-dark, #121212);
+  --color-surface-dark: var(--color-surface-dark, #1e1e1e);
+  --color-navbar-bg: var(--color-navbar-bg, #D4AF37);
+  --color-button: var(--color-button, #D4AF37);
 }
 
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
   :root {
+    /* Fallback values — replaced by inline :root from BaseLayout */
+    --color-primary: #D4AF37;
+    --color-primary-dark: #b5952f;
+    --color-secondary: #FFDF00;
+    --color-background-dark: #121212;
+    --color-surface-dark: #1e1e1e;
+    --color-navbar-bg: #D4AF37;
+    --color-button: #D4AF37;
+    --font-family-sans: 'Inter', sans-serif;
     --background: #ffffff;
     --foreground: #000000;
   }
@@ -22,5 +34,6 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    font-family: var(--font-family-sans);
   }
 }

@@ -5,7 +5,6 @@ import {
   languages,
   localizePath,
 } from '../i18n/utils';
-import { getSiteSettings } from '../lib/cms';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -20,10 +19,12 @@ const navLinks = [
 
 interface Props {
   logoUrl?: string;
+  tenantId?: number | string;
+  siteSettings?: any;
 }
 
-const { logoUrl } = Astro.props;
-const siteSettings = await getSiteSettings(lang);
+// Receive from BaseLayout — no extra network call needed
+const { logoUrl, tenantId, siteSettings } = Astro.props;
 ---
 
 <nav class='bg-primary dark:bg-primary shadow-md sticky top-0 z-50'>

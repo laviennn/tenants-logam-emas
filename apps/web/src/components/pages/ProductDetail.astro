@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProductCard from '../ProductCard.astro';
 import { useTranslations } from '../../i18n/utils';
-import { getSiteSettings, getImageUrl } from '../../lib/cms';
+import { resolveTenant, getSiteSettings, getImageUrl } from '../../lib/cms';
 
 interface Props {
   product: any;
@@ -11,33 +11,36 @@ interface Props {
 
 const { product, lang } = Astro.props;
 const t = useTranslations(lang);
-const siteSettings = await getSiteSettings(lang);
 const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+
+// ── Resolve Tenant ─────────────────────────────────────────────
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+const tenantId = tenant?.id;
+const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
+const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
 
 const id = product.id;
 
-const reviewsRes = await fetch(
-  `${CMS_URL}/api/reviews?where[product][equals]=${id}&sort=-createdAt&limit=100`,
-  { cache: 'no-store' }
-);
-const reviewsData = await reviewsRes.json();
+// ── Parallel Fetch Reviews + Related Products ─────────────────
+const [reviewsData, relatedData] = await Promise.all([
+  fetch(`${CMS_URL}/api/reviews?where[product][equals]=${id}${tenantFilter}&sort=-createdAt&limit=100`, { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : { docs: [] })
+    .catch(() => ({ docs: [] })),
+  fetch(`${CMS_URL}/api/products?where[category][equals]=${product.category?.id || product.category}&where[id][not_equals]=${id}${tenantFilter}&limit=4`, { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : { docs: [] })
+    .catch(() => ({ docs: [] })),
+]);
+
 const reviews = reviewsData.docs || [];
+const relatedProducts = relatedData.docs || [];
 
 // Calculate Statistics
 const totalReviews = reviews.length;
-const averageRating = totalReviews > 0 
+const averageRating = totalReviews > 0
   ? (reviews.reduce((acc: number, curr: any) => acc + curr.rating, 0) / totalReviews).toFixed(1)
   : '0.0';
 const starCount = Math.floor(Number(averageRating));
-
-// Fetch Related Products (same category)
-const catId = product.category?.id || product.category;
-const relatedRes = await fetch(
-  `${CMS_URL}/api/products?where[category][equals]=${catId}&where[id][not_equals]=${id}&limit=4`,
-  { cache: 'no-store' }
-);
-const relatedData = await relatedRes.json();
-const relatedProducts = relatedData.docs || [];
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('id-ID', {
@@ -48,17 +51,7 @@ const formatPrice = (price: number) =>
 
 const _getImageUrl = (image: any, size: string = 'card') => {
   if (!image) return '/img/emas_hero.jpeg';
-  
-  // ALWAYS USE ORIGINAL URL for reviews/testimonials to avoid cropping
-  let url = image.url; 
-  
-  if (!url) return '/img/emas_hero.jpeg';
-  
-  if (url.startsWith('/api/media/file/')) {
-    const filename = url.split('/').pop();
-    return `https://gonlvunbqxfwogpnncdn.supabase.co/storage/v1/object/public/media/${filename}`;
-  }
-  return url.startsWith('http') ? url : `${CMS_URL}${url}`;
+  return getImageUrl(image, size);
 };
 
 const mainImageUrl = _getImageUrl(product.image, 'large');
@@ -73,7 +66,7 @@ const gallery = [
 const categoryName = product.category?.name || 'Produk';
 ---
 
-<BaseLayout title={product.name}>
+<BaseLayout title={product.name} tenantId={tenantId} siteSettings={siteSettings}>
   <div class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12'>
     <!-- Breadcrumbs -->
     <nav class='flex mb-8 text-sm font-medium' aria-label='Breadcrumb'>

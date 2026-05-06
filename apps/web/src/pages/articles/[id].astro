@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getImageUrl } from '../../lib/cms';
+import { getImageUrl, resolveTenant, getSiteSettings } from '../../lib/cms';
 import LexicalRenderer from '../../components/LexicalRenderer.astro';
 import { getLangFromUrl, useTranslations } from '../../i18n/utils';
 
@@ -8,19 +8,10 @@ export async function getStaticPaths() {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
   
   try {
-    console.log(`[Astro Build] Fetching articles from: ${CMS_URL}/api/articles`);
     const res = await fetch(`${CMS_URL}/api/articles?limit=100`);
-    
-    if (!res.ok) {
-      const text = await res.text();
-      console.error(`[Astro Build] Failed to fetch articles. Status: ${res.status}. Body: ${text.slice(0, 100)}`);
-      return [];
-    }
-
+    if (!res.ok) return [];
     const data = await res.json();
-    const docs = data.docs || [];
-    
-    return docs.map((article: any) => ({
+    return (data.docs || []).map((article: any) => ({
       params: { id: article.id.toString() },
     }));
   } catch (error) {
@@ -33,6 +24,12 @@ const { id } = Astro.params;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+
+// Resolve tenant
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+const tenantId = tenant?.id;
+const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
 
 let article;
 const articleRes = await fetch(`${CMS_URL}/api/articles/${id}?locale=${lang}`, { cache: 'no-store' });
@@ -61,7 +58,7 @@ const currentUrl = Astro.url.href;
 const shareText = encodeURIComponent(article.title);
 ---
 
-<BaseLayout title={article.title}>
+<BaseLayout title={article.title} tenantId={tenantId} siteSettings={siteSettings}>
   <article class="py-20 bg-white dark:bg-background-dark">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Breadcrumb -->

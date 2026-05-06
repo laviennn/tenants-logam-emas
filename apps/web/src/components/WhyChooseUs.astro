@@ -2,12 +2,18 @@
 import { getLangFromUrl } from '../i18n/utils';
 import { getCopywriting } from '../lib/cms';
 
+interface Props {
+  tenantId?: number | string;
+  copywriting?: any;
+}
+
 const lang = getLangFromUrl(Astro.url);
+const { tenantId, copywriting: propCopywriting } = Astro.props;
 
-// Fetch Global Data from the merged Copywriting global
-const copywriting = await getCopywriting(lang);
+// Use pre-fetched copywriting if passed (avoids extra network call from Home page)
+const copywriting = propCopywriting ?? (tenantId ? await getCopywriting(tenantId, lang) : null);
 
-// Use data from copywriting global or fallback to local defaults
+// Use data from copywriting collection or fallback to local defaults
 const title = copywriting?.whyTitle || 'Mengapa Memilih Kami?';
 const subtitle = copywriting?.whySubtitle || 'Kami memiliki keunggulan yang memberikan nilai tambah untuk investasi Anda';
 const features = copywriting?.whyFeatures || [];

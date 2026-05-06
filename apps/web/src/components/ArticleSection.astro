@@ -11,13 +11,19 @@ interface Article {
   viewCount?: number;
 }
 
+interface Props {
+  tenantId?: number | string;
+}
+
 const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const { tenantId } = Astro.props;
+const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
 
 let articles: Article[] = [];
 try {
-  const res = await fetch(`${CMS_URL}/api/articles?locale=${lang}&limit=3&sort=-publishDate`, { cache: 'no-store' });
+  const res = await fetch(`${CMS_URL}/api/articles?locale=${lang}&limit=3&sort=-publishDate${tenantFilter}`, { cache: 'no-store' });
   if (res.ok) {
     const data = await res.json();
     articles = data.docs || [];

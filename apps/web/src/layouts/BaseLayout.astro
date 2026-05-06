@@ -4,25 +4,68 @@ import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import Toast from '../components/Toast.astro';
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
-import { getSiteSettings, getImageUrl } from '../lib/cms';
+import {
+  resolveTenant,
+  getSiteSettings,
+  getImageUrl,
+  buildTenantCssVars,
+} from '../lib/cms';
 
 interface Props {
   title?: string;
   description?: string;
+  /** Pass a pre-resolved tenantId to avoid double-resolving in parent pages */
+  tenantId?: number | string;
+  /** Pass pre-fetched siteSettings to avoid double-fetch */
+  siteSettings?: any;
 }
 
-const { title, description } = Astro.props;
+const { title, description, tenantId: propTenantId, siteSettings: propSiteSettings } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-const siteSettings = await getSiteSettings(lang);
+// ── Tenant Resolution ──────────────────────────────────────────
+// Resolve once per request; use cached result if passed from parent
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = propTenantId ? null : await resolveTenant(hostname);
+const tenantId = propTenantId ?? tenant?.id;
+
+// ── Site Settings ──────────────────────────────────────────────
+const siteSettings = propSiteSettings ?? (tenantId ? await getSiteSettings(tenantId, lang) : null);
 const logoUrl = siteSettings?.logo ? getImageUrl(siteSettings.logo) : '';
 
-const siteTitle = title 
-  ? `${title} | ${siteSettings?.metaTitle || 'Logam Mulia Gold Antam'}` 
+// ── CSS Theme Variables ────────────────────────────────────────
+// Build from Tenants collection (preferred) or fallback
+const themeTenant = tenant ?? (tenantId ? { id: tenantId } : null);
+const cssVars = buildTenantCssVars(
+  // Merge: tenant styling takes precedence, siteSettings is data
+  tenant || {
+    primaryColor: '#D4AF37',
+    primaryDarkColor: '#b5952f',
+    secondaryColor: '#FFDF00',
+    backgroundDarkColor: '#121212',
+    surfaceDarkColor: '#1e1e1e',
+    navbarBgColor: '#D4AF37',
+    buttonColor: '#D4AF37',
+    fontFamily: 'Inter',
+  }
+);
+
+// ── SEO ────────────────────────────────────────────────────────
+const siteTitle = title
+  ? `${title} | ${siteSettings?.metaTitle || 'Logam Mulia Gold Antam'}`
   : (siteSettings?.metaTitle || t('nav.home') + ' | Logam Mulia Gold Antam');
 
 const siteDescription = description || siteSettings?.metaDescription || t('services.desc');
+
+// OG Image: use CMS-uploaded ogImage or fallback to static
+const ogImageUrl = siteSettings?.ogImage
+  ? getImageUrl(siteSettings.ogImage)
+  : new URL('/img/og_image.webp', Astro.url).toString();
+
+// Font for Google Fonts
+const fontName = tenant?.fontFamily || 'Inter';
+const googleFontUrl = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@400;500;600;700;800&display=swap`;
 ---
 
 <!DOCTYPE html>
@@ -32,35 +75,42 @@ const siteDescription = description || siteSettings?.metaDescription || t('servi
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{siteTitle}</title>
     <meta name="description" content={siteDescription} />
-    
+
     <!-- Open Graph -->
     <meta property="og:title" content={siteTitle} />
     <meta property="og:description" content={siteDescription} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={Astro.url} />
-    <meta property="og:image" content={new URL('/img/og_image.webp', Astro.url)} />
+    <meta property="og:image" content={ogImageUrl} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    
+
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={siteTitle} />
     <meta name="twitter:description" content={siteDescription} />
-    <meta name="twitter:image" content={new URL('/img/og_image.webp', Astro.url)} />
-    
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#D4AF37" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <!-- Theme Color (uses tenant primary) -->
+    <meta name="theme-color" content={tenant?.primaryColor || '#D4AF37'} media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content={tenant?.backgroundDarkColor || '#121212'} media="(prefers-color-scheme: dark)" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Fonts — loaded dynamically from tenant fontFamily setting -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href={googleFontUrl} rel="stylesheet" />
+
+    <!-- 🎨 Tenant CSS Custom Properties — injected server-side, no FOUC -->
+    <style is:inline>
+      :root {
+{cssVars}
+      }
+    </style>
 
     {siteSettings?.googleSearchConsoleCode && (
       <meta name="google-site-verification" content={siteSettings.googleSearchConsoleCode} />
@@ -79,17 +129,16 @@ const siteDescription = description || siteSettings?.metaDescription || t('servi
     )}
   </head>
   <body class="bg-gray-50 dark:bg-background-dark font-sans text-gray-900 dark:text-white min-h-screen flex flex-col">
-    <Navbar logoUrl={logoUrl} />
+    <Navbar logoUrl={logoUrl} tenantId={tenantId} siteSettings={siteSettings} />
     <main class="flex-grow">
       <slot />
     </main>
-    <Footer logoUrl={logoUrl} />
+    <Footer logoUrl={logoUrl} tenantId={tenantId} siteSettings={siteSettings} />
     <Toast />
     <script>
       import { langStore } from '../lib/lang';
       import { ui } from '../i18n/ui';
 
-      // Synchronize store with server-detected language
       const serverLang = document.documentElement.lang as any;
       if (serverLang) {
         langStore.set(serverLang);

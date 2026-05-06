@@ -1,50 +1,39 @@
 import type { CollectionConfig } from 'payload'
-// import { triggerVercelRebuild } from '../utils/rebuild'
+import { tenantWrite, tenantDelete, isOwner } from '../access/tenantAccess'
 
 export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'category', 'sortOrder', 'price', 'isFeatured'],
+    defaultColumns: ['name', 'tenant', 'category', 'sortOrder', 'price', 'isFeatured'],
+    group: '🛒 Katalog',
   },
   defaultSort: 'sortOrder',
   hooks: {
-    // afterChange: [() => triggerVercelRebuild()],
-    // afterDelete: [() => triggerVercelRebuild()],
     beforeDelete: [
       async ({ id, req: { payload } }) => {
-        // Clean up featuredProducts relationship in Copywriting global
+        // Clean up featuredProducts relationship in Copywriting collection
         try {
-          const copywriting = await payload.findGlobal({
-            slug: 'copywriting',
+          const copywritings = await payload.find({
+            collection: 'copywriting',
+            where: { 'featuredProducts': { contains: id } },
+            limit: 100,
           })
-
-          if (copywriting?.featuredProducts && copywriting.featuredProducts.length > 0) {
-            const updatedFeatured = copywriting.featuredProducts
+          for (const cw of copywritings.docs) {
+            const updatedFeatured = (cw.featuredProducts || [])
               .map((p: any) => (typeof p === 'object' ? p.id : p))
               .filter((productId: any) => String(productId) !== String(id))
-
-            if (updatedFeatured.length !== copywriting.featuredProducts.length) {
-              await payload.updateGlobal({
-                slug: 'copywriting',
-                data: {
-                  featuredProducts: updatedFeatured,
-                },
-              })
-              console.log(`[Products Hook] Removed product ${id} from Copywriting featured list.`)
-            }
+            await payload.update({
+              collection: 'copywriting',
+              id: cw.id,
+              data: { featuredProducts: updatedFeatured },
+            })
           }
-
-          // 2. Clean up associated Reviews
+          // Clean up associated Reviews
           await payload.delete({
             collection: 'reviews',
-            where: {
-              product: {
-                equals: id,
-              },
-            },
+            where: { product: { equals: id } },
           })
-          console.log(`[Products Hook] Deleted all reviews associated with product ${id}.`)
         } catch (err) {
           console.error(`[Products Hook] Error during product cleanup:`, err)
         }
@@ -53,11 +42,23 @@ export const Products: CollectionConfig = {
   },
   access: {
     read: () => true,
-    create: ({ req: { user } }) => !!user,
-    update: ({ req: { user } }) => !!user,
-    delete: () => true,
+    create: tenantWrite,
+    update: tenantWrite,
+    delete: tenantDelete,
   },
   fields: [
+    {
+      name: 'tenant',
+      type: 'relationship',
+      relationTo: 'tenants',
+      required: true,
+      index: true,
+      label: 'Tenant',
+      admin: {
+        condition: (_: any, { user }: any) => isOwner(user),
+        description: 'Tenant pemilik produk ini.',
+      },
+    },
     {
       name: 'name',
       type: 'text',
@@ -86,7 +87,7 @@ export const Products: CollectionConfig = {
     },
     {
       name: 'description',
-      type: 'textarea', // Using textarea for simplicity in Astro for now, or Rich Text if needed
+      type: 'textarea',
       localized: true,
       label: 'Deskripsi Produk',
     },

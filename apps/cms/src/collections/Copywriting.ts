@@ -1,15 +1,32 @@
-import type { GlobalConfig } from 'payload'
+import type { CollectionConfig } from 'payload'
+import { tenantWrite, tenantDelete, isOwner } from '../access/tenantAccess'
 
-export const Copywriting: GlobalConfig = {
+export const Copywriting: CollectionConfig = {
   slug: 'copywriting',
-  label: 'Copywriting Texts',
   admin: {
-    group: 'Pengaturan Halaman',
+    useAsTitle: 'tenant',
+    group: '⚙️ Pengaturan',
+    defaultColumns: ['tenant', 'updatedAt'],
+    description: 'Teks copywriting halaman per tenant.',
   },
   access: {
     read: () => true,
+    create: tenantWrite,
+    update: tenantWrite,
+    delete: tenantDelete,
   },
   fields: [
+    {
+      name: 'tenant',
+      type: 'relationship',
+      relationTo: 'tenants',
+      required: true,
+      index: true,
+      label: 'Tenant',
+      admin: {
+        condition: (_, { user }: any) => isOwner(user),
+      },
+    },
     {
       type: 'tabs',
       tabs: [
@@ -30,7 +47,8 @@ export const Copywriting: GlobalConfig = {
               label: 'Deskripsi Layanan',
               localized: true,
               required: true,
-              defaultValue: 'Kami menyediakan pelbagai perkhidmatan terbaik untuk memenuhi keperluan pelaburan emas anda dengan profesional dan dipercayai.',
+              defaultValue:
+                'Kami menyediakan pelbagai perkhidmatan terbaik untuk memenuhi keperluan pelaburan emas anda dengan profesional dan dipercayai.',
             },
           ],
         },
@@ -51,19 +69,8 @@ export const Copywriting: GlobalConfig = {
               label: 'Daftar Kelebihan',
               minRows: 1,
               fields: [
-                {
-                  name: 'icon',
-                  type: 'text',
-                  label: 'Ikon (Emoji)',
-                  required: true,
-                },
-                {
-                  name: 'title',
-                  type: 'text',
-                  label: 'Judul',
-                  localized: true,
-                  required: true,
-                },
+                { name: 'icon', type: 'text', label: 'Ikon (Emoji)', required: true },
+                { name: 'title', type: 'text', label: 'Judul', localized: true, required: true },
                 {
                   name: 'description',
                   type: 'textarea',
@@ -92,7 +99,8 @@ export const Copywriting: GlobalConfig = {
               label: 'Sub-judul Why Choose Us',
               localized: true,
               required: true,
-              defaultValue: 'Kami memiliki keunggulan yang memberikan nilai tambah untuk investasi Anda',
+              defaultValue:
+                'Kami memiliki keunggulan yang memberikan nilai tambah untuk investasi Anda',
             },
             {
               name: 'whyFeatures',
@@ -100,12 +108,7 @@ export const Copywriting: GlobalConfig = {
               label: 'Daftar Fitur Why Choose Us',
               minRows: 1,
               fields: [
-                {
-                  name: 'icon',
-                  type: 'text',
-                  label: 'Ikon (Emoji)',
-                  required: true,
-                },
+                { name: 'icon', type: 'text', label: 'Ikon (Emoji)', required: true },
                 {
                   name: 'title',
                   type: 'text',
@@ -134,7 +137,8 @@ export const Copywriting: GlobalConfig = {
               hasMany: true,
               label: 'Produk Unggulan (Bisa Diurutkan)',
               admin: {
-                description: 'Pilih dan urutkan produk yang akan tampil di bagian Unggulan di halaman depan.',
+                description:
+                  'Pilih dan urutkan produk yang akan tampil di bagian Unggulan di halaman depan.',
               },
             },
           ],
