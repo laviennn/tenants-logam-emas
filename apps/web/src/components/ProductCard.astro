@@ -40,7 +40,7 @@ const discountPercent = strikePrice ? Math.round(((strikePrice - price) / strike
   <div class="p-4 flex flex-col flex-grow relative z-20">
     <!-- Title -->
     <div class="block">
-      <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 h-10 group-hover:text-primary transition-colors">{name}</h3>
+      <h3 class="text-sm font-bold text-featured-text mb-2 line-clamp-2 h-10 group-hover:text-primary transition-colors">{name}</h3>
     </div>
     
     <!-- Rating & Sold -->
@@ -60,7 +60,7 @@ const discountPercent = strikePrice ? Math.round(((strikePrice - price) / strike
       {strikePrice && (
         <span class="text-xs text-gray-400 line-through decoration-gray-400">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(strikePrice)}</span>
       )}
-      <div class="text-lg font-black text-[#d97706]">
+      <div class="text-lg font-black text-featured-text">
         {formattedPrice}
       </div>
     </div>
@@ -83,7 +83,7 @@ const discountPercent = strikePrice ? Math.round(((strikePrice - price) / strike
       <button 
         type="button" 
         data-product={JSON.stringify({id, name, price, image})} 
-        class="btn-buy-now w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white text-sm font-bold transition-all shadow-sm"
+        class="btn-buy-now w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cart-button hover:opacity-90 text-white text-sm font-bold transition-all shadow-sm"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>

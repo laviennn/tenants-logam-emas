@@ -182,6 +182,9 @@ export const buildTenantCssVars = (tenant: any): string => {
     '--color-surface-dark': tenant.surfaceDarkColor || '#1e1e1e',
     '--color-navbar-bg': tenant.navbarBgColor || tenant.primaryColor || '#D4AF37',
     '--color-button': tenant.buttonColor || tenant.primaryColor || '#D4AF37',
+    '--color-cart-button': tenant.cartButtonColor || tenant.primaryColor || '#D4AF37',
+    '--color-cart-text': tenant.cartTextColor || '#1e1e1e',
+    '--color-featured-text': tenant.featuredProductTextColor || '#1e1e1e',
     '--font-family-sans': `'${tenant.fontFamily || 'Inter'}', sans-serif`,
   }
 

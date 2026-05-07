@@ -118,6 +118,25 @@ export const Tenants: CollectionConfig = {
               defaultValue: '#D4AF37',
             },
             {
+              name: 'cartButtonColor',
+              type: 'text',
+              label: 'Warna Tombol Keranjang (Hex)',
+              defaultValue: '#D4AF37',
+              admin: { description: 'Warna tombol Add to Cart dan Checkout' }
+            },
+            {
+              name: 'cartTextColor',
+              type: 'text',
+              label: 'Warna Teks Keranjang (Hex)',
+              defaultValue: '#1e1e1e',
+            },
+            {
+              name: 'featuredProductTextColor',
+              type: 'text',
+              label: 'Warna Teks Produk Unggulan (Hex)',
+              defaultValue: '#1e1e1e',
+            },
+            {
               name: 'fontFamily',
               type: 'select',
               label: 'Font Family',
