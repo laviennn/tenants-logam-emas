@@ -30,6 +30,7 @@ export default buildConfig({
   cors: [
     'https://www.logammulia-antam.com',
     'https://logam-muliagold-antam.vercel.app',
+    'https://dev.panel-arvello.space',
     'http://localhost:4321',
     'http://localhost:3000',
     'http://localhost:3001',
