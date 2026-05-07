@@ -40,7 +40,7 @@ const discountPercent = strikePrice ? Math.round(((strikePrice - price) / strike
   <div class="p-4 flex flex-col flex-grow relative z-20">
     <!-- Title -->
     <div class="block">
-      <h3 class="text-sm font-bold text-featured-text mb-2 line-clamp-2 h-10 group-hover:text-primary transition-colors">{name}</h3>
+      <h3 class="text-sm font-bold text-product-title mb-2 line-clamp-2 h-10 group-hover:text-primary transition-colors">{name}</h3>
     </div>
     
     <!-- Rating & Sold -->
@@ -60,7 +60,7 @@ const discountPercent = strikePrice ? Math.round(((strikePrice - price) / strike
       {strikePrice && (
         <span class="text-xs text-gray-400 line-through decoration-gray-400">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(strikePrice)}</span>
       )}
-      <div class="text-lg font-black text-featured-text">
+      <div class="text-lg font-black text-product-price">
         {formattedPrice}
       </div>
     </div>

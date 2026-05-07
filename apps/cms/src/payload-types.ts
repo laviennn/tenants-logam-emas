@@ -186,7 +186,8 @@ export interface Tenant {
    */
   cartButtonColor?: string | null;
   cartTextColor?: string | null;
-  featuredProductTextColor?: string | null;
+  productTitleColor?: string | null;
+  productPriceColor?: string | null;
   fontFamily?: ('Inter' | 'Poppins' | 'Roboto' | 'Outfit' | 'Plus Jakarta Sans' | 'Nunito') | null;
   /**
    * URL untuk trigger rebuild Vercel saat konten berubah.
@@ -716,7 +717,8 @@ export interface TenantsSelect<T extends boolean = true> {
   buttonColor?: T;
   cartButtonColor?: T;
   cartTextColor?: T;
-  featuredProductTextColor?: T;
+  productTitleColor?: T;
+  productPriceColor?: T;
   fontFamily?: T;
   vercelDeployHookUrl?: T;
   updatedAt?: T;
