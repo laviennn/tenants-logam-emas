@@ -1,21 +1,81 @@
-export const triggerVercelRebuild = async () => {
-  const url = process.env.VERCEL_DEPLOY_HOOK_URL;
-  if (!url) {
-    console.log('[Webhook] VERCEL_DEPLOY_HOOK_URL not set, skipping rebuild trigger.');
-    return;
-  }
+import { getPayload } from 'payload'
+import configPromise from '../payload.config'
+
+/**
+ * Triggers a Vercel rebuild using the hook URL stored in the Tenants collection.
+ * If tenantId is provided, it triggers only that tenant's hook.
+ * If no tenantId is provided, it triggers all active tenants' hooks.
+ */
+export const triggerVercelRebuild = async (tenantId?: string | number) => {
+  const payload = await getPayload({ config: configPromise })
 
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-    });
-    
-    if (response.ok) {
-      console.log('[Webhook] Successfully triggered Vercel rebuild.');
+    // 1. Determine which hooks to trigger
+    let hooks: string[] = []
+
+    if (tenantId) {
+      // Trigger specific tenant
+      const tenant = await payload.findByID({
+        collection: 'tenants',
+        id: tenantId,
+        depth: 0,
+      })
+      if (tenant?.vercelDeployHookUrl) {
+        hooks.push(tenant.vercelDeployHookUrl)
+      }
     } else {
-      console.error('[Webhook] Failed to trigger Vercel rebuild:', response.statusText);
+      // Trigger all active tenants with a hook set
+      const tenants = await payload.find({
+        collection: 'tenants',
+        where: {
+          and: [
+            { isActive: { equals: true } },
+            { vercelDeployHookUrl: { exists: true } },
+            { vercelDeployHookUrl: { not_equals: '' } },
+          ],
+        },
+        limit: 100,
+        depth: 0,
+      })
+      hooks = tenants.docs.map((t: any) => t.vercelDeployHookUrl).filter(Boolean)
     }
+
+    // 2. Fallback to .env if no tenant hooks found
+    if (hooks.length === 0 && process.env.VERCEL_DEPLOY_HOOK_URL) {
+      console.log('[Webhook] No tenant-specific hooks found, using global .env fallback.')
+      hooks.push(process.env.VERCEL_DEPLOY_HOOK_URL)
+    }
+
+    if (hooks.length === 0) {
+      console.log('[Webhook] No Vercel Deploy Hook URLs found (Payload or .env), skipping.')
+      return
+    }
+
+    // 3. Trigger hooks in parallel
+    console.log(`[Webhook] Triggering ${hooks.length} Vercel rebuild(s)...`)
+    
+    const results = await Promise.all(
+      hooks.map(async (url) => {
+        try {
+          const response = await fetch(url, { method: 'POST' })
+          return { url, ok: response.ok, status: response.status }
+        } catch (err) {
+          return { url, ok: false, error: err }
+        }
+      })
+    )
+
+    results.forEach((res) => {
+      if (res.ok) {
+        console.log(`[Webhook] Successfully triggered: ${res.url}`)
+      } else {
+        console.error(`[Webhook] Failed to trigger: ${res.url}`, res.error || `Status: ${res.status}`)
+      }
+    })
+
+    return results
   } catch (error) {
-    console.error('[Webhook] Error triggering Vercel rebuild:', error);
+    console.error('[Webhook] Error during rebuild trigger process:', error)
+    throw error
   }
-};
+}
