@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import {  tenantWrite, isOwner , assignTenantFromUser } from '../access/tenantAccess'
+import { tenantWrite, isOwner, tenantRead, assignTenantFromUser } from '../access/tenantAccess'
 
 export const Transactions: CollectionConfig = {
   slug: 'transactions',
@@ -10,7 +10,7 @@ export const Transactions: CollectionConfig = {
     group: '💼 Penjualan',
   },
   access: {
-    read: () => true,
+    read: tenantRead,
     create: () => true, // Frontend checkout posts here
     update: tenantWrite,
     delete: tenantWrite,

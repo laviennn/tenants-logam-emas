@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import {  tenantWrite, tenantDelete, isOwner , assignTenantFromUser } from '../access/tenantAccess'
+import { tenantWrite, tenantDelete, isOwner, tenantRead, assignTenantFromUser } from '../access/tenantAccess'
 
 export const Articles: CollectionConfig = {
   slug: 'articles',
@@ -9,7 +9,7 @@ export const Articles: CollectionConfig = {
     defaultColumns: ['title', 'tenant', 'publishDate'],
   },
   access: {
-    read: () => true,
+    read: tenantRead,
     create: tenantWrite,
     update: tenantWrite,
     delete: tenantDelete,

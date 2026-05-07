@@ -36,10 +36,20 @@ export const ownerOnly: Access = ({ req: { user } }) => {
   return !!user && isOwner(user)
 }
 
-/** Read access returning where-clause for tenant isolation */
 export const tenantRead: Access = ({ req: { user } }) => {
-  // Public API reads allowed, but scoped by tenant via frontend query params
-  return true
+  if (!user) return true // Izinkan akses publik (untuk website Astro)
+  if (isOwner(user)) return true // Owner bisa lihat semua
+  
+  return filterByTenant(user) as Where // Admin/Editor hanya bisa lihat tenant mereka
+}
+
+/** Access specifically for the 'Tenants' collection itself */
+export const tenantsRead: Access = ({ req: { user } }) => {
+  if (!user) return true
+  if (isOwner(user)) return true
+  
+  const tenantId = typeof user.tenant === 'object' ? user.tenant?.id : user.tenant
+  return { id: { equals: tenantId } }
 }
 
 /** Write access: must be owner OR admin of that tenant */
