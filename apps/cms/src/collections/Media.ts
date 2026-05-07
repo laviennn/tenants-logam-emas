@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { tenantWrite, tenantDelete, isOwner, tenantRead, assignTenantFromUser } from '../access/tenantAccess'
+import { anyAuthenticated, isOwner } from '../access/tenantAccess'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -8,10 +8,10 @@ export const Media: CollectionConfig = {
     defaultColumns: ['filename', 'tenant', 'alt', 'updatedAt'],
   },
   access: {
-    read: tenantRead,
-    create: tenantWrite,
-    update: tenantWrite,
-    delete: tenantDelete,
+    read: () => true, // Publik bisa baca, admin bisa lihat semua
+    create: anyAuthenticated,
+    update: anyAuthenticated,
+    delete: anyAuthenticated,
   },
   fields: [
     {
@@ -21,9 +21,8 @@ export const Media: CollectionConfig = {
       required: false, // Optional since some media is shared (OG images, logos)
       index: true,
       label: 'Tenant',
-      hooks: {
-        beforeValidate: [assignTenantFromUser],
-      },
+      // No hooks to force tenant, making it global by default
+      hooks: {},
       admin: {
         condition: (_data: any, _siblingData: any, { user }: any) => isOwner(user),
       },

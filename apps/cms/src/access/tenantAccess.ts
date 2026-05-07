@@ -67,6 +67,14 @@ export const tenantDelete: Access = ({ req: { user } }) => {
 }
 
 /** 
+ * Access for global collections (like Media) 
+ * Allow any logged-in user to perform actions regardless of their tenant
+ */
+export const anyAuthenticated: Access = ({ req: { user } }) => {
+  return !!user
+}
+
+/** 
  * Field hook to automatically assign the tenant field for Tenant Admins.
  * Owners can set this manually via the UI, so it returns the provided value.
  */
