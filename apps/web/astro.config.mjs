@@ -2,10 +2,12 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 
-// https://astro.build/config
+// Ambil domain dari Env Variable saat build, atau gunakan default untuk lokal
+const SITE_URL = process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
+
 export default defineConfig({
-  site: 'https://www.logam-muliagold-antam.com',
-  output: process.env.NODE_ENV === 'development' ? 'server' : 'static',
+  site: SITE_URL, // Sekarang domain bersifat dinamis
+  output: 'static', // Pastikan tetap static
   vite: {
     plugins: [tailwindcss()],
   },
