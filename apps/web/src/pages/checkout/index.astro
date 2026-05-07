@@ -86,8 +86,8 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
                 />
                 <p
                   id='phone-error'
-                  class='text-red-500 text-[10px] font-bold mt-1 hidden uppercase tracking-wider'>
-                  Format nomor telepon salah (Gunakan 08... atau 628...)
+                  class='text-red-500 text-[11px] font-bold mt-1 hidden uppercase tracking-wider bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-100 dark:border-red-900/30'>
+                  ⚠️ Format nomor salah. Harus diawali 08... atau 62... dan hanya angka.
                 </p>
               </div>
             </div>
@@ -546,6 +546,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
 
       <button
         id='btn-confirm'
+        data-brand={siteSettings.brandName}
         type='button'
         data-i18n='checkout.confirm_wa'
         data-wa={siteSettings.whatsappNumber}
@@ -950,12 +951,17 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
       return;
     }
 
-    const phoneRegex = /^(08|628)[0-9]{8,13}$/;
-    if (!phoneRegex.test(phoneInput.value.replace(/\D/g, ''))) {
+    const phoneVal = phoneInput.value;
+    const phoneRegex = /^(08|62)[0-9]{8,13}$/;
+    
+    if (!phoneRegex.test(phoneVal)) {
       showToast(
-        'Format nomor telepon tidak valid. Gunakan format 08... atau 628... (10-15 digit).',
+        'Format nomor WhatsApp tidak valid. Harus diawali 08... atau 62... (10-15 digit).',
         'warning',
       );
+      phoneInput.focus();
+      const phoneError = document.getElementById('phone-error');
+      phoneError?.classList.remove('hidden');
       return;
     }
 
@@ -1123,7 +1129,8 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
       document.getElementById('shipping-method') as HTMLInputElement
     ).value;
 
-    const waText = `Halo Admin Mulia Gold, saya ingin konfirmasi pembayaran:
+    const brandName = btnConfirm?.dataset.brand || 'Mulia Gold';
+    const waText = `Halo Admin ${brandName}, saya ingin konfirmasi pembayaran:
 
 *Order ID:* ${orderId}
 *Nama Lengkap:* ${name}
@@ -1159,6 +1166,42 @@ ${orderList}
         // Redirect current tab to Track Order
         window.location.href = `/track-order?id=${orderId}`;
       });
+    }
+  });
+  // Real-time Phone Validation
+  const phoneInputEl = document.getElementById('phone') as HTMLInputElement;
+  const phoneErrorEl = document.getElementById('phone-error');
+
+  phoneInputEl?.addEventListener('input', (e) => {
+    const target = e.target as HTMLInputElement;
+    // Bersihkan karakter non-angka
+    const originalValue = target.value;
+    const cleanedValue = originalValue.replace(/\D/g, '');
+    
+    if (originalValue !== cleanedValue) {
+      target.value = cleanedValue;
+    }
+
+    // Validasi format awalan (08 atau 62)
+    const val = target.value;
+    if (val.length >= 2) {
+      if (!val.startsWith('08') && !val.startsWith('62')) {
+        phoneErrorEl?.classList.remove('hidden');
+        target.classList.add('border-red-500', 'ring-red-500');
+      } else {
+        phoneErrorEl?.classList.add('hidden');
+        target.classList.remove('border-red-500', 'ring-red-500');
+      }
+    } else if (val.length > 0) {
+       // Masih mengetik digit pertama, jangan show error dulu kecuali jika digit pertama bukan 0 atau 6
+       if (val !== '0' && val !== '6') {
+         phoneErrorEl?.classList.remove('hidden');
+       } else {
+         phoneErrorEl?.classList.add('hidden');
+       }
+    } else {
+      phoneErrorEl?.classList.add('hidden');
+      target.classList.remove('border-red-500', 'ring-red-500');
     }
   });
 </script>
