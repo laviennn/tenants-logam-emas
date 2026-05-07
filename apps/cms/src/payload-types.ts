@@ -181,6 +181,12 @@ export interface Tenant {
    */
   navbarBgColor?: string | null;
   buttonColor?: string | null;
+  /**
+   * Warna tombol Add to Cart dan Checkout
+   */
+  cartButtonColor?: string | null;
+  cartTextColor?: string | null;
+  featuredProductTextColor?: string | null;
   fontFamily?: ('Inter' | 'Poppins' | 'Roboto' | 'Outfit' | 'Plus Jakarta Sans' | 'Nunito') | null;
   /**
    * URL untuk trigger rebuild Vercel saat konten berubah.
@@ -708,6 +714,9 @@ export interface TenantsSelect<T extends boolean = true> {
   surfaceDarkColor?: T;
   navbarBgColor?: T;
   buttonColor?: T;
+  cartButtonColor?: T;
+  cartTextColor?: T;
+  featuredProductTextColor?: T;
   fontFamily?: T;
   vercelDeployHookUrl?: T;
   updatedAt?: T;

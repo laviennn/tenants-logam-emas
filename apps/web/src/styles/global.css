@@ -9,6 +9,9 @@
   --color-surface-dark: var(--color-surface-dark, #1e1e1e);
   --color-navbar-bg: var(--color-navbar-bg, #D4AF37);
   --color-button: var(--color-button, #D4AF37);
+  --color-cart-button: var(--color-cart-button, #D4AF37);
+  --color-cart-text: var(--color-cart-text, #1e1e1e);
+  --color-featured-text: var(--color-featured-text, #1e1e1e);
 }
 
 @custom-variant dark (&:is(.dark *));
