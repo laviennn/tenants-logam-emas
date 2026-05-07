@@ -23,29 +23,13 @@ import { Copywriting } from './collections/Copywriting'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
+import { dynamicCors } from './utils/dynamicCors'
+
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
-  cors: (origin) => {
-    const whitelist = [
-      'localhost',
-      'vercel.app',
-      'panel-arvello.space',
-      'logammulia-antam.com',
-    ]
-
-    if (!origin) return true
-
-    // Check if the origin matches any of our whitelisted base domains
-    const isWhitelisted = whitelist.some((domain) => origin.includes(domain))
-
-    if (isWhitelisted) return true
-
-    // For multi-tenant production, we allow dynamic origins. 
-    // You can tighten this later by querying the 'tenants' collection if needed.
-    return true
-  },
+  cors: dynamicCors,
   localization: {
     locales: ['id', 'en', 'my'],
     defaultLocale: 'id',
