@@ -53,6 +53,12 @@ export const Media: CollectionConfig = {
       },
     ],
     adminThumbnail: 'thumbnail',
-    mimeTypes: ['image/*'],
+    mimeTypes: [
+      'image/*',
+      'image/svg+xml',
+      'application/xml',
+      'image/x-icon',
+      'image/vnd.microsoft.icon',
+    ],
   },
 }
