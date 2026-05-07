@@ -184,7 +184,8 @@ export const buildTenantCssVars = (tenant: any): string => {
     '--color-button': tenant.buttonColor || tenant.primaryColor || '#D4AF37',
     '--color-cart-button': tenant.cartButtonColor || tenant.primaryColor || '#D4AF37',
     '--color-cart-text': tenant.cartTextColor || '#1e1e1e',
-    '--color-featured-text': tenant.featuredProductTextColor || '#1e1e1e',
+    '--color-product-title': tenant.productTitleColor || '#1e1e1e',
+    '--color-product-price': tenant.productPriceColor || '#d97706',
     '--font-family-sans': `'${tenant.fontFamily || 'Inter'}', sans-serif`,
   }
 

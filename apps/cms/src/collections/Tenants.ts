@@ -131,10 +131,16 @@ export const Tenants: CollectionConfig = {
               defaultValue: '#1e1e1e',
             },
             {
-              name: 'featuredProductTextColor',
+              name: 'productTitleColor',
               type: 'text',
-              label: 'Warna Teks Produk Unggulan (Hex)',
+              label: 'Warna Nama Produk (Hex)',
               defaultValue: '#1e1e1e',
+            },
+            {
+              name: 'productPriceColor',
+              type: 'text',
+              label: 'Warna Harga Produk (Hex)',
+              defaultValue: '#d97706',
             },
             {
               name: 'fontFamily',
