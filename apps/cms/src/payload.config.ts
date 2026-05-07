@@ -23,13 +23,11 @@ import { Copywriting } from './collections/Copywriting'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
-import { dynamicCors } from './utils/dynamicCors'
-
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
-  cors: dynamicCors,
+  cors: '*',
   localization: {
     locales: ['id', 'en', 'my'],
     defaultLocale: 'id',
