@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import {  tenantWrite, tenantDelete, isOwner , assignTenantFromUser } from '../access/tenantAccess'
+import { tenantWrite, tenantDelete, isOwner, tenantRead, assignTenantFromUser } from '../access/tenantAccess'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -8,7 +8,7 @@ export const Media: CollectionConfig = {
     defaultColumns: ['filename', 'tenant', 'alt', 'updatedAt'],
   },
   access: {
-    read: () => true,
+    read: tenantRead,
     create: tenantWrite,
     update: tenantWrite,
     delete: tenantDelete,

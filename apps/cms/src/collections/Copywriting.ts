@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import {  tenantWrite, tenantDelete, isOwner , assignTenantFromUser } from '../access/tenantAccess'
+import { tenantWrite, tenantDelete, isOwner, tenantRead, assignTenantFromUser } from '../access/tenantAccess'
 
 export const Copywriting: CollectionConfig = {
   slug: 'copywriting',
@@ -10,7 +10,7 @@ export const Copywriting: CollectionConfig = {
     description: 'Teks copywriting halaman per tenant.',
   },
   access: {
-    read: () => true,
+    read: tenantRead,
     create: tenantWrite,
     update: tenantWrite,
     delete: tenantDelete,

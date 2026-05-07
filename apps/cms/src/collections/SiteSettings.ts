@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import {  tenantWrite, tenantDelete, isOwner, filterByTenant , assignTenantFromUser } from '../access/tenantAccess'
+import {  tenantWrite, tenantDelete, isOwner, tenantRead, filterByTenant, assignTenantFromUser } from '../access/tenantAccess'
 
 export const SiteSettings: CollectionConfig = {
   slug: 'site-settings',
@@ -10,7 +10,7 @@ export const SiteSettings: CollectionConfig = {
     description: 'Pengaturan situs per tenant: SEO, kontak, pembayaran, pengiriman.',
   },
   access: {
-    read: () => true,
+    read: tenantRead,
     create: tenantWrite,
     update: tenantWrite,
     delete: tenantDelete,

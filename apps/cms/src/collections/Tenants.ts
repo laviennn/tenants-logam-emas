@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import {  ownerOnly , assignTenantFromUser } from '../access/tenantAccess'
+import { ownerOnly, tenantsRead, assignTenantFromUser } from '../access/tenantAccess'
 
 export const Tenants: CollectionConfig = {
   slug: 'tenants',
@@ -10,7 +10,7 @@ export const Tenants: CollectionConfig = {
     description: 'Kelola semua tenant (website) dalam sistem. Hanya Owner yang bisa mengakses menu ini.',
   },
   access: {
-    read: () => true,
+    read: tenantsRead,
     create: ownerOnly,
     update: ownerOnly,
     delete: ownerOnly,

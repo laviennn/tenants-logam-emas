@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import {  tenantWrite, isOwner , assignTenantFromUser } from '../access/tenantAccess'
+import { tenantWrite, isOwner, tenantRead, assignTenantFromUser } from '../access/tenantAccess'
 
 export const Reviews: CollectionConfig = {
   slug: 'reviews',
@@ -9,7 +9,7 @@ export const Reviews: CollectionConfig = {
     group: '📰 Konten',
   },
   access: {
-    read: () => true,
+    read: tenantRead,
     create: () => true, // Public can submit reviews
     update: tenantWrite,
     delete: tenantWrite,

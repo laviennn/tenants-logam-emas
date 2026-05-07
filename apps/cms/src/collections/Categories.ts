@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import {  tenantWrite, tenantDelete, isOwner , assignTenantFromUser } from '../access/tenantAccess'
+import { tenantWrite, tenantDelete, isOwner, tenantRead, assignTenantFromUser } from '../access/tenantAccess'
 
 const TENANT_FIELD = {
   name: 'tenant',
@@ -26,7 +26,7 @@ export const Categories: CollectionConfig = {
   },
   defaultSort: 'sortOrder',
   access: {
-    read: () => true,
+    read: tenantRead,
     create: tenantWrite,
     update: tenantWrite,
     delete: tenantDelete,
