@@ -101,7 +101,7 @@ async function duplicateTenant() {
 
   for (const prod of products.docs) {
     const data = sanitizeData(prod);
-    const oldCatId = prod.category;
+    const oldCatId = typeof prod.category === 'object' ? prod.category.id : prod.category;
     data.category = categoryMap.get(oldCatId) || oldCatId;
 
     const newProd = await payload.create({
