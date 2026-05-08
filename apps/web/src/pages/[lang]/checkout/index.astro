@@ -1,0 +1,11 @@
+---
+import Checkout from '../../../components/pages/Checkout.astro';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'my' } },
+  ];
+}
+---
+<Checkout />

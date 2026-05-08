@@ -214,16 +214,32 @@ const allProducts = (productsData.docs || []).map((p: any) => ({
     } else { pagination.classList.add('hidden'); }
   }
 
+  function updateURL() {
+    const url = new URL(window.location.href);
+    if (currentCategory) url.searchParams.set('category', currentCategory);
+    else url.searchParams.delete('category');
+    
+    if (currentSort !== 'price-asc') url.searchParams.set('sort', currentSort);
+    else url.searchParams.delete('sort');
+    
+    if (currentPage > 1) url.searchParams.set('page', currentPage.toString());
+    else url.searchParams.delete('page');
+    
+    window.history.replaceState({}, '', url.toString());
+  }
+
   (window as any).changePage = (p: number) => {
     if (p < 1 || p > Math.ceil(allProducts.filter((x: any) => !currentCategory || String(x.category) === String(currentCategory)).length / ITEMS_PER_PAGE)) return;
     currentPage = p;
     renderProducts();
+    updateURL();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const urlParams = new URLSearchParams(window.location.search);
   currentCategory = urlParams.get('category') || '';
   currentSort = urlParams.get('sort') || 'price-asc';
+  currentPage = parseInt(urlParams.get('page') || '1', 10);
   
   sortSelect.value = currentSort;
   catButtons.forEach(btn => {
@@ -236,11 +252,11 @@ const allProducts = (productsData.docs || []).map((p: any) => ({
     }
   });
 
-  sortSelect.addEventListener('change', (e) => { currentSort = e.target.value; currentPage = 1; renderProducts(); });
+  sortSelect.addEventListener('change', (e) => { currentSort = (e.target as HTMLSelectElement).value; currentPage = 1; renderProducts(); updateURL(); });
 
   catButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      currentCategory = btn.dataset.category;
+      currentCategory = (btn as HTMLElement).dataset.category || '';
       currentPage = 1;
       catButtons.forEach(b => {
         b.classList.remove('bg-gray-900', 'dark:bg-white', 'text-white', 'dark:text-gray-900', 'border-gray-900', 'dark:border-white', 'shadow-md');
@@ -249,6 +265,7 @@ const allProducts = (productsData.docs || []).map((p: any) => ({
       btn.classList.add('bg-gray-900', 'dark:bg-white', 'text-white', 'dark:text-gray-900', 'border-gray-900', 'dark:border-white', 'shadow-md');
       btn.classList.remove('bg-white', 'dark:bg-surface-dark', 'text-gray-600', 'dark:text-gray-400', 'border-gray-200', 'dark:border-gray-800');
       renderProducts();
+      updateURL();
     });
   });
 

@@ -82,13 +82,13 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
       </div>
 
       <!-- Desktop Menu -->
-      <div class='hidden md:flex flex-1 justify-center space-x-6 lg:space-x-8'>
+      <div class='hidden md:flex flex-1 justify-center space-x-4 lg:space-x-6'>
         {
           navLinks.map((link) => (
             <a
               href={localizePath(link.href, lang)}
               data-i18n={link.key}
-              class='text-gray-900 dark:text-gray-900 px-3 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10'>
+              class='text-gray-900 dark:text-gray-900 px-2 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10'>
               {t(link.key as any)}
             </a>
           ))

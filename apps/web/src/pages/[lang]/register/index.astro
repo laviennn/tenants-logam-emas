@@ -1,0 +1,11 @@
+---
+import Register from '../../../components/pages/Register.astro';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'my' } },
+  ];
+}
+---
+<Register />

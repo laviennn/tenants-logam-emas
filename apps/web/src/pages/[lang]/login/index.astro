@@ -1,0 +1,11 @@
+---
+import Login from '../../../components/pages/Login.astro';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'my' } },
+  ];
+}
+---
+<Login />

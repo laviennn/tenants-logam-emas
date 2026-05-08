@@ -1,0 +1,11 @@
+---
+import Cart from '../../../components/pages/Cart.astro';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'my' } },
+  ];
+}
+---
+<Cart />

@@ -1,0 +1,11 @@
+---
+import TrackOrder from '../../../components/pages/TrackOrder.astro';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'my' } },
+  ];
+}
+---
+<TrackOrder />
