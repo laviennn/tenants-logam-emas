@@ -28,6 +28,8 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
       i18nSubtitle='checkout.subtitle'
     />
 
+    <div id='global-toast' class='hidden mb-6 rounded-xl p-4 text-sm font-medium border'></div>
+
     <div
       id='checkout-container'
       class='grid grid-cols-1 lg:grid-cols-12 gap-12 hidden mt-8'>
@@ -486,48 +488,44 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
         </p>
       </div>
 
-      <div
-        class='bg-gray-50 dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-8 text-center flex flex-col items-center'>
-        <img
-          id='bank-logo'
-          src=''
-          alt='Bank Logo'
-          class='h-12 object-contain mb-4 hidden'
-        />
-        <p
-          id='bank-name'
-          class='text-lg font-bold text-gray-900 dark:text-white mb-1'>
-          BCA
-        </p>
-        <div class='flex items-center gap-3 mb-2'>
-          <p
-            id='bank-account'
-            class='text-3xl font-mono font-black tracking-wider text-primary'>
-            1234567890
-          </p>
-          <button
-            id='btn-copy'
-            class='p-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all active:scale-95'
-            title='Salin Nomor Rekening'>
-            <svg
-              class='w-5 h-5'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-              ><path
-                stroke-linecap='round'
-                stroke-linejoin='round'
-                stroke-width='2'
-                d='M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3'
-              ></path></svg
-            >
-          </button>
+      <div class='bg-gray-50 dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4 mb-8'>
+        <!-- Header: Bank Info -->
+        <div class='flex items-center gap-4'>
+          <div class='w-16 h-16 bg-white rounded-xl p-2 flex items-center justify-center border border-gray-100 dark:border-gray-700 flex-shrink-0'>
+            <img id='bank-logo' src='' alt='Bank Logo' class='w-full h-full object-contain hidden' />
+          </div>
+          <div>
+            <p id='bank-name' class='text-lg font-bold text-gray-900 dark:text-white'>BCA</p>
+            <span class='text-xs text-gray-500 uppercase tracking-wider'>Metode Pembayaran</span>
+          </div>
         </div>
-        <p
-          id='bank-acc-name'
-          class='text-sm text-gray-500 uppercase tracking-widest'>
-          A.N. PT Logam Mulia
-        </p>
+        
+        <!-- Divider -->
+        <div class='border-t border-gray-100 dark:border-gray-800 pt-4'>
+          <!-- Account Number Section -->
+          <div class='mb-4'>
+            <p class='text-xs text-gray-500 mb-1'>Nomor Rekening</p>
+            <div class='flex items-center justify-between gap-3'>
+              <p id='bank-account' class='text-xl sm:text-2xl font-mono font-black text-primary tracking-wider'>
+                1234567890
+              </p>
+              <button id='btn-copy' class='flex items-center gap-1 p-2 text-xs text-primary hover:text-primary-dark transition-colors flex-shrink-0' title='Salin Nomor Rekening'>
+                <svg class='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3'></path>
+                </svg>
+                <span>Salin</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Account Name Section -->
+          <div>
+            <p class='text-xs text-gray-500 mb-1'>Atas Nama</p>
+            <p id='bank-acc-name' class='text-base font-semibold text-gray-900 dark:text-white uppercase'>
+              A.N. PT Logam Mulia
+            </p>
+          </div>
+        </div>
       </div>
 
       <div class='space-y-4'>
@@ -628,7 +626,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
   const showToast = (
     message: string,
     type: 'error' | 'success' | 'warning',
-    containerId = 'upload-toast',
+    containerId = 'global-toast',
   ) => {
     const toast = document.getElementById(containerId);
     if (!toast) return;
@@ -843,6 +841,21 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
       return;
     }
 
+    const phoneInput = document.getElementById('phone') as HTMLInputElement;
+    const phoneVal = phoneInput.value;
+    const phoneRegex = /^(08|62)[0-9]{8,13}$/;
+    
+    if (!phoneRegex.test(phoneVal)) {
+      showToast(
+        'Format nomor WhatsApp tidak valid. Harus diawali 08... atau 62... (10-15 digit).',
+        'warning',
+      );
+      phoneInput.focus();
+      const phoneError = document.getElementById('phone-error');
+      phoneError?.classList.remove('hidden');
+      return;
+    }
+
     const email = (document.getElementById('email') as HTMLInputElement).value;
     const password = (document.getElementById('password') as HTMLInputElement)
       ?.value;
@@ -951,19 +964,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
       return;
     }
 
-    const phoneVal = phoneInput.value;
-    const phoneRegex = /^(08|62)[0-9]{8,13}$/;
-    
-    if (!phoneRegex.test(phoneVal)) {
-      showToast(
-        'Format nomor WhatsApp tidak valid. Harus diawali 08... atau 62... (10-15 digit).',
-        'warning',
-      );
-      phoneInput.focus();
-      const phoneError = document.getElementById('phone-error');
-      phoneError?.classList.remove('hidden');
-      return;
-    }
+
 
     const fileInput = document.getElementById(
       'payment-proof',
