@@ -1,5 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { Image, getImage } from 'astro:assets';
+import emasHero from '../../assets/img/emas_hero_11zon.webp';
 import SectionTitle from '../SectionTitle.astro';
 import ProductCard from '../ProductCard.astro';
 import GoldCalculator from '../GoldCalculator.astro';
@@ -28,6 +30,8 @@ const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
 const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
 const tenant = await resolveTenant(hostname);
 const tenantId = tenant?.id;
+
+const optimizedHero = await getImage({ src: emasHero });
 
 // ── 2. Parallel Fetch All Data for Performance ────────────────
 const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
@@ -129,9 +133,11 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
                     </div>
                   )}
 
-                  <img 
+                  <Image 
                     src={_getImageUrl(product.image, 'large')} 
                     alt={product.name}
+                    width={800}
+                    height={600}
                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   
@@ -183,9 +189,11 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
           <a href={localizePath(`/products?category=${cat.id}`, lang)} class="group">
             <div class="relative rounded-2xl overflow-hidden bg-primary aspect-[4/3] mb-3 shadow-md border border-gray-100 dark:border-gray-800">
               {cat.image?.url ? (
-                <img 
+                <Image 
                   src={_getImageUrl(cat.image, 'thumbnail')} 
                   alt={cat.name}
+                  width={400}
+                  height={300}
                   class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                 />
               ) : (
@@ -229,7 +237,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
   </section>
 
   <!-- Layanan Kami -->
-  <section class="relative py-24 bg-gray-900 bg-[url('/img/emas_hero.jpeg')] bg-cover bg-center bg-fixed">
+  <section style={`background-image: url('${optimizedHero.src}')`} class="relative py-24 bg-gray-900 bg-cover bg-center bg-fixed">
     <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-sm"></div>
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
       <h2 data-i18n="hero.services" class="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">

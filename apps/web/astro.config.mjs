@@ -8,6 +8,12 @@ const SITE_URL = process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
 export default defineConfig({
   site: SITE_URL, // Sekarang domain bersifat dinamis
   output: 'static', // Pastikan tetap static
+  build: {
+    inlineStylesheets: 'always',
+  },
+  image: {
+    domains: ['jlkuxbwuuhxtaguqfskz.supabase.co'],
+  },
   vite: {
     plugins: [tailwindcss()],
   },

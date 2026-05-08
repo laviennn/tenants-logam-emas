@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+
 interface Props {
   id: string;
   name: string;
@@ -34,7 +36,7 @@ const discountPercent = strikePrice ? Math.round(((strikePrice - price) / strike
 
   <!-- Image -->
   <div class="relative aspect-square overflow-hidden bg-gray-50 dark:bg-gray-900 p-4 block">
-    <img src={image} alt={name} loading="lazy" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+    <Image src={image} alt={name} width={300} height={300} loading="lazy" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
   </div>
   
   <div class="p-4 flex flex-col flex-grow relative z-20">

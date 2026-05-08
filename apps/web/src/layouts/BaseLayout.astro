@@ -109,7 +109,8 @@ const googleFontUrl = `https://fonts.googleapis.com/css2?family=${fontName.repla
     <!-- Fonts — loaded dynamically from tenant fontFamily setting -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href={googleFontUrl} rel="stylesheet" />
+    <link rel="preload" href={googleFontUrl} as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href={googleFontUrl} /></noscript>
 
     <!-- 🎨 Tenant CSS Custom Properties — injected server-side, no FOUC -->
     <style is:inline set:html={`
