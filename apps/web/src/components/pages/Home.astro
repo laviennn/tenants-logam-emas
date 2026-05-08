@@ -6,7 +6,7 @@ import GoldCalculator from '../GoldCalculator.astro';
 import TestimonialSection from '../TestimonialSection.astro';
 import ArticleSection from '../ArticleSection.astro';
 import WhyChooseUs from '../WhyChooseUs.astro';
-import { useTranslations } from '../../i18n/utils';
+import { useTranslations, localizePath } from '../../i18n/utils';
 import {
   resolveTenant,
   getSiteSettings,
@@ -121,7 +121,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
             return (
               <div class="flex-shrink-0 w-full md:w-[calc(50%-12px)] snap-center">
                 <div class="group relative overflow-hidden rounded-3xl bg-gray-100 dark:bg-gray-800 aspect-[4/5] md:aspect-[16/9] shadow-sm">
-                  <a href={`/products/${product.id}`} class="absolute inset-0 z-10" aria-label={`View ${product.name}`}></a>
+                  <a href={localizePath(`/products/${product.id}`, lang)} class="absolute inset-0 z-10" aria-label={`View ${product.name}`}></a>
                   
                   {discountPercent > 0 && (
                     <div class="absolute top-4 left-4 z-30 bg-red-600 text-white text-xs font-black px-3 py-1 rounded-xl shadow-lg pointer-events-none">
@@ -180,7 +180,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
       
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {categories.map((cat: any) => (
-          <a href={`/products?category=${cat.id}`} class="group">
+          <a href={localizePath(`/products?category=${cat.id}`, lang)} class="group">
             <div class="relative rounded-2xl overflow-hidden bg-primary aspect-[4/3] mb-3 shadow-md border border-gray-100 dark:border-gray-800">
               {cat.image?.url ? (
                 <img 
@@ -207,7 +207,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between mb-8 border-l-4 border-primary pl-4">
         <h2 data-i18n="index.latest_products" class="text-2xl font-bold text-gray-900 dark:text-white">{t('index.latest_products')}</h2>
-        <a href="/products" class="text-primary font-bold text-sm hover:underline flex items-center gap-1">
+        <a href={localizePath('/products', lang)} class="text-primary font-bold text-sm hover:underline flex items-center gap-1">
           <span data-i18n="index.view_all">{t('index.view_all')}</span> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </a>
       </div>

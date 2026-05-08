@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations, localizePath } from '../i18n/utils';
+import { resolveTenant, getSiteSettings } from '../lib/cms';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+const tenantId = tenant?.id;
+const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
+---
+
+<BaseLayout title={t('404.title')} tenantId={tenantId} siteSettings={siteSettings}>
+  <div class="min-h-[70vh] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 text-center">
+    <div class="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center text-5xl mb-6">
+      😕
+    </div>
+    <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4" data-i18n="404.title">
+      {t('404.title')}
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md" data-i18n="404.desc">
+      {t('404.desc')}
+    </p>
+    <a href={localizePath('/', lang)} class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-xl transition-colors shadow-sm inline-flex items-center gap-2" data-i18n="404.back_home">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+      {t('404.back_home')}
+    </a>
+  </div>
+</BaseLayout>

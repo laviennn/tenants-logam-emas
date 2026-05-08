@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionTitle from '../SectionTitle.astro';
+import { getLangFromUrl, useTranslations, localizePath } from '../../i18n/utils';
+
+interface Props {
+  lang?: 'id' | 'en' | 'my';
+}
+
+const { lang: propLang } = Astro.props;
+const lang = propLang || getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={t('nav.register')}>
+  <div class="min-h-[70vh] flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+      <div>
+        <SectionTitle title={t('nav.register')} i18nTitle="nav.register" />
+        <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+          <span data-i18n="login.or">{t('login.or')}</span>
+          <a href={localizePath('/login', lang)} class="font-medium text-primary hover:text-primary-dark" data-i18n="register.login_link">
+            {t('register.login_link')}
+          </a>
+        </p>
+      </div>
+      <form id="register-form" class="mt-8 space-y-6">
+        <!-- Toast Notification Container -->
+        <div id="toast" class="hidden rounded-lg p-4 mb-4 text-sm font-medium"></div>
+
+        <div class="rounded-md shadow-sm space-y-4">
+          <div>
+            <label for="email-address" class="sr-only">Email address</label>
+            <input id="email-address" name="email" type="email" autocomplete="email" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Email address">
+          </div>
+          <div>
+            <label for="password" class="sr-only">Password</label>
+            <input id="password" name="password" type="password" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Password">
+          </div>
+          <div>
+            <label for="confirm-password" class="sr-only">Confirm Password</label>
+            <input id="confirm-password" name="confirm-password" type="password" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder={t('register.confirm_password_placeholder')}>
+          </div>
+        </div>
+
+        <div>
+          <button type="submit" id="btn-register" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-50" data-i18n="register.submit_btn">
+            {t('register.submit_btn')}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+
+  const form = document.getElementById('register-form') as HTMLFormElement;
+  const btnRegister = document.getElementById('btn-register');
+  const toast = document.getElementById('toast');
+
+  const showToast = (message: string, type: 'error' | 'success') => {
+    if(!toast) return;
+    toast.innerText = message;
+    toast.classList.remove('hidden', 'bg-red-50', 'text-red-800', 'border-red-200', 'bg-green-50', 'text-green-800', 'border-green-200');
+    toast.classList.add('border');
+    if(type === 'error') {
+      toast.classList.add('bg-red-50', 'text-red-800', 'border-red-200', 'dark:bg-red-900/30', 'dark:text-red-200');
+    } else {
+      toast.classList.add('bg-green-50', 'text-green-800', 'border-green-200', 'dark:bg-green-900/30', 'dark:text-green-200');
+    }
+  };
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if(btnRegister) {
+      btnRegister.innerText = 'Memproses...';
+      btnRegister.setAttribute('disabled', 'true');
+    }
+
+    const email = (document.getElementById('email-address') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const confirmPassword = (document.getElementById('confirm-password') as HTMLInputElement).value;
+
+    if (password !== confirmPassword) {
+      showToast("Password dan konfirmasi password tidak cocok!", 'error');
+      if(btnRegister) {
+        btnRegister.innerText = 'Daftar Sekarang';
+        btnRegister.removeAttribute('disabled');
+      }
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      showToast('Pendaftaran Gagal: ' + error.message, 'error');
+      if(btnRegister) {
+        btnRegister.innerText = 'Daftar Sekarang';
+        btnRegister.removeAttribute('disabled');
+      }
+    } else {
+      showToast('Pendaftaran berhasil! Mengalihkan...', 'success');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
+    }
+  });
+</script>
