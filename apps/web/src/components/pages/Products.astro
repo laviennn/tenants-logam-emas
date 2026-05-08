@@ -54,7 +54,7 @@ const allProducts = (productsData.docs || []).map((p: any) => ({
       <div id="category-filters" class="flex items-center gap-2 overflow-x-auto pb-4 lg:pb-0 w-full no-scrollbar">
         <button 
           data-category="" 
-          class="cat-filter px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 border bg-gray-900 text-white border-gray-900 shadow-md"
+          class="cat-filter px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 border bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white shadow-md"
           data-i18n="products.all_categories"
         >
           {t('products.all_categories')}
@@ -228,11 +228,11 @@ const allProducts = (productsData.docs || []).map((p: any) => ({
   sortSelect.value = currentSort;
   catButtons.forEach(btn => {
     if (String(btn.dataset.category) === String(currentCategory)) {
-      btn.classList.add('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-md');
-      btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+      btn.classList.add('bg-gray-900', 'dark:bg-white', 'text-white', 'dark:text-gray-900', 'border-gray-900', 'dark:border-white', 'shadow-md');
+      btn.classList.remove('bg-white', 'dark:bg-surface-dark', 'text-gray-600', 'dark:text-gray-400', 'border-gray-200', 'dark:border-gray-800');
     } else {
-      btn.classList.remove('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-md');
-      btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+      btn.classList.remove('bg-gray-900', 'dark:bg-white', 'text-white', 'dark:text-gray-900', 'border-gray-900', 'dark:border-white', 'shadow-md');
+      btn.classList.add('bg-white', 'dark:bg-surface-dark', 'text-gray-600', 'dark:text-gray-400', 'border-gray-200', 'dark:border-gray-800');
     }
   });
 
@@ -243,11 +243,11 @@ const allProducts = (productsData.docs || []).map((p: any) => ({
       currentCategory = btn.dataset.category;
       currentPage = 1;
       catButtons.forEach(b => {
-        b.classList.remove('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-md');
-        b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+        b.classList.remove('bg-gray-900', 'dark:bg-white', 'text-white', 'dark:text-gray-900', 'border-gray-900', 'dark:border-white', 'shadow-md');
+        b.classList.add('bg-white', 'dark:bg-surface-dark', 'text-gray-600', 'dark:text-gray-400', 'border-gray-200', 'dark:border-gray-800');
       });
-      btn.classList.add('bg-gray-900', 'text-white', 'border-gray-900', 'shadow-md');
-      btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+      btn.classList.add('bg-gray-900', 'dark:bg-white', 'text-white', 'dark:text-gray-900', 'border-gray-900', 'dark:border-white', 'shadow-md');
+      btn.classList.remove('bg-white', 'dark:bg-surface-dark', 'text-gray-600', 'dark:text-gray-400', 'border-gray-200', 'dark:border-gray-800');
       renderProducts();
     });
   });
