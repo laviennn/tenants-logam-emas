@@ -91,7 +91,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
             {goldPriceData?.strikePrice && (
               <span class="text-sm text-gray-400 line-through font-medium">{formatPrice(goldPriceData.strikePrice)}</span>
             )}
-            <span class="text-3xl font-black text-[#d97706]">{formatPrice(goldPrice)}</span>
+            <span class="text-3xl font-black text-[var(--color-product-price)]">{formatPrice(goldPrice)}</span>
           </div>
           <p data-i18n="index.per_gram" class="text-gray-400 text-xs uppercase tracking-widest font-medium">{t('index.per_gram')}</p>
         </div>
@@ -193,7 +193,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
                   <span class="text-white font-black text-xl leading-tight uppercase">{cat.name}</span>
                 </div>
               )}
-              <div class="absolute top-0 right-0 w-12 h-12 bg-[#d97706] translate-x-6 -translate-y-6 rotate-45 group-hover:scale-125 transition-transform"></div>
+              <div class="absolute top-0 right-0 w-12 h-12 bg-[var(--color-product-price)] translate-x-6 -translate-y-6 rotate-45 group-hover:scale-125 transition-transform"></div>
             </div>
             <p class="text-center font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">{cat.name}</p>
           </a>

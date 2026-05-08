@@ -4,8 +4,8 @@ dotenv.config();
 
 import { getPayload } from 'payload';
 
-const SOURCE_TENANT_ID = 2;
-const TARGET_TENANT_ID = 4;
+const SOURCE_TENANT_ID = 4;
+const TARGET_TENANT_ID = 5;
 
 /**
  * Pembersihan data: Menghapus field internal Payload agar bisa di-insert sebagai data baru.
@@ -28,10 +28,45 @@ function sanitizeData(data: any): any {
   return data;
 }
 
+async function fetchAll(payload: any, collection: string, where: any) {
+  let allDocs: any[] = [];
+  let page = 1;
+  let hasNextPage = true;
+  
+  while (hasNextPage) {
+    const res = await payload.find({
+      collection,
+      where,
+      limit: 100,
+      page,
+      depth: 0,
+      overrideAccess: true,
+    });
+    allDocs = allDocs.concat(res.docs);
+    hasNextPage = res.hasNextPage;
+    page = res.nextPage;
+  }
+  return allDocs;
+}
+
 async function duplicateTenant() {
   const { default: configPromise } = await import('./src/payload.config');
   const payload = await getPayload({ config: configPromise });
   console.log(`🚀 Memulai duplikasi data dari Tenant ${SOURCE_TENANT_ID} ke Tenant ${TARGET_TENANT_ID}...`);
+
+  // 0. Pembersihan data lama di target tenant (Idempotency)
+  console.log(`🗑️ Membersihkan data lama di Tenant ${TARGET_TENANT_ID}...`);
+  const collectionsToClean = ['site-settings', 'gold-price', 'categories', 'products', 'articles', 'testimonials', 'copywriting'];
+  for (const coll of collectionsToClean) {
+    const existing = await fetchAll(payload, coll, { tenant: { equals: TARGET_TENANT_ID } });
+    for (const doc of existing) {
+      await payload.delete({
+        collection: coll,
+        id: doc.id,
+        overrideAccess: true,
+      });
+    }
+  }
 
   const commonOptions = {
     overrideAccess: true,
@@ -72,14 +107,9 @@ async function duplicateTenant() {
   // 2. Duplikasi Kategori
   console.log('📂 Menduplikasi Kategori...');
   const categoryMap = new Map<number, number>();
-  const categories = await payload.find({ 
-    ...commonOptions,
-    collection: 'categories', 
-    where: { tenant: { equals: SOURCE_TENANT_ID } }, 
-    limit: 100,
-  });
+  const categories = await fetchAll(payload, 'categories', { tenant: { equals: SOURCE_TENANT_ID } });
   
-  for (const cat of categories.docs) {
+  for (const cat of categories) {
     const data = sanitizeData(cat);
     const newCat = await payload.create({
       collection: 'categories',
@@ -92,14 +122,9 @@ async function duplicateTenant() {
   // 3. Duplikasi Produk
   console.log('🛒 Menduplikasi Produk...');
   const productMap = new Map<number, number>();
-  const products = await payload.find({ 
-    ...commonOptions,
-    collection: 'products', 
-    where: { tenant: { equals: SOURCE_TENANT_ID } }, 
-    limit: 500,
-  });
+  const products = await fetchAll(payload, 'products', { tenant: { equals: SOURCE_TENANT_ID } });
 
-  for (const prod of products.docs) {
+  for (const prod of products) {
     const data = sanitizeData(prod);
     const oldCatId = typeof prod.category === 'object' ? prod.category.id : prod.category;
     data.category = categoryMap.get(oldCatId) || oldCatId;
@@ -114,13 +139,8 @@ async function duplicateTenant() {
 
   // 4. Duplikasi Konten
   console.log('📝 Menduplikasi Artikel & Testimoni...');
-  const articles = await payload.find({ 
-    ...commonOptions,
-    collection: 'articles', 
-    where: { tenant: { equals: SOURCE_TENANT_ID } }, 
-    limit: 100,
-  });
-  for (const art of articles.docs) {
+  const articles = await fetchAll(payload, 'articles', { tenant: { equals: SOURCE_TENANT_ID } });
+  for (const art of articles) {
     const data = sanitizeData(art);
     await payload.create({ 
       collection: 'articles', 
@@ -129,13 +149,8 @@ async function duplicateTenant() {
     });
   }
 
-  const testimonials = await payload.find({ 
-    ...commonOptions,
-    collection: 'testimonials', 
-    where: { tenant: { equals: SOURCE_TENANT_ID } }, 
-    limit: 100,
-  });
-  for (const test of testimonials.docs) {
+  const testimonials = await fetchAll(payload, 'testimonials', { tenant: { equals: SOURCE_TENANT_ID } });
+  for (const test of testimonials) {
     const data = sanitizeData(test);
     await payload.create({ 
       collection: 'testimonials', 
@@ -168,7 +183,7 @@ async function duplicateTenant() {
     });
   }
 
-  console.log('✅ Selesai! Semua data berhasil diduplikasi ke Tenant 4.');
+  console.log(`✅ Selesai! Semua data berhasil diduplikasi ke Tenant ${TARGET_TENANT_ID}.`);
   process.exit(0);
 }
 

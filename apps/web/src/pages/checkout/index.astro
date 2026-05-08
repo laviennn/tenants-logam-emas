@@ -408,7 +408,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
             id='btn-proceed'
             type='button'
             data-i18n='checkout.proceed_payment'
-            class='w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 px-4 rounded-xl transition-colors shadow-sm flex items-center justify-center'>
+            class='w-full bg-cart-button hover:opacity-90 text-white font-bold py-3.5 px-4 rounded-xl transition-colors shadow-sm flex items-center justify-center'>
             {t('checkout.proceed_payment')}
             <svg
               class='w-5 h-5 ml-2'
@@ -459,7 +459,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
       <a
         href='/'
         data-i18n='checkout.shop_now'
-        class='inline-flex bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-lg transition-colors'
+        class='inline-flex bg-cart-button hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-colors'
         >{t('checkout.shop_now')}</a
       >
     </div>
