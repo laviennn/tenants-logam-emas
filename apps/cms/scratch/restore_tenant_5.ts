@@ -19,7 +19,7 @@ function sanitizeData(data: any): any {
 }
 
 async function restore() {
-  const { default: configPromise } = await import('/Users/naoo/P.A.R.A/PROJECTS/dev-logam_tenants/apps/cms/src/payload.config');
+  const { default: configPromise } = await import('../src/payload.config');
   const payload = await getPayload({ config: configPromise });
   
   const SOURCE_TENANT_ID = 4;
