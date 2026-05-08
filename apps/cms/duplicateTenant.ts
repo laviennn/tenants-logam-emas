@@ -4,8 +4,8 @@ dotenv.config();
 
 import { getPayload } from 'payload';
 
-const SOURCE_TENANT_ID = 4;
-const TARGET_TENANT_ID = 5;
+const SOURCE_TENANT_ID = 6;
+const TARGET_TENANT_ID = 7;
 
 /**
  * Pembersihan data: Menghapus field internal Payload agar bisa di-insert sebagai data baru.
@@ -56,7 +56,7 @@ async function duplicateTenant() {
 
   // 0. Pembersihan data lama di target tenant (Idempotency)
   console.log(`🗑️ Membersihkan data lama di Tenant ${TARGET_TENANT_ID}...`);
-  const collectionsToClean = ['site-settings', 'gold-price', 'categories', 'products', 'articles', 'testimonials', 'copywriting'] as const;
+  const collectionsToClean = ['site-settings', 'gold-price', 'products', 'categories', 'articles', 'testimonials', 'copywriting'] as const;
   for (const coll of collectionsToClean) {
     const existing = await fetchAll(payload, coll, { tenant: { equals: TARGET_TENANT_ID } });
     for (const doc of existing) {
