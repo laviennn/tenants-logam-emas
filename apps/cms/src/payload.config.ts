@@ -55,7 +55,12 @@ export default buildConfig({
       handler: async (req) => {
         try {
           const { triggerVercelRebuild } = await import('./utils/rebuild')
-          await triggerVercelRebuild()
+          
+          // Get tenant ID from logged in user
+          const user = (req as any).user
+          const tenantId = user && typeof user.tenant === 'object' ? user.tenant?.id : user?.tenant
+          
+          await triggerVercelRebuild(tenantId)
           return Response.json({ success: true })
         } catch (error) {
           return Response.json(
