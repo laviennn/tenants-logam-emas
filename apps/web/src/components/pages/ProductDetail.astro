@@ -56,9 +56,9 @@ const _getImageUrl = (image: any, size: string = 'card') => {
 
 const mainImageUrl = _getImageUrl(product.image, 'large');
 const gallery = [
-  { thumb: _getImageUrl(product.image, 'thumbnail'), large: mainImageUrl },
+  { thumb: _getImageUrl(product.image, ''), large: mainImageUrl }, // Menggunakan gambar original jika thumbnail size bermasalah
   ...(product.gallery || []).map((g: any) => ({
-    thumb: _getImageUrl(g.image, 'thumbnail'),
+    thumb: _getImageUrl(g.image, ''),
     large: _getImageUrl(g.image, 'large'),
   })),
 ];
@@ -94,7 +94,7 @@ const categoryName = product.category?.name || 'Produk';
         {gallery.length > 1 && (
           <div class='flex gap-4 overflow-x-auto pb-2 no-scrollbar'>
             {gallery.map((img, idx) => (
-              <button class:list={['gallery-thumb min-w-[80px] md:min-w-[100px] aspect-square rounded-2xl overflow-hidden border-2 transition-all p-2 bg-white dark:bg-gray-900', idx === 0 ? 'border-primary shadow-md' : 'border-gray-100 dark:border-gray-800 opacity-60 hover:opacity-100']} data-large={img.large}>
+              <button class:list={['gallery-thumb w-20 h-20 md:w-24 md:h-24 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all p-2 bg-white dark:bg-gray-900', idx === 0 ? 'border-primary shadow-md' : 'border-gray-100 dark:border-gray-800 opacity-60 hover:opacity-100']} data-large={img.large}>
                 <img src={img.thumb} alt={`${product.name} ${idx + 1}`} class='w-full h-full object-contain' />
               </button>
             ))}
@@ -123,7 +123,7 @@ const categoryName = product.category?.name || 'Produk';
           <div class='bg-gray-50 dark:bg-gray-900/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 mb-8'>
             <div class='flex flex-col gap-1 mb-2'>
               {product.strikePrice && <span class='text-lg text-gray-400 line-through font-medium'>{formatPrice(product.strikePrice)}</span>}
-              <div class='text-4xl font-black text-[#d97706]'>{formatPrice(product.price)}</div>
+              <div class='text-4xl font-black text-[var(--color-product-price)]'>{formatPrice(product.price)}</div>
             </div>
             <div class='flex items-center gap-2 text-sm'>
               <span class='text-gray-500'>{t('product.stock')}:</span>
@@ -144,7 +144,7 @@ const categoryName = product.category?.name || 'Produk';
             <button id='btn-add-cart' class='flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl border-2 border-primary text-primary font-black hover:bg-primary/5 transition-all'>
               <span data-i18n="index.cart">{t('index.cart')}</span>
             </button>
-            <button id='btn-buy-now' class='flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl bg-[#d97706] hover:bg-[#b45309] text-white font-black transition-all shadow-lg shadow-primary/20'>
+            <button id='btn-buy-now' class='flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl bg-[var(--color-cart-button)] hover:opacity-90 text-white font-black transition-all shadow-lg shadow-primary/20'>
               <span data-i18n="index.buy">{t('index.buy')}</span>
             </button>
           </div>
