@@ -1,10 +1,21 @@
 ---
 import ProductDetail from '../../../components/pages/ProductDetail.astro';
+import { resolveTenant } from '../../../lib/cms';
 
 export async function getStaticPaths() {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+  const SITE_URL = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
+  
+  const url = new URL(SITE_URL);
+  const hostname = url.hostname + (url.port ? `:${url.port}` : '');
+  
+  const tenant = await resolveTenant(hostname);
+  const tenantId = tenant?.id;
+  
   const locales = ['en', 'my'];
-  const res = await fetch(`${CMS_URL}/api/products?limit=1000`);
+  const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
+  
+  const res = await fetch(`${CMS_URL}/api/products?limit=1000${tenantFilter}`);
   const data = await res.json();
   const products = data.docs || [];
   
