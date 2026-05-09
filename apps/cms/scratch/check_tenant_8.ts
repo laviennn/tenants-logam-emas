@@ -12,7 +12,7 @@ async function check() {
       id: 8,
     });
     console.log('✅ Tenant 8 exists:', tenant.name);
-  } catch (e) {
+  } catch (e: any) {
     console.log('❌ Tenant 8 does not exist or error:', e.message);
     return;
   }
