@@ -6,9 +6,21 @@ import { getLangFromUrl, useTranslations } from '../../i18n/utils';
 
 export async function getStaticPaths() {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+  const SITE_URL = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
   
   try {
-    const res = await fetch(`${CMS_URL}/api/articles?limit=100`);
+    const url = new URL(SITE_URL);
+    const hostname = url.hostname + (url.port ? `:${url.port}` : '');
+    
+    const tenant = await resolveTenant(hostname);
+    const tenantId = tenant?.id;
+    const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
+    
+    console.log(`[Astro Build] SITE_URL: ${SITE_URL}`);
+    console.log(`[Astro Build] Resolved Tenant: ${tenant?.name || 'None'} (ID: ${tenantId || 'None'})`);
+    console.log(`[Astro Build] Fetching articles with filter: ${tenantFilter || 'None'}`);
+    
+    const res = await fetch(`${CMS_URL}/api/articles?limit=100${tenantFilter}`);
     if (!res.ok) return [];
     const data = await res.json();
     return (data.docs || []).map((article: any) => ({
