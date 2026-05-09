@@ -13,6 +13,14 @@ interface Props {
 
 // Receive from BaseLayout — no extra network call needed
 const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
+
+const brandName = siteSettings?.brandName || tenantName || 'Logam Mulia';
+const customMessage =
+  siteSettings?.whatsappDefaultMessage ||
+  'saya tertarik untuk bertransaksi emas. Bagaimana prosedur pembelian dan penjualannya?';
+const defaultMessage = `Halo Admin ${brandName}, ${customMessage}`;
+const waLink = `https://wa.me/${siteSettings?.whatsappNumber}?text=${encodeURIComponent(defaultMessage)}`;
+const showWA = siteSettings?.enableFloatingWA && siteSettings?.whatsappNumber;
 ---
 
 <footer
@@ -172,9 +180,21 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
                 ></path></svg
               >
             </div>
-            <span class='text-gray-600 dark:text-gray-400 text-sm'
-              >+{siteSettings?.whatsappNumber || '6281234567890'}</span
-            >
+            {
+              showWA ? (
+                <a
+                  href={waLink}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  class='text-gray-600 dark:text-gray-400 text-sm hover:text-primary transition-colors underline'>
+                  +{siteSettings?.whatsappNumber || '6281234567890'}
+                </a>
+              ) : (
+                <span class='text-gray-600 dark:text-gray-400 text-sm'>
+                  +{siteSettings?.whatsappNumber || '6281234567890'}
+                </span>
+              )
+            }
           </li>
           <li class='flex items-center gap-3'>
             <div
@@ -201,7 +221,9 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
 
       <!-- Newsletter -->
       <div>
-        <h3 class='text-lg font-bold mb-4 text-gray-900 dark:text-white'>Newsletter</h3>
+        <h3 class='text-lg font-bold mb-4 text-gray-900 dark:text-white'>
+          Newsletter
+        </h3>
         <p class='text-gray-600 dark:text-gray-400 text-sm mb-4'>
           Subscribe for latest updates and gold prices.
         </p>
@@ -222,8 +244,10 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
     </div>
   </div>
 
-  <div class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gray-100 dark:border-gray-800 pt-8'>
-    <div class='flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400'>
+  <div
+    class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gray-100 dark:border-gray-800 pt-8'>
+    <div
+      class='flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400'>
       <p>
         © {new Date().getFullYear()}
         {siteSettings?.brandName || tenantName || 'Logam Mulia'}. All rights
