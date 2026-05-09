@@ -17,7 +17,7 @@ async function check() {
     return;
   }
   
-  const collections = ['site-settings', 'gold-price', 'products', 'categories', 'articles', 'testimonials', 'copywriting'];
+  const collections = ['site-settings', 'gold-price', 'products', 'categories', 'articles', 'testimonials', 'copywriting'] as const;
   for (const coll of collections) {
     const res = await payload.find({
       collection: coll,
