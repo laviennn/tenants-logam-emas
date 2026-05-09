@@ -12,8 +12,14 @@ export async function getStaticPaths() {
   const tenant = await resolveTenant(hostname);
   const tenantId = tenant?.id;
   
+  console.log(`[Astro Build] SITE_URL: ${SITE_URL}`);
+  console.log(`[Astro Build] Resolved Hostname: ${hostname}`);
+  console.log(`[Astro Build] Resolved Tenant: ${tenant?.name || 'None'} (ID: ${tenantId || 'None'})`);
+  
   const locales = ['en', 'my'];
   const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
+  
+  console.log(`[Astro Build] Fetching products with filter: ${tenantFilter || 'None'}`);
   
   const res = await fetch(`${CMS_URL}/api/products?limit=1000${tenantFilter}`);
   const data = await res.json();

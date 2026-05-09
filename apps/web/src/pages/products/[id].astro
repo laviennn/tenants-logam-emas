@@ -1,12 +1,24 @@
 ---
 import ProductDetail from '../../components/pages/ProductDetail.astro';
+import { resolveTenant } from '../../lib/cms';
 
 export async function getStaticPaths() {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+  const SITE_URL = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
   
   try {
-    console.log(`[Astro Build] Fetching products from: ${CMS_URL}/api/products`);
-    const res = await fetch(`${CMS_URL}/api/products?limit=1000`);
+    const url = new URL(SITE_URL);
+    const hostname = url.hostname + (url.port ? `:${url.port}` : '');
+    
+    const tenant = await resolveTenant(hostname);
+    const tenantId = tenant?.id;
+    const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
+    
+    console.log(`[Astro Build] SITE_URL: ${SITE_URL}`);
+    console.log(`[Astro Build] Resolved Tenant: ${tenant?.name || 'None'} (ID: ${tenantId || 'None'})`);
+    console.log(`[Astro Build] Fetching products with filter: ${tenantFilter || 'None'}`);
+    
+    const res = await fetch(`${CMS_URL}/api/products?limit=1000${tenantFilter}`);
     
     if (!res.ok) {
       const text = await res.text();
