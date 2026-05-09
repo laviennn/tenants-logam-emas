@@ -382,6 +382,11 @@ export interface SiteSetting {
    * Mulai dengan kode negara, contoh: 6281234567890
    */
   whatsappNumber: string;
+  enableFloatingWA?: boolean | null;
+  /**
+   * Pesan ini akan ditambahkan setelah "Halo Admin {Brand Name}, "
+   */
+  whatsappDefaultMessage?: string | null;
   email?: string | null;
   address?: string | null;
   /**
@@ -412,6 +417,7 @@ export interface SiteSetting {
    * Contoh: https://instagram.com/namaakun
    */
   instagram?: string | null;
+  enableFloatingInstagram?: boolean | null;
   /**
    * Contoh: https://x.com/namaakun
    */
@@ -869,6 +875,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   googleSearchConsoleCode?: T;
   googleAnalyticsId?: T;
   whatsappNumber?: T;
+  enableFloatingWA?: T;
+  whatsappDefaultMessage?: T;
   email?: T;
   address?: T;
   footerAbout?: T;
@@ -890,6 +898,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
       };
   facebook?: T;
   instagram?: T;
+  enableFloatingInstagram?: T;
   twitter?: T;
   tiktok?: T;
   updatedAt?: T;

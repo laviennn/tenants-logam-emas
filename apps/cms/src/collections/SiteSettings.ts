@@ -132,6 +132,21 @@ export const SiteSettings: CollectionConfig = {
               },
             },
             {
+              name: 'enableFloatingWA',
+              type: 'checkbox',
+              defaultValue: true,
+              label: 'Aktifkan Floating WhatsApp',
+            },
+            {
+              name: 'whatsappDefaultMessage',
+              type: 'text',
+              defaultValue: 'saya tertarik untuk bertransaksi emas. Bagaimana prosedur pembelian dan penjualannya?',
+              label: 'Pesan Default WhatsApp (Lanjutan)',
+              admin: {
+                description: 'Pesan ini akan ditambahkan setelah "Halo Admin {Brand Name}, "',
+              },
+            },
+            {
               name: 'email',
               type: 'text',
               required: false,
@@ -208,6 +223,12 @@ export const SiteSettings: CollectionConfig = {
               required: false,
               label: 'URL Instagram',
               admin: { description: 'Contoh: https://instagram.com/namaakun' },
+            },
+            {
+              name: 'enableFloatingInstagram',
+              type: 'checkbox',
+              defaultValue: true,
+              label: 'Aktifkan Floating Instagram',
             },
             {
               name: 'twitter',

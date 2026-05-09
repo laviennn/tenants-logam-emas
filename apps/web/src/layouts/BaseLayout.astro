@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import Navbar from '../components/Navbar.astro';
+import FloatingButtons from '../components/FloatingButtons.astro';
 import Footer from '../components/Footer.astro';
 import Toast from '../components/Toast.astro';
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
@@ -142,6 +143,7 @@ ${cssVars}
     </main>
     <Footer logoUrl={logoUrl} tenantId={tenantId} siteSettings={siteSettings} tenantName={tenant?.name} />
     <Toast />
+    <FloatingButtons siteSettings={siteSettings} />
     <script>
       import { langStore } from '../lib/lang';
       import { ui } from '../i18n/ui';
