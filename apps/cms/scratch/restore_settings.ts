@@ -24,7 +24,7 @@ async function run() {
   
   const SOURCE_TENANT_ID = 6;
   const TARGET_TENANTS = [7, 8];
-  const collections = ['site-settings', 'gold-price'];
+  const collections = ['site-settings', 'gold-price'] as const;
   
   console.log(`🚀 Memulai pemulihan Site Settings & Gold Price dari Tenant ${SOURCE_TENANT_ID} ke Tenant ${TARGET_TENANTS.join(', ')}...`);
   
