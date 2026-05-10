@@ -36,6 +36,7 @@ const t = useTranslations(lang);
           <div>
             <label for="password" class="sr-only">Password</label>
             <input id="password" name="password" type="password" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Password">
+            <p id="password-error" class="text-xs text-red-500 hidden mt-1">Password minimal 6 karakter.</p>
           </div>
           <div>
             <label for="confirm-password" class="sr-only">Confirm Password</label>
@@ -108,6 +109,28 @@ const t = useTranslations(lang);
       setTimeout(() => {
         window.location.href = '/';
       }, 1000);
+    }
+  });
+
+  // Password Validation on Blur
+  const passwordInputEl = document.getElementById('password') as HTMLInputElement;
+  const passwordErrorEl = document.getElementById('password-error');
+  passwordInputEl?.addEventListener('blur', () => {
+    const val = passwordInputEl.value;
+    if (val.length < 6) {
+      passwordErrorEl?.classList.remove('hidden');
+      passwordInputEl.classList.add('border-red-500', 'ring-red-500');
+    } else {
+      passwordErrorEl?.classList.add('hidden');
+      passwordInputEl.classList.remove('border-red-500', 'ring-red-500');
+    }
+  });
+
+  passwordInputEl?.addEventListener('input', () => {
+    const val = passwordInputEl.value;
+    if (val.length >= 6) {
+      passwordErrorEl?.classList.add('hidden');
+      passwordInputEl.classList.remove('border-red-500', 'ring-red-500');
     }
   });
 </script>

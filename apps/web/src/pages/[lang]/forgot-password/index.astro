@@ -1,0 +1,11 @@
+---
+import ForgotPassword from '../../../components/pages/ForgotPassword.astro';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'my' } },
+  ];
+}
+---
+<ForgotPassword />
