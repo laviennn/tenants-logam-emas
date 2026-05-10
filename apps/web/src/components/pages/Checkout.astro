@@ -119,13 +119,19 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
                     class='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
                     >{t('checkout.password')}</label
                   >
-                  <input
-                    type='password'
-                    id='password'
-                    minlength='6'
-                    class='w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-primary'
-                  />
+                  <div class='relative'>
+                    <input
+                      type='password'
+                      id='password'
+                      minlength='6'
+                      class='w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-primary'
+                    />
+                    <button type='button' class='absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 toggle-password' data-target='password'>
+                      <svg class='h-5 w-5 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'></path><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'></path></svg>
+                    </button>
+                  </div>
                   <p class='text-xs text-gray-500 dark:text-gray-400 mt-1'>Minimal 6 karakter.</p>
+                  <p id='password-error' class='text-xs text-red-500 hidden mt-1'>Password minimal 6 karakter.</p>
                 </div>
                 <div>
                   <label
@@ -133,12 +139,17 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
                     class='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
                     >{t('checkout.confirm_password')}</label
                   >
-                  <input
-                    type='password'
-                    id='confirm-password'
-                    minlength='6'
-                    class='w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-primary'
-                  />
+                  <div class='relative'>
+                    <input
+                      type='password'
+                      id='confirm-password'
+                      minlength='6'
+                      class='w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-primary'
+                    />
+                    <button type='button' class='absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 toggle-password' data-target='confirm-password'>
+                      <svg class='h-5 w-5 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'></path><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'></path></svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -609,6 +620,61 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
               Otomatis diarahkan ke halaman lacak pesanan
             </p>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div
+      id='login-modal'
+      class='fixed inset-0 z-[100] flex items-center justify-center px-4 hidden'>
+      <div class='absolute inset-0 bg-gray-900/60 backdrop-blur-sm'></div>
+      <div
+        class='bg-white dark:bg-surface-dark w-full max-w-md rounded-3xl shadow-2xl relative z-10 overflow-hidden transform transition-all'
+        id='login-modal-content'>
+        <div class='p-8'>
+          <div class='text-center mb-6'>
+            <div class='w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl'>
+              ⚠️
+            </div>
+            <h3 class='text-xl font-bold text-gray-900 dark:text-white mb-2' data-i18n="checkout.email_registered_title">
+              {t('checkout.email_registered_title') || 'Email Sudah Terdaftar'}
+            </h3>
+            <p class='text-sm text-gray-500 dark:text-gray-400' data-i18n="checkout.email_registered_desc">
+              {t('checkout.email_registered_desc') || 'Email ini sudah memiliki akun. Silakan masuk untuk melanjutkan pesanan.'}
+            </p>
+          </div>
+
+          <form id='modal-login-form' class='space-y-4'>
+            <!-- Error Container -->
+            <div id='modal-login-error' class='hidden rounded-lg p-3 text-sm font-medium bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800'></div>
+            
+            <div>
+              <label for='modal-email' class='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1' data-i18n="checkout.email">{t('checkout.email')}</label>
+              <input type='email' id='modal-email' readonly class='w-full px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-primary' />
+            </div>
+            <div>
+              <label for='modal-password' class='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1' data-i18n="checkout.password">{t('checkout.password')}</label>
+              <div class='relative'>
+                <input type='password' id='modal-password' required class='w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-primary' />
+                <button type='button' class='absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 toggle-password' data-target='modal-password'>
+                  <!-- Eye Icon -->
+                  <svg class='h-5 w-5 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'></path><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'></path></svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class='flex items-center justify-between'>
+              <a href='/forgot-password' class='text-sm text-primary hover:text-primary-dark' data-i18n="login.forgot_password">{t('login.forgot_password') || 'Lupa Password?'}</a>
+            </div>
+
+            <button type='submit' class='w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-xl transition-colors' data-i18n="nav.login">
+              {t('nav.login')}
+            </button>
+            <button type='button' id='btn-close-login-modal' class='w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold py-3 px-4 rounded-xl transition-colors mt-2' data-i18n="checkout.cancel">
+              {t('checkout.cancel') || 'Batal'}
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -1212,5 +1278,122 @@ ${orderList}
       phoneErrorEl?.classList.add('hidden');
       target.classList.remove('border-red-500', 'ring-red-500');
     }
+  });
+
+  // Phone Validation on Blur
+  phoneInputEl?.addEventListener('blur', () => {
+    const val = phoneInputEl.value;
+    if (val.length > 0 && !val.startsWith('08') && !val.startsWith('62')) {
+      phoneErrorEl?.classList.remove('hidden');
+      phoneInputEl.classList.add('border-red-500', 'ring-red-500');
+    }
+  });
+
+  // Password Validation on Blur
+  const passwordInputEl = document.getElementById('password') as HTMLInputElement;
+  const passwordErrorEl = document.getElementById('password-error');
+  passwordInputEl?.addEventListener('blur', () => {
+    const val = passwordInputEl.value;
+    if (val.length < 6) {
+      passwordErrorEl?.classList.remove('hidden');
+      passwordInputEl.classList.add('border-red-500', 'ring-red-500');
+    } else {
+      passwordErrorEl?.classList.add('hidden');
+      passwordInputEl.classList.remove('border-red-500', 'ring-red-500');
+    }
+  });
+
+  passwordInputEl?.addEventListener('input', () => {
+    const val = passwordInputEl.value;
+    if (val.length >= 6) {
+      passwordErrorEl?.classList.add('hidden');
+      passwordInputEl.classList.remove('border-red-500', 'ring-red-500');
+    }
+  });
+
+  // Real-time Email Check on Blur (RPC)
+  const emailInputEl = document.getElementById('email') as HTMLInputElement;
+  emailInputEl?.addEventListener('blur', async () => {
+    const email = emailInputEl.value;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return;
+
+    console.log('[Checkout] Checking email existence via RPC:', email);
+    const { data: exists, error } = await supabase.rpc('check_email_exists', { email_to_check: email });
+
+    if (error) {
+      console.error('[Checkout] RPC error checking email:', error);
+      return;
+    }
+
+    if (exists) {
+      console.log('[Checkout] Email already exists, showing login modal');
+      const loginModal = document.getElementById('login-modal');
+      const modalContent = document.getElementById('login-modal-content');
+      if (loginModal && modalContent) {
+        loginModal.classList.remove('hidden');
+        setTimeout(() => {
+          modalContent.classList.remove('scale-95', 'opacity-0');
+          modalContent.classList.add('scale-100', 'opacity-100');
+        }, 50);
+        
+        const modalEmailInput = document.getElementById('modal-email') as HTMLInputElement;
+        if (modalEmailInput) modalEmailInput.value = email;
+      }
+    }
+  });
+
+  // Modal Login Form Submission
+  const modalLoginForm = document.getElementById('modal-login-form') as HTMLFormElement;
+  modalLoginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = (document.getElementById('modal-email') as HTMLInputElement).value;
+    const password = (document.getElementById('modal-password') as HTMLInputElement).value;
+    const modalLoginErrorEl = document.getElementById('modal-login-error');
+
+    modalLoginErrorEl?.classList.add('hidden');
+
+    console.log('[Checkout Modal] Attempting login for:', email);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      console.error('[Checkout Modal] Login error:', error);
+      if (modalLoginErrorEl) {
+        modalLoginErrorEl.innerText = 'Gagal masuk: ' + error.message;
+        modalLoginErrorEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    console.log('[Checkout Modal] Login success, hiding modal and reloading session');
+    const loginModal = document.getElementById('login-modal');
+    if (loginModal) loginModal.classList.add('hidden');
+    
+    window.location.reload();
+  });
+
+  // Close Login Modal
+  const btnCloseLoginModal = document.getElementById('btn-close-login-modal');
+  btnCloseLoginModal?.addEventListener('click', () => {
+    const loginModal = document.getElementById('login-modal');
+    if (loginModal) loginModal.classList.add('hidden');
+  });
+
+  // Toggle Password Visibility
+  document.querySelectorAll('.toggle-password').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetId = (btn as HTMLElement).dataset.target;
+      if (!targetId) return;
+      const input = document.getElementById(targetId) as HTMLInputElement;
+      if (!input) return;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = `<svg class='h-5 w-5 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 1.274-4.057-5.064-7-9.542-7 4.477 0 8.268-2.943 9.542-7zm-5.04 1.524c-1.265-.438-2.432-1.112-3.473-1.983m1.42-1.42a3 3 0 114.243 4.243 3 3 0 01-4.243-4.243z'></path><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 3l18 18'></path></svg>`;
+      } else {
+        input.type = 'password';
+        btn.innerHTML = `<svg class='h-5 w-5 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'></path><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'></path></svg>`;
+      }
+    });
   });
 </script>

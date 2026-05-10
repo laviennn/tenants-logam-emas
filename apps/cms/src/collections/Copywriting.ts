@@ -139,6 +139,20 @@ export const Copywriting: CollectionConfig = {
               relationTo: 'products',
               hasMany: true,
               label: 'Produk Unggulan (Bisa Diurutkan)',
+              filterOptions: ({ data, user }: any) => {
+                let tenantId = typeof data?.tenant === 'object' ? data.tenant.id : data?.tenant;
+                
+                if (!tenantId && user?.tenant) {
+                  tenantId = typeof user.tenant === 'object' ? user.tenant.id : user.tenant;
+                }
+                
+                if (tenantId) {
+                  return {
+                    tenant: { equals: tenantId },
+                  }
+                }
+                return true;
+              },
               admin: {
                 description:
                   'Pilih dan urutkan produk yang akan tampil di bagian Unggulan di halaman depan.',
