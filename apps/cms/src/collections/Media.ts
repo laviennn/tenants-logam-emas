@@ -6,6 +6,7 @@ export const Media: CollectionConfig = {
   admin: {
     group: '📁 Media',
     defaultColumns: ['filename', 'tenant', 'alt', 'updatedAt'],
+    hidden: ({ user }) => !isOwner(user),
   },
   access: {
     read: () => true, // Publik bisa baca, admin bisa lihat semua
