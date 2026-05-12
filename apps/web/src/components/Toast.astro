@@ -5,7 +5,7 @@
 <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
 
 <script>
-  function showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
+  function showToast(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') {
     const container = document.getElementById('toast-container');
     if (!container) return;
 
@@ -13,9 +13,12 @@
     // Use direct tailwind classes instead of @apply in <style>
     toast.className = 'pointer-events-auto flex items-center gap-3 bg-white dark:bg-surface-dark border border-gray-100 dark:border-white/5 shadow-2xl rounded-2xl p-4 min-w-[300px] transform transition-all duration-500 translate-y-4 opacity-0';
     
-    const icon = type === 'success' 
-      ? '<div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500 text-xl">✅</div>'
-      : '<div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 text-xl">❌</div>';
+    let icon = '<div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 text-xl">❌</div>';
+    if (type === 'success') {
+      icon = '<div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500 text-xl">✅</div>';
+    } else if (type === 'warning') {
+      icon = '<div class="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-500 text-xl">⚠️</div>';
+    }
 
     toast.innerHTML = `
       ${icon}

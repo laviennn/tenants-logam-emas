@@ -189,7 +189,13 @@ export interface Tenant {
    * Warna tombol Add to Cart dan Checkout
    */
   cartButtonColor?: string | null;
+  /**
+   * Kosongkan untuk otomatis menyesuaikan Light/Dark Mode
+   */
   cartTextColor?: string | null;
+  /**
+   * Kosongkan untuk otomatis menyesuaikan Light/Dark Mode
+   */
   productTitleColor?: string | null;
   productPriceColor?: string | null;
   fontFamily?: ('Inter' | 'Poppins' | 'Roboto' | 'Outfit' | 'Plus Jakarta Sans' | 'Nunito') | null;

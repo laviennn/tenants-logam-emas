@@ -13,6 +13,7 @@
   --color-cart-text: var(--color-cart-text, #1e1e1e);
   --color-product-title: var(--color-product-title, #1e1e1e);
   --color-product-price: var(--color-product-price, #d97706);
+  --font-sans: var(--font-family-sans, "Inter", sans-serif);
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -30,10 +31,12 @@
     --font-family-sans: 'Inter', sans-serif;
     --background: #ffffff;
     --foreground: #000000;
+    --color-text-default: #111827;
   }
   .dark {
     --background: var(--color-background-dark);
     --foreground: #ffffff;
+    --color-text-default: #f9fafb;
   }
   body {
     background-color: var(--background);
