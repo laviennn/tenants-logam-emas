@@ -332,7 +332,10 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
                                 {channel.bankName}
                               </p>
                               <p class='text-gray-500 text-xs truncate'>
-                                {channel.accountNumber} · {channel.accountName}
+                                {channel.accountNumber}
+                              </p>
+                              <p class='text-gray-500 text-xs truncate'>
+                                {channel.accountName}
                               </p>
                             </div>
                             <div class='w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600 flex-shrink-0 payment-radio' />
@@ -541,7 +544,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
           <div>
             <p class='text-xs text-gray-500 mb-1'>Atas Nama</p>
             <p id='bank-acc-name' class='text-base font-semibold text-gray-900 dark:text-white uppercase'>
-              A.N. PT Logam Mulia
+              PT Logam Mulia
             </p>
           </div>
         </div>
@@ -994,7 +997,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
     if (bAccEl) bAccEl.innerText = bankAcc;
 
     const bAccNameEl = document.getElementById('bank-acc-name');
-    if (bAccNameEl) bAccNameEl.innerText = 'A.N. ' + bankAccName;
+    if (bAccNameEl) bAccNameEl.innerText = bankAccName;
 
     const bLogoEl = document.getElementById('bank-logo') as HTMLImageElement;
     if (bLogoEl) {
@@ -1314,6 +1317,7 @@ ${orderList}
   // Real-time Email Check on Blur (RPC)
   const emailInputEl = document.getElementById('email') as HTMLInputElement;
   emailInputEl?.addEventListener('blur', async () => {
+    if (emailInputEl.readOnly) return; // Skip if already logged in
     const email = emailInputEl.value;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return;
