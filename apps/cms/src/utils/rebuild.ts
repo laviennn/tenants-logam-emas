@@ -20,39 +20,40 @@ export const triggerVercelRebuild = async (tenantId?: string | number) => {
         id: tenantId,
         depth: 0,
       })
-      if (tenant?.vercelDeployHookUrl) {
-        hooks.push(tenant.vercelDeployHookUrl)
-      }
+      if (tenant?.vercelDeployHookUrl) hooks.push(tenant.vercelDeployHookUrl)
+      if (tenant?.cloudflareDeployHookUrl) hooks.push(tenant.cloudflareDeployHookUrl)
     } else {
-      // Trigger all active tenants with a hook set
+      // Trigger all active tenants
       const tenants = await payload.find({
         collection: 'tenants',
         where: {
-          and: [
-            { isActive: { equals: true } },
-            { vercelDeployHookUrl: { exists: true } },
-            { vercelDeployHookUrl: { not_equals: '' } },
-          ],
+          isActive: { equals: true }
         },
         limit: 100,
         depth: 0,
       })
-      hooks = tenants.docs.map((t: any) => t.vercelDeployHookUrl).filter(Boolean)
+      
+      // Extract all valid hooks
+      hooks = tenants.docs.flatMap((t: any) => [
+        t.vercelDeployHookUrl, 
+        t.cloudflareDeployHookUrl
+      ]).filter(Boolean)
     }
 
     // 2. Fallback to .env if no tenant hooks found
-    if (hooks.length === 0 && process.env.VERCEL_DEPLOY_HOOK_URL) {
-      console.log('[Webhook] No tenant-specific hooks found, using global .env fallback.')
-      hooks.push(process.env.VERCEL_DEPLOY_HOOK_URL)
+    if (hooks.length === 0) {
+      console.log('[Webhook] No tenant-specific hooks found, using global .env fallback if available.')
+      if (process.env.VERCEL_DEPLOY_HOOK_URL) hooks.push(process.env.VERCEL_DEPLOY_HOOK_URL)
+      if (process.env.CF_PAGES_DEPLOY_HOOK_URL) hooks.push(process.env.CF_PAGES_DEPLOY_HOOK_URL)
     }
 
     if (hooks.length === 0) {
-      console.log('[Webhook] No Vercel Deploy Hook URLs found (Payload or .env), skipping.')
+      console.log('[Webhook] No Deploy Hook URLs found (Payload or .env), skipping.')
       return
     }
 
     // 3. Trigger hooks in parallel
-    console.log(`[Webhook] Triggering ${hooks.length} Vercel rebuild(s)...`)
+    console.log(`[Webhook] Triggering ${hooks.length} deploy hook(s)...`)
     
     const results = await Promise.all(
       hooks.map(async (url) => {

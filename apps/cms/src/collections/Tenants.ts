@@ -170,6 +170,14 @@ export const Tenants: CollectionConfig = {
                 description: 'URL untuk trigger rebuild Vercel saat konten berubah.',
               },
             },
+            {
+              name: 'cloudflareDeployHookUrl',
+              type: 'text',
+              label: 'Cloudflare Deploy Hook URL',
+              admin: {
+                description: 'URL untuk trigger rebuild Cloudflare Pages saat konten berubah.',
+              },
+            },
           ],
         },
       ],
