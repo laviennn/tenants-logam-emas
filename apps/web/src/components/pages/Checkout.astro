@@ -33,7 +33,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
       i18nSubtitle='checkout.subtitle'
     />
 
-    <div id='global-toast' class='hidden mb-6 rounded-xl p-4 text-sm font-medium border'></div>
+
 
     <div
       id='checkout-container'
@@ -284,7 +284,6 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
                 <input
                   type='hidden'
                   id='shipping-method'
-                  required
                 />
                 <input
                   type='hidden'
@@ -352,7 +351,6 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
                 <input
                   type='hidden'
                   id='payment-method'
-                  required
                 />
                 <input
                   type='hidden'
@@ -487,11 +485,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
     <div
       id='upload-section'
       class='hidden max-w-2xl mx-auto bg-white dark:bg-surface-dark p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800 mt-8'>
-      <!-- Toast container for upload section -->
-      <div
-        id='upload-toast'
-        class='hidden mb-6 rounded-xl p-4 text-sm font-medium border'>
-      </div>
+
 
       <div class='text-center mb-8'>
         <h3
@@ -699,42 +693,17 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
 
   console.log('[Checkout] Initializing with CMS_URL:', CMS_URL);
 
-  // ── Toast helper ──────────────────────────────────────────────
+  // ── Toast helper (Delegated to Global Toast.astro) ─────────────
   const showToast = (
     message: string,
     type: 'error' | 'success' | 'warning',
-    containerId = 'global-toast',
+    _ignoredContainerId = '',
   ) => {
-    const toast = document.getElementById(containerId);
-    if (!toast) return;
-    toast.innerText = message;
-    toast.className = 'mb-6 rounded-xl p-4 text-sm font-medium border'; // reset
-    if (type === 'error')
-      toast.classList.add(
-        'bg-red-50',
-        'text-red-800',
-        'border-red-200',
-        'dark:bg-red-900/30',
-        'dark:text-red-200',
-      );
-    if (type === 'success')
-      toast.classList.add(
-        'bg-green-50',
-        'text-green-800',
-        'border-green-200',
-        'dark:bg-green-900/30',
-        'dark:text-green-200',
-      );
-    if (type === 'warning')
-      toast.classList.add(
-        'bg-yellow-50',
-        'text-yellow-800',
-        'border-yellow-200',
-        'dark:bg-yellow-900/30',
-        'dark:text-yellow-200',
-      );
-    toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 6000);
+    window.dispatchEvent(
+      new CustomEvent('cart-toast', {
+        detail: { message, type },
+      }),
+    );
   };
 
   // ── Terminal Logger helper ────────────────────────────────────
@@ -914,7 +883,22 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
   btnProceed?.addEventListener('click', async () => {
     const form = document.getElementById('checkout-form') as HTMLFormElement;
     if (!form.checkValidity()) {
+      showToast('Harap lengkapi seluruh form data pembeli dan alamat pengiriman.', 'warning');
       form.reportValidity();
+      return;
+    }
+
+    const shippingMethodVal = (document.getElementById('shipping-method') as HTMLInputElement)?.value;
+    if (!shippingMethodVal) {
+      showToast('Harap pilih jasa pengiriman terlebih dahulu.', 'warning');
+      document.getElementById('shipping-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const paymentMethodVal = (document.getElementById('payment-method') as HTMLInputElement)?.value;
+    if (!paymentMethodVal) {
+      showToast('Harap pilih channel pembayaran terlebih dahulu.', 'warning');
+      document.getElementById('payment-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 

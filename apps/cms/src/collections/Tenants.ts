@@ -140,13 +140,13 @@ export const Tenants: CollectionConfig = {
               name: 'cartTextColor',
               type: 'text',
               label: 'Warna Teks Keranjang (Hex)',
-              defaultValue: '#1e1e1e',
+              admin: { description: 'Kosongkan untuk otomatis menyesuaikan Light/Dark Mode' },
             },
             {
               name: 'productTitleColor',
               type: 'text',
               label: 'Warna Nama Produk (Hex)',
-              defaultValue: '#1e1e1e',
+              admin: { description: 'Kosongkan untuk otomatis menyesuaikan Light/Dark Mode' },
             },
             {
               name: 'productPriceColor',
