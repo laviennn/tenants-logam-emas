@@ -5,7 +5,7 @@ dotenv.config();
 import { getPayload } from 'payload';
 
 const SOURCE_TENANT_ID = 9;
-const TARGET_TENANT_ID = 10;
+const TARGET_TENANT_ID = 12;
 
 /**
  * Pembersihan data: Menghapus field internal Payload agar bisa di-insert sebagai data baru.
