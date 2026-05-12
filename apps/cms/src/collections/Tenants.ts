@@ -75,6 +75,17 @@ export const Tenants: CollectionConfig = {
           label: '🎨 Tema & Warna',
           fields: [
             {
+              name: 'theme_layout',
+              type: 'select',
+              label: 'Tema & Layout Halaman',
+              defaultValue: 'default',
+              options: [
+                { label: 'Default', value: 'default' },
+                { label: 'Luxury (Premium)', value: 'luxury' },
+              ],
+              admin: { description: 'Pilih layout utama untuk website ini' },
+            },
+            {
               name: 'primaryColor',
               type: 'text',
               label: 'Warna Primary (Hex)',

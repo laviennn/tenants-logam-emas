@@ -8,6 +8,8 @@ import GoldCalculator from '../GoldCalculator.astro';
 import TestimonialSection from '../TestimonialSection.astro';
 import ArticleSection from '../ArticleSection.astro';
 import WhyChooseUs from '../WhyChooseUs.astro';
+import HeroLuxury from '../themes/luxury/HeroLuxury.astro';
+import ReasonsLuxury from '../themes/luxury/ReasonsLuxury.astro';
 import { useTranslations, localizePath } from '../../i18n/utils';
 import {
   resolveTenant,
@@ -30,6 +32,7 @@ const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
 const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
 const tenant = await resolveTenant(hostname);
 const tenantId = tenant?.id;
+const themeLayout = tenant?.theme_layout || 'default';
 
 const optimizedHero = await getImage({ src: emasHero });
 
@@ -80,28 +83,35 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
 ---
 
 <BaseLayout title={t('nav.home') as string} tenantId={tenantId} tenant={tenant} siteSettings={siteSettings}>
-  <!-- Hero Section: Gold Price Card -->
-  <section class="py-12 md:py-20 bg-white dark:bg-background-dark">
-    <div class="w-full md:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="w-full md:max-w-xs">
-        <div class="bg-white dark:bg-surface-dark rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-8 text-center flex flex-col items-center transition-transform hover:scale-[1.02]">
-          <div class="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-             <img src="https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=50" class="w-8 h-8 rounded-full object-cover" alt="Gold Icon" />
+  {themeLayout === 'luxury' ? (
+    <>
+      <HeroLuxury lang={lang} goldPrice={goldPrice} />
+      <ReasonsLuxury lang={lang} />
+    </>
+  ) : (
+    <!-- Hero Section: Gold Price Card (Default) -->
+    <section class="py-12 md:py-20 bg-white dark:bg-background-dark">
+      <div class="w-full md:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="w-full md:max-w-xs">
+          <div class="bg-white dark:bg-surface-dark rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-8 text-center flex flex-col items-center transition-transform hover:scale-[1.02]">
+            <div class="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+               <img src="https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=50" class="w-8 h-8 rounded-full object-cover" alt="Gold Icon" />
+            </div>
+            <h3 data-i18n="index.gold_price_today" class="text-gray-900 dark:text-white font-bold text-lg mb-1">{t('index.gold_price_today')}</h3>
+            <p data-i18n="index.global_market" class="text-gray-400 text-sm mb-6">{t('index.global_market')}</p>
+            
+            <div class="mb-1 flex flex-col items-center gap-1">
+              {goldPriceData?.strikePrice && (
+                <span class="text-sm text-gray-400 line-through font-medium">{formatPrice(goldPriceData.strikePrice)}</span>
+              )}
+              <span class="text-3xl font-black text-[var(--color-product-price)]">{formatPrice(goldPrice)}</span>
+            </div>
+            <p data-i18n="index.per_gram" class="text-gray-400 text-xs uppercase tracking-widest font-medium">{t('index.per_gram')}</p>
           </div>
-          <h3 data-i18n="index.gold_price_today" class="text-gray-900 dark:text-white font-bold text-lg mb-1">{t('index.gold_price_today')}</h3>
-          <p data-i18n="index.global_market" class="text-gray-400 text-sm mb-6">{t('index.global_market')}</p>
-          
-          <div class="mb-1 flex flex-col items-center gap-1">
-            {goldPriceData?.strikePrice && (
-              <span class="text-sm text-gray-400 line-through font-medium">{formatPrice(goldPriceData.strikePrice)}</span>
-            )}
-            <span class="text-3xl font-black text-[var(--color-product-price)]">{formatPrice(goldPrice)}</span>
-          </div>
-          <p data-i18n="index.per_gram" class="text-gray-400 text-xs uppercase tracking-widest font-medium">{t('index.per_gram')}</p>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
 
   <!-- Produk Unggulan -->
   <section class="py-12 bg-white dark:bg-background-dark overflow-hidden">
@@ -249,23 +259,25 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
     </div>
   </section>
 
-  <!-- Kelebihan Menyimpan Emas -->
-  <section class="py-20 bg-white dark:bg-surface-dark">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <SectionTitle title={copywriting?.advantagesTitle || t('advantages.title')} />
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-12">
-        {copywriting?.advantages && copywriting.advantages.map((adv: any) => (
-          <div class="bg-gray-50 dark:bg-gray-800/50 p-8 rounded-2xl hover:-translate-y-1 transition-transform duration-300 border border-gray-100 dark:border-gray-800">
-            <div class="w-14 h-14 bg-primary/20 dark:bg-primary/10 rounded-xl flex items-center justify-center text-3xl mb-6 shadow-sm border border-primary/30">
-              {adv.icon}
+  <!-- Kelebihan Menyimpan Emas (Default Theme Only) -->
+  {themeLayout === 'default' && (
+    <section class="py-20 bg-white dark:bg-surface-dark">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle title={copywriting?.advantagesTitle || t('advantages.title')} />
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-12">
+          {copywriting?.advantages && copywriting.advantages.map((adv: any) => (
+            <div class="bg-gray-50 dark:bg-gray-800/50 p-8 rounded-2xl hover:-translate-y-1 transition-transform duration-300 border border-gray-100 dark:border-gray-800">
+              <div class="w-14 h-14 bg-primary/20 dark:bg-primary/10 rounded-xl flex items-center justify-center text-3xl mb-6 shadow-sm border border-primary/30">
+                {adv.icon}
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">{adv.title}</h3>
+              <p class="text-gray-600 dark:text-gray-400 leading-relaxed">{adv.description}</p>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">{adv.title}</h3>
-            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">{adv.description}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
 
   <!-- Gold Calculator Section -->
   <section class="py-20 bg-gray-50 dark:bg-gray-900/30">

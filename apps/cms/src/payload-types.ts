@@ -169,6 +169,10 @@ export interface Tenant {
    */
   primaryDomain?: string | null;
   /**
+   * Pilih layout utama untuk website ini
+   */
+  theme_layout?: ('default' | 'luxury') | null;
+  /**
    * Warna utama brand. Contoh: #D4AF37
    */
   primaryColor?: string | null;
@@ -722,6 +726,7 @@ export interface TenantsSelect<T extends boolean = true> {
         id?: T;
       };
   primaryDomain?: T;
+  theme_layout?: T;
   primaryColor?: T;
   primaryDarkColor?: T;
   secondaryColor?: T;
