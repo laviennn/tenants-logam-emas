@@ -30,10 +30,26 @@ export const Testimonials: CollectionConfig = {
       },
     },
     {
+      name: 'type',
+      type: 'select',
+      defaultValue: 'text',
+      required: true,
+      options: [
+        { label: 'Teks & Profil (Opsi 1)', value: 'text' },
+        { label: 'Screenshot WhatsApp (Opsi 2)', value: 'image_only' }
+      ],
+      admin: {
+        description: 'Pilih tampilan testimoni di halaman website.',
+      }
+    },
+    {
       name: 'reviewerName',
       type: 'text',
       required: false,
       localized: true,
+      admin: {
+        condition: (data) => data.type === 'text' || !data.type,
+      },
     },
     {
       name: 'location',
@@ -42,6 +58,7 @@ export const Testimonials: CollectionConfig = {
       localized: true,
       admin: {
         description: 'City or Region (e.g., Jakarta, Makassar)',
+        condition: (data) => data.type === 'text' || !data.type,
       },
     },
     {
@@ -49,6 +66,9 @@ export const Testimonials: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
       required: false,
+      admin: {
+        condition: (data) => data.type === 'text' || !data.type,
+      },
     },
     {
       name: 'starRating',
@@ -57,12 +77,18 @@ export const Testimonials: CollectionConfig = {
       min: 1,
       max: 5,
       defaultValue: 5,
+      admin: {
+        condition: (data) => data.type === 'text' || !data.type,
+      },
     },
     {
       name: 'reviewText',
       type: 'textarea',
       required: false,
       localized: true,
+      admin: {
+        condition: (data) => data.type === 'text' || !data.type,
+      },
     },
     {
       name: 'image',
@@ -70,7 +96,7 @@ export const Testimonials: CollectionConfig = {
       relationTo: 'media',
       required: false,
       admin: {
-        description: 'Photo of the product or testimony',
+        description: 'Photo of the product (Opsi 1) OR WhatsApp Screenshot (Opsi 2)',
       },
     },
   ],

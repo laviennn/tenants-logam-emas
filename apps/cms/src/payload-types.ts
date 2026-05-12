@@ -521,16 +521,20 @@ export interface Article {
 export interface Testimonial {
   id: number;
   tenant?: (number | null) | Tenant;
+  /**
+   * Pilih tampilan testimoni di halaman website.
+   */
+  type: 'text' | 'image_only';
   reviewerName?: string | null;
   /**
    * City or Region (e.g., Jakarta, Makassar)
    */
   location?: string | null;
   avatar?: (number | null) | Media;
-  starRating: number;
+  starRating?: number | null;
   reviewText?: string | null;
   /**
-   * Photo of the product or testimony
+   * Photo of the product (Opsi 1) OR WhatsApp Screenshot (Opsi 2)
    */
   image?: (number | null) | Media;
   updatedAt: string;
@@ -968,6 +972,7 @@ export interface ArticlesSelect<T extends boolean = true> {
  */
 export interface TestimonialsSelect<T extends boolean = true> {
   tenant?: T;
+  type?: T;
   reviewerName?: T;
   location?: T;
   avatar?: T;

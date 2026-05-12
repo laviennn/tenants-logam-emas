@@ -3,12 +3,13 @@ import { getImageUrl } from '../lib/cms';
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
 
 interface Testimonial {
-  reviewerName: string;
+  type?: 'text' | 'image_only';
+  reviewerName?: string;
   location?: string;
   avatar?: any;
   image?: any;
-  starRating: number;
-  reviewText: string;
+  starRating?: number;
+  reviewText?: string;
   createdAt: string;
 }
 
@@ -44,7 +45,25 @@ const formatDate = (dateStr: string) => {
 
 <div class="relative px-4 sm:px-0">
   <div id="testimonial-slider" class="flex gap-8 overflow-x-auto pb-16 snap-x scrollbar-hide">
-    {testimonials.length > 0 ? testimonials.map((test) => (
+    {testimonials.length > 0 ? testimonials.map((test) => {
+      const type = test.type || 'text';
+      if (type === 'image_only' && test.image) {
+        return (
+          <div 
+            class="flex-shrink-0 w-[280px] md:w-[320px] snap-center rounded-[2rem] shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer group/img relative border-4 border-white dark:border-gray-800 bg-gray-100 dark:bg-gray-900 lightbox-trigger aspect-[9/16]" 
+            data-src={test.image.url.startsWith('http') ? test.image.url : `${CMS_URL}${test.image.url}`}
+          >
+            <img 
+              src={test.image.url.startsWith('http') ? test.image.url : `${CMS_URL}${test.image.url}`} 
+              alt="Testimonial Screenshot" 
+              class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" 
+              loading="lazy"
+            />
+            <div class="absolute inset-0 bg-black/10 group-hover/img:bg-black/0 transition-colors pointer-events-none"></div>
+          </div>
+        );
+      }
+      return (
       <div class="flex-shrink-0 w-[320px] md:w-[450px] snap-center bg-white dark:bg-surface-dark p-8 md:p-10 rounded-[3rem] shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-white/5 flex flex-col group/card">
         <!-- Header: Avatar & Info -->
         <div class="flex items-center justify-between mb-8">
@@ -54,7 +73,7 @@ const formatDate = (dateStr: string) => {
                 <img src={getImageUrl(test.avatar, 'thumbnail')} alt={test.reviewerName} class="w-full h-full object-cover" />
               ) : (
                 <div class="w-full h-full flex items-center justify-center text-primary font-black text-2xl uppercase">
-                  {test.reviewerName.charAt(0)}
+                  {(test.reviewerName || 'A').charAt(0)}
                 </div>
               )}
             </div>
@@ -100,7 +119,8 @@ const formatDate = (dateStr: string) => {
         
 
       </div>
-    )) : (
+      );
+    }) : (
       <div class="w-full py-20 text-center text-gray-400 bg-gray-50 dark:bg-gray-900/50 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-white/5">
         <p class="font-black uppercase tracking-widest">Belum ada ulasan pelanggan.</p>
       </div>
@@ -111,6 +131,12 @@ const formatDate = (dateStr: string) => {
   <div class="max-w-[200px] mx-auto h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
     <div id="testimonial-progress" class="h-full bg-primary transition-all duration-300" style="width: 10%;"></div>
   </div>
+</div>
+
+<!-- LightBox for Image-Only Testimonials -->
+<div id="testimonial-lightbox" class="fixed inset-0 z-[100] bg-black/90 hidden items-center justify-center p-4 backdrop-blur-sm cursor-pointer opacity-0 transition-opacity duration-300">
+  <button class="absolute top-6 right-6 text-white text-4xl hover:text-gray-300 transition-colors">&times;</button>
+  <img id="lightbox-img" src="" alt="Expanded Testimonial" class="max-h-[90vh] max-w-full rounded-xl shadow-2xl cursor-default scale-95 transition-transform duration-300" />
 </div>
 
 <style>
@@ -124,6 +150,7 @@ const formatDate = (dateStr: string) => {
 </style>
 
 <script>
+  // Slider Progress
   const slider = document.getElementById('testimonial-slider');
   const progress = document.getElementById('testimonial-progress');
 
@@ -131,6 +158,47 @@ const formatDate = (dateStr: string) => {
     slider.addEventListener('scroll', () => {
       const scrollPercentage = (slider.scrollLeft / (slider.scrollWidth - slider.clientWidth)) * 100;
       progress.style.width = `${Math.max(10, scrollPercentage)}%`;
+    });
+  }
+
+  // Lightbox Logic
+  const triggers = document.querySelectorAll('.lightbox-trigger');
+  const lightbox = document.getElementById('testimonial-lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+
+  if (lightbox && lightboxImg) {
+    triggers.forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const src = trigger.getAttribute('data-src');
+        if (src) {
+          lightboxImg.setAttribute('src', src);
+          lightbox.classList.remove('hidden');
+          // Trigger animation
+          requestAnimationFrame(() => {
+            lightbox.classList.remove('opacity-0');
+            lightbox.classList.add('flex');
+            lightboxImg.classList.remove('scale-95');
+            lightboxImg.classList.add('scale-100');
+          });
+        }
+      });
+    });
+
+    const closeLightbox = () => {
+      lightbox.classList.add('opacity-0');
+      lightboxImg.classList.remove('scale-100');
+      lightboxImg.classList.add('scale-95');
+      setTimeout(() => {
+        lightbox.classList.add('hidden');
+        lightbox.classList.remove('flex');
+      }, 300);
+    };
+
+    lightbox.addEventListener('click', closeLightbox);
+    
+    // Prevent closing when clicking the image itself
+    lightboxImg.addEventListener('click', (e) => {
+      e.stopPropagation();
     });
   }
 </script>
