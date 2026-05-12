@@ -71,9 +71,24 @@ export const getImageUrl = (image: any, size: string | null = null): string => {
 
   if (!url) return '/img/emas_hero.jpeg'
 
-  // Serve directly from Supabase CDN — bypass CMS proxy for performance
+  const imageKitEndpoint = import.meta.env.PUBLIC_IMAGEKIT_URL_ENDPOINT
+
+  // 1. Handle absolute Supabase URLs returned directly by Payload
+  if (imageKitEndpoint && url.includes('supabase.co/storage/v1/object/public/media/')) {
+    const filename = url.split('/').pop()
+    const endpoint = imageKitEndpoint.replace(/\/$/, '')
+    return `${endpoint}/${filename}?tr=f-auto,q-80`
+  }
+
+  // 2. Handle relative CMS paths
   if (url.startsWith('/api/media/file/')) {
     const filename = url.split('/').pop()
+
+    if (imageKitEndpoint) {
+      const endpoint = imageKitEndpoint.replace(/\/$/, '')
+      return `${endpoint}/${filename}?tr=f-auto,q-80`
+    }
+
     const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || 'https://jlkuxbwuuhxtaguqfskz.supabase.co'
     const projectRef = supabaseUrl.split('//')[1]?.split('.')[0] || 'jlkuxbwuuhxtaguqfskz'
     return `https://${projectRef}.supabase.co/storage/v1/object/public/media/${filename}`

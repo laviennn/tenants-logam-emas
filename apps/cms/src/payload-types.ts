@@ -193,6 +193,10 @@ export interface Tenant {
    * URL untuk trigger rebuild Vercel saat konten berubah.
    */
   vercelDeployHookUrl?: string | null;
+  /**
+   * URL untuk trigger rebuild Cloudflare Pages saat konten berubah.
+   */
+  cloudflareDeployHookUrl?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -731,6 +735,7 @@ export interface TenantsSelect<T extends boolean = true> {
   productPriceColor?: T;
   fontFamily?: T;
   vercelDeployHookUrl?: T;
+  cloudflareDeployHookUrl?: T;
   updatedAt?: T;
   createdAt?: T;
 }
