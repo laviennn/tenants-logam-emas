@@ -223,7 +223,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
   <!-- Produk Terbaru -->
   <section class="py-12 bg-white dark:bg-background-dark">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between mb-8 border-l-4 border-primary pl-4">
+      <div id="newProducts" class="flex items-center justify-between mb-8 border-l-4 border-primary pl-4">
         <h2 data-i18n="index.latest_products" class="text-2xl font-bold text-gray-900 dark:text-white">{t('index.latest_products')}</h2>
         <a href={localizePath('/products', lang)} class="text-primary font-bold text-sm hover:underline flex items-center gap-1">
           <span data-i18n="index.view_all">{t('index.view_all')}</span> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
