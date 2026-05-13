@@ -21,6 +21,18 @@ const customMessage =
 const defaultMessage = `Halo Admin ${brandName}, ${customMessage}`;
 const waLink = `https://wa.me/${siteSettings?.whatsappNumber}?text=${encodeURIComponent(defaultMessage)}`;
 const showWA = siteSettings?.enableFloatingWA && siteSettings?.whatsappNumber;
+
+const formatSocialUrl = (url: string, base: string) => {
+  if (!url) return '';
+  url = url.trim();
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('@')) url = url.substring(1);
+  return `${base}${url}`;
+};
+
+const fbLink = formatSocialUrl(siteSettings?.facebook, 'https://facebook.com/');
+const igLink = formatSocialUrl(siteSettings?.instagram, 'https://instagram.com/');
+const twLink = formatSocialUrl(siteSettings?.twitter, 'https://twitter.com/');
 ---
 
 <footer
@@ -42,7 +54,7 @@ const showWA = siteSettings?.enableFloatingWA && siteSettings?.whatsappNumber;
           {
             siteSettings?.facebook && (
               <a
-                href={siteSettings.facebook}
+                href={fbLink}
                 target='_blank'
                 rel='noopener noreferrer'
                 class='w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center text-gray-400 hover:text-primary hover:shadow-md transition-all'>
@@ -58,7 +70,7 @@ const showWA = siteSettings?.enableFloatingWA && siteSettings?.whatsappNumber;
           {
             siteSettings?.instagram && (
               <a
-                href={siteSettings.instagram}
+                href={igLink}
                 target='_blank'
                 rel='noopener noreferrer'
                 class='w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center text-gray-400 hover:text-primary hover:shadow-md transition-all'>
@@ -74,7 +86,7 @@ const showWA = siteSettings?.enableFloatingWA && siteSettings?.whatsappNumber;
           {
             siteSettings?.twitter && (
               <a
-                href={siteSettings.twitter}
+                href={twLink}
                 target='_blank'
                 rel='noopener noreferrer'
                 class='w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center text-gray-400 hover:text-primary hover:shadow-md transition-all'>
