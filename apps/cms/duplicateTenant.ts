@@ -5,7 +5,7 @@ dotenv.config();
 import { getPayload } from 'payload';
 
 const SOURCE_TENANT_ID = 9;
-const TARGET_TENANT_ID = 13;
+const TARGET_TENANT_ID = 14;
 
 /**
  * Pembersihan data: Menghapus field internal Payload agar bisa di-insert sebagai data baru.
@@ -50,7 +50,7 @@ async function fetchAll(payload: any, collection: string, where: any) {
 }
 
 async function duplicateTenant() {
-  const { default: configPromise } = await import('./src/payload.config');
+  const { default: configPromise } = await import('./src/payload.config.ts');
   const payload = await getPayload({ config: configPromise });
   console.log(`🚀 Memulai duplikasi data dari Tenant ${SOURCE_TENANT_ID} ke Tenant ${TARGET_TENANT_ID}...`);
 

@@ -9,10 +9,20 @@ const showWA = siteSettings?.enableFloatingWA && siteSettings?.whatsappNumber;
 const showInstagram = siteSettings?.enableFloatingInstagram && siteSettings?.instagram;
 
 const brandName = siteSettings?.brandName || 'Logam Mulia';
+
 const customMessage = siteSettings?.whatsappDefaultMessage || 'saya tertarik untuk bertransaksi emas. Bagaimana prosedur pembelian dan penjualannya?';
 const defaultMessage = `Halo Admin ${brandName}, ${customMessage}`;
 const waLink = `https://wa.me/${siteSettings?.whatsappNumber}?text=${encodeURIComponent(defaultMessage)}`;
-const igLink = siteSettings?.instagram;
+
+const formatSocialUrl = (url: string, base: string) => {
+  if (!url) return '';
+  url = url.trim();
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('@')) url = url.substring(1);
+  return `${base}${url}`;
+};
+
+const igLink = formatSocialUrl(siteSettings?.instagram, 'https://instagram.com/');
 ---
 
 <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-center">
