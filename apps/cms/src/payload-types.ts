@@ -407,6 +407,10 @@ export interface SiteSetting {
    * Teks singkat di bagian footer.
    */
   footerAbout?: string | null;
+  /**
+   * Teks bebas yang ditampilkan di bagian bawah footer. Jika dikosongkan, otomatis menggunakan format: "© {tahun} {Brand Name}. All rights reserved."
+   */
+  footerCopyright?: string | null;
   shippingMethods?:
     | {
         name: string;
@@ -900,6 +904,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   email?: T;
   address?: T;
   footerAbout?: T;
+  footerCopyright?: T;
   shippingMethods?:
     | T
     | {
