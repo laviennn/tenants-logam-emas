@@ -3,7 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionTitle from '../SectionTitle.astro';
 import ProductCard from '../ProductCard.astro';
 import { useTranslations } from '../../i18n/utils';
-import { resolveTenant, getSiteSettings, getImageUrl } from '../../lib/cms';
+import { resolveTenant, getSiteSettings, getImageUrl, getDefaultLocale } from '../../lib/cms';
 
 interface Props {
   lang: 'id' | 'en' | 'my';
@@ -20,11 +20,12 @@ const tenant = await resolveTenant(hostname);
 const tenantId = tenant?.id;
 const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
 const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
+const defaultLocale = getDefaultLocale();
 
 // ── Parallel Fetch ─────────────────────────────────────────────
 const [categoriesRes, productsRes] = await Promise.all([
-  fetch(`${CMS_URL}/api/categories?limit=100${tenantFilter}`, { cache: 'no-store' }),
-  fetch(`${CMS_URL}/api/products?limit=1000&sort=-createdAt${tenantFilter}`, { cache: 'no-store' })
+  fetch(`${CMS_URL}/api/categories?limit=100${tenantFilter}&locale=${defaultLocale}`, { cache: 'no-store' }),
+  fetch(`${CMS_URL}/api/products?limit=1000&sort=-createdAt${tenantFilter}&locale=${defaultLocale}`, { cache: 'no-store' })
 ]);
 
 const categoriesData = categoriesRes.ok ? await categoriesRes.json() : { docs: [] };
@@ -43,6 +44,9 @@ const allProducts = (productsData.docs || []).map((p: any) => ({
   image: getImageUrl(p.image, 'card'),
   createdAt: p.createdAt
 }));
+
+// Region-aware currency config, passed to client-side script
+const regionCode = import.meta.env.PUBLIC_TENANT_REGION === 'MY' ? 'MY' : 'ID';
 ---
 
 <BaseLayout title={t('nav.products')} tenantId={tenantId} siteSettings={siteSettings}>
@@ -108,6 +112,7 @@ const allProducts = (productsData.docs || []).map((p: any) => ({
 </style>
 
 <script id="products-data" type="application/json" set:html={JSON.stringify(allProducts)}></script>
+<script id="region-config" type="application/json" set:html={JSON.stringify({ regionCode })}></script>
 
 <script>
   import { langStore } from '../../lib/lang';
@@ -127,8 +132,14 @@ const allProducts = (productsData.docs || []).map((p: any) => ({
   const sortSelect = document.getElementById('sort-select');
   const catButtons = document.querySelectorAll('.cat-filter');
 
-  function formatPrice(price) {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
+  const regionConfigEl = document.getElementById('region-config');
+  const regionCode = regionConfigEl ? JSON.parse(regionConfigEl.textContent || '{"regionCode":"ID"}').regionCode : 'ID';
+
+  function formatPrice(price: number): string {
+    if (regionCode === 'MY') {
+      return `RM ${new Intl.NumberFormat('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(price)}`;
+    }
+    return `Rp${new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(price)}`;
   }
 
   function renderProducts() {

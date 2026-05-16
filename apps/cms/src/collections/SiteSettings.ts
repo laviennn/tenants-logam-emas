@@ -179,7 +179,7 @@ export const SiteSettings: CollectionConfig = {
               label: 'Metode Pengiriman',
               fields: [
                 { name: 'name', type: 'text', required: true, label: 'Nama Ekspedisi (JNE, J&T, dll)' },
-                { name: 'price', type: 'number', required: true, label: 'Ongkos Kirim Flat (Rp)' },
+                { name: 'price', type: 'number', required: true, label: 'Ongkos Kirim Flat (Nominal)' },
               ],
             },
           ],

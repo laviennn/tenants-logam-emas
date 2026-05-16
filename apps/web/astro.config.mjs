@@ -1,4 +1,4 @@
-import { defineConfig } from 'astro/config';
+import { defineConfig, passthroughImageService } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 
@@ -12,15 +12,16 @@ export default defineConfig({
     inlineStylesheets: 'always',
   },
   image: {
-    domains: ['jlkuxbwuuhxtaguqfskz.supabase.co'],
+    service: passthroughImageService(),
+    domains: ['jlkuxbwuuhxtaguqfskz.supabase.co', 'localhost'],
   },
   vite: {
     plugins: [tailwindcss()],
   },
   integrations: [sitemap()],
   i18n: {
-    defaultLocale: "id",
-    locales: ["id", "en", "my"],
+    defaultLocale: process.env.PUBLIC_TENANT_REGION === 'MY' ? 'my' : 'id',
+    locales: process.env.PUBLIC_TENANT_REGION === 'MY' ? ['my', 'en'] : ['id', 'en', 'my'],
     routing: {
       prefixDefaultLocale: false,
     }

@@ -2,7 +2,8 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProductCard from '../ProductCard.astro';
 import { useTranslations } from '../../i18n/utils';
-import { resolveTenant, getSiteSettings, getImageUrl } from '../../lib/cms';
+import { resolveTenant, getSiteSettings, getImageUrl, getDefaultLocale } from '../../lib/cms';
+import { formatCurrency } from '../../utils/currency';
 
 interface Props {
   product: any;
@@ -19,6 +20,7 @@ const tenant = await resolveTenant(hostname);
 const tenantId = tenant?.id;
 const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
 const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
+const defaultLocale = getDefaultLocale();
 
 const id = product.id;
 
@@ -27,7 +29,7 @@ const [reviewsData, relatedData] = await Promise.all([
   fetch(`${CMS_URL}/api/reviews?where[product][equals]=${id}${tenantFilter}&sort=-createdAt&limit=100`, { cache: 'no-store' })
     .then(r => r.ok ? r.json() : { docs: [] })
     .catch(() => ({ docs: [] })),
-  fetch(`${CMS_URL}/api/products?where[category][equals]=${product.category?.id || product.category}&where[id][not_equals]=${id}${tenantFilter}&limit=4`, { cache: 'no-store' })
+  fetch(`${CMS_URL}/api/products?where[category][equals]=${product.category?.id || product.category}&where[id][not_equals]=${id}${tenantFilter}&limit=4&locale=${defaultLocale}`, { cache: 'no-store' })
     .then(r => r.ok ? r.json() : { docs: [] })
     .catch(() => ({ docs: [] })),
 ]);
@@ -42,12 +44,6 @@ const averageRating = totalReviews > 0
   : '0.0';
 const starCount = Math.floor(Number(averageRating));
 
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(price);
 
 const _getImageUrl = (image: any, size: string = 'card') => {
   if (!image) return '/img/emas_hero.jpeg';
@@ -122,8 +118,8 @@ const categoryName = product.category?.name || 'Produk';
 
           <div class='bg-gray-50 dark:bg-gray-900/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 mb-8'>
             <div class='flex flex-col gap-1 mb-2'>
-              {product.strikePrice && <span class='text-lg text-gray-400 line-through font-medium'>{formatPrice(product.strikePrice)}</span>}
-              <div class='text-4xl font-black text-[var(--color-product-price)]'>{formatPrice(product.price)}</div>
+              {product.strikePrice && <span class='text-lg text-gray-400 line-through font-medium'>{formatCurrency(product.strikePrice)}</span>}
+              <div class='text-4xl font-black text-[var(--color-product-price)]'>{formatCurrency(product.price)}</div>
             </div>
             <div class='flex items-center gap-2 text-sm'>
               <span class='text-gray-500'>{t('product.stock')}:</span>

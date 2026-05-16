@@ -1,6 +1,6 @@
 ---
 import ProductDetail from '../../components/pages/ProductDetail.astro';
-import { resolveTenant } from '../../lib/cms';
+import { resolveTenant, getDefaultLocale } from '../../lib/cms';
 
 export async function getStaticPaths() {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
@@ -18,7 +18,7 @@ export async function getStaticPaths() {
     console.log(`[Astro Build] Resolved Tenant: ${tenant?.name || 'None'} (ID: ${tenantId || 'None'})`);
     console.log(`[Astro Build] Fetching products with filter: ${tenantFilter || 'None'}`);
     
-    const res = await fetch(`${CMS_URL}/api/products?limit=1000${tenantFilter}`);
+    const res = await fetch(`${CMS_URL}/api/products?limit=1000${tenantFilter}&locale=${getDefaultLocale()}`);
     
     if (!res.ok) {
       const text = await res.text();
@@ -44,12 +44,14 @@ let { product } = Astro.props;
 // Di localhost (mode server), Astro.props akan kosong. Kita ambil data secara Live.
 if (!product && id) {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
-  const res = await fetch(`${CMS_URL}/api/products/${id}?locale=id`);
+  const res = await fetch(`${CMS_URL}/api/products/${id}?locale=${getDefaultLocale()}`);
   if (res.ok) {
     product = await res.json();
   }
 }
 
 if (!product) return Astro.redirect('/404');
+
+const defaultLang = getDefaultLocale() as 'id' | 'en' | 'my';
 ---
-<ProductDetail product={product} lang="id" />
+<ProductDetail product={product} lang={defaultLang} />

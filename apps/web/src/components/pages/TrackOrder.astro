@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getLangFromUrl, useTranslations } from '../../i18n/utils';
 import { resolveTenant, getSiteSettings } from '../../lib/cms';
+import { formatCurrency } from '../../utils/currency';
 
 interface Props {
   lang?: 'id' | 'en' | 'my';
@@ -120,7 +121,7 @@ const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
       <!-- Total -->
       <div class="p-6 md:p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
         <span class="text-lg font-bold text-gray-900 dark:text-white">Total:</span>
-        <span id="res-total" class="text-xl md:text-2xl font-black text-[#d97706]">Rp17.225.000</span>
+        <span id="res-total" class="text-xl md:text-2xl font-black text-[#d97706]">{formatCurrency(0)}</span>
       </div>
 
       <!-- Payment Proof -->
@@ -139,7 +140,7 @@ const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
 </BaseLayout>
 
 <script>
-  const formatCurrency = (val: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+  import { formatCurrency } from '../../utils/currency';
 
   const getStatusBadge = (status: string) => {
     switch(status) {

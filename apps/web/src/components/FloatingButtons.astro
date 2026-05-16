@@ -9,9 +9,15 @@ const showWA = siteSettings?.enableFloatingWA && siteSettings?.whatsappNumber;
 const showInstagram = siteSettings?.enableFloatingInstagram && siteSettings?.instagram;
 
 const brandName = siteSettings?.brandName || 'Logam Mulia';
+const isMY = import.meta.env.PUBLIC_TENANT_REGION === 'MY';
 
-const customMessage = siteSettings?.whatsappDefaultMessage || 'saya tertarik untuk bertransaksi emas. Bagaimana prosedur pembelian dan penjualannya?';
-const defaultMessage = `Halo Admin ${brandName}, ${customMessage}`;
+// Default fallback message differs per region; CMS field overrides this if set
+const defaultCustomMessage = isMY
+  ? 'boleh ajar saya simpan emas?'
+  : 'saya tertarik untuk bertransaksi emas. Bagaimana prosedur pembelian dan penjualannya?';
+const customMessage = siteSettings?.whatsappDefaultMessage || defaultCustomMessage;
+const greeting = isMY ? `Salam ${brandName}` : `Halo Admin ${brandName}`;
+const defaultMessage = `${greeting}, ${customMessage}`;
 const waLink = `https://wa.me/${siteSettings?.whatsappNumber}?text=${encodeURIComponent(defaultMessage)}`;
 
 const formatSocialUrl = (url: string, base: string) => {

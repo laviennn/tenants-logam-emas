@@ -8,6 +8,11 @@ interface Props {
 const { currentPrice } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+
+import { formatCurrency } from '../utils/currency';
+const isMY = import.meta.env.PUBLIC_TENANT_REGION === 'MY';
+const currencySymbol = isMY ? 'RM' : 'Rp';
+const regionCode = isMY ? 'MY' : 'ID';
 ---
 
 <div class="relative group max-w-5xl mx-auto mt-8">
@@ -53,7 +58,7 @@ const t = useTranslations(lang);
           {t('calc.purchase_price')}
         </label>
         <div class="relative flex items-center bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all shadow-sm">
-          <div class="pl-6 font-black text-xl text-[var(--color-product-price)]/60 select-none">Rp</div>
+          <div class="pl-6 font-black text-xl text-[var(--color-product-price)]/60 select-none">{currencySymbol}</div>
           <input 
             type="number" 
             id="calc-purchase" 
@@ -90,13 +95,13 @@ const t = useTranslations(lang);
       
       <div class="mb-8">
         <p data-i18n="calc.current_value" class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2">{t('calc.current_value')}</p>
-        <h3 id="res-current" class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">Rp2.500.000</h3>
+        <h3 id="res-current" class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">{formatCurrency(0)}</h3>
       </div>
 
       <div class="mb-10">
         <p data-i18n="calc.profit_loss" class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2">{t('calc.profit_loss')}</p>
         <div class="flex items-center gap-3">
-          <h3 id="res-profit" class="text-2xl md:text-3xl font-black text-green-500 italic tracking-tight">Rp0</h3>
+          <h3 id="res-profit" class="text-2xl md:text-3xl font-black text-green-500 italic tracking-tight">{formatCurrency(0)}</h3>
           <div id="res-profit-bg" class="px-3 py-1 bg-green-100 dark:bg-green-500/20 rounded-full border border-green-200 dark:border-green-500/30">
             <span id="res-profit-pct" class="text-xs font-black text-green-600 dark:text-green-400 tracking-tight">+0.00%</span>
           </div>
@@ -110,7 +115,7 @@ const t = useTranslations(lang);
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"></path></svg>
           </div>
         </div>
-        <h3 id="res-estimate" class="text-4xl md:text-5xl font-black text-[var(--color-product-price)] italic mb-8 tracking-tight">Rp2.875.000</h3>
+        <h3 id="res-estimate" class="text-4xl md:text-5xl font-black text-[var(--color-product-price)] italic mb-8 tracking-tight">{formatCurrency(0)}</h3>
         
         <p data-i18n="calc.future_potential" class="text-[9px] text-center font-bold text-gray-300 dark:text-gray-600 uppercase tracking-widest">{t('calc.future_potential')}</p>
       </div>
@@ -135,7 +140,7 @@ const t = useTranslations(lang);
   }
 </style>
 
-<script define:vars={{ currentPrice }}>
+<script define:vars={{ currentPrice, regionCode }}>
   const inputGrams = document.getElementById('calc-grams');
   const inputPurchase = document.getElementById('calc-purchase');
   const inputRange = document.getElementById('calc-range');
@@ -147,7 +152,13 @@ const t = useTranslations(lang);
   const resProfitBg = document.getElementById('res-profit-bg');
   const resEstimate = document.getElementById('res-estimate');
 
-  const formatIDR = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+  const formatIDR = (val) => {
+    if (regionCode === 'MY') {
+      return `RM ${new Intl.NumberFormat('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val)}`;
+    } else {
+      return `Rp${new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val)}`;
+    }
+  };
 
   const calculate = () => {
     const grams = parseFloat(inputGrams.value) || 0;

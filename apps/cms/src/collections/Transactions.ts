@@ -73,14 +73,14 @@ export const Transactions: CollectionConfig = {
         { name: 'productId', type: 'text', label: 'Product ID' },
         { name: 'productName', type: 'text', label: 'Nama Produk' },
         { name: 'quantity', type: 'number', label: 'Jumlah' },
-        { name: 'priceAtPurchase', type: 'number', label: 'Harga saat beli (Rp)' },
+        { name: 'priceAtPurchase', type: 'number', label: 'Harga saat beli (Nominal)' },
       ],
     },
     { name: 'shippingMethod', type: 'text', label: 'Jasa Pengiriman' },
-    { name: 'shippingCost', type: 'number', label: 'Ongkos Kirim (Rp)', defaultValue: 0 },
+    { name: 'shippingCost', type: 'number', label: 'Ongkos Kirim (Nominal)', defaultValue: 0 },
     { name: 'paymentChannel', type: 'text', label: 'Channel Pembayaran (Bank)' },
-    { name: 'subtotal', type: 'number', label: 'Subtotal (Rp)', required: true },
-    { name: 'total', type: 'number', label: 'Total Transaksi (Rp)', required: true },
+    { name: 'subtotal', type: 'number', label: 'Subtotal (Nominal)', required: true },
+    { name: 'total', type: 'number', label: 'Total Transaksi (Nominal)', required: true },
     {
       name: 'paymentProofUrl',
       type: 'text',
@@ -104,7 +104,7 @@ export const Transactions: CollectionConfig = {
     afterChange: [
       async ({ doc }) => {
         console.log(
-          `[Transactions] ${doc.orderId} | Status: ${doc.status} | Total: Rp ${doc.total?.toLocaleString('id-ID')}`,
+          `[Transactions] ${doc.orderId} | Status: ${doc.status} | Total: ${doc.total?.toLocaleString()}`,
         )
       },
     ],

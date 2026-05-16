@@ -9,6 +9,17 @@
 
 export const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000'
 
+/**
+ * Returns the correct Payload CMS locale string based on the build-time
+ * PUBLIC_TENANT_REGION env var. Defaults to 'id' for Indonesia.
+ * MY → 'my', anything else → 'id'
+ */
+export const getDefaultLocale = (): string => {
+  const region = import.meta.env.PUBLIC_TENANT_REGION
+  if (region === 'MY') return 'my'
+  return 'id'
+}
+
 // ── Tenant Resolution Cache ─────────────────────────────────────
 type TenantCache = {
   data: any | null

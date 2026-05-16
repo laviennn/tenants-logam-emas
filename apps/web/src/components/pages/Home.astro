@@ -17,7 +17,9 @@ import {
   getGoldPrice,
   getCopywriting,
   getImageUrl,
+  getDefaultLocale,
 } from '../../lib/cms';
+import { formatCurrency } from '../../utils/currency';
 
 interface Props {
   lang: 'id' | 'en' | 'my';
@@ -38,16 +40,17 @@ const optimizedHero = await getImage({ src: emasHero });
 
 // ── 2. Parallel Fetch All Data for Performance ────────────────
 const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
+const defaultLocale = getDefaultLocale();
 
 const [siteSettings, goldPriceData, copywriting, categoriesData, latestProductsData] =
   await Promise.all([
     tenantId ? getSiteSettings(tenantId, lang) : Promise.resolve(null),
     tenantId ? getGoldPrice(tenantId) : Promise.resolve(null),
     tenantId ? getCopywriting(tenantId, lang) : Promise.resolve(null),
-    fetch(`${CMS_URL}/api/categories?sort=sortOrder,name&limit=10${tenantFilter}`, { cache: 'no-store' })
+    fetch(`${CMS_URL}/api/categories?sort=sortOrder,name&limit=10${tenantFilter}&locale=${defaultLocale}`, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { docs: [] })
       .catch(() => ({ docs: [] })),
-    fetch(`${CMS_URL}/api/products?sort=sortOrder,-createdAt&limit=8${tenantFilter}`, { cache: 'no-store' })
+    fetch(`${CMS_URL}/api/products?sort=sortOrder,-createdAt&limit=8${tenantFilter}&locale=${defaultLocale}`, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { docs: [] })
       .catch(() => ({ docs: [] })),
   ]);
@@ -64,7 +67,7 @@ if (copywriting?.featuredProducts?.length > 0) {
   // Fallback to isFeatured flag
   try {
     const featuredRes = await fetch(
-      `${CMS_URL}/api/products?where[isFeatured][equals]=true${tenantFilter}&limit=6`,
+      `${CMS_URL}/api/products?where[isFeatured][equals]=true${tenantFilter}&limit=6&locale=${defaultLocale}`,
       { cache: 'no-store' }
     );
     if (featuredRes.ok) {
@@ -75,9 +78,6 @@ if (copywriting?.featuredProducts?.length > 0) {
     console.error('[Home] Error fetching featured products:', e);
   }
 }
-
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
 
 const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, size);
 ---
@@ -102,9 +102,9 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
             
             <div class="mb-1 flex flex-col items-center gap-1">
               {goldPriceData?.strikePrice && (
-                <span class="text-sm text-gray-400 line-through font-medium">{formatPrice(goldPriceData.strikePrice)}</span>
+                <span class="text-sm text-gray-400 line-through font-medium">{formatCurrency(goldPriceData.strikePrice)}</span>
               )}
-              <span class="text-3xl font-black text-[var(--color-product-price)]">{formatPrice(goldPrice)}</span>
+              <span class="text-3xl font-black text-[var(--color-product-price)]">{formatCurrency(goldPrice)}</span>
             </div>
             <p data-i18n="index.per_gram" class="text-gray-400 text-xs uppercase tracking-widest font-medium">{t('index.per_gram')}</p>
           </div>
@@ -145,7 +145,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
 
                   <Image 
                     src={_getImageUrl(product.image, 'large')} 
-                    alt={product.name}
+                    alt={product.name || 'Product Image'}
                     width={800}
                     height={600}
                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -166,9 +166,9 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
 
                     <div class="flex flex-col items-center gap-0 md:gap-1 mb-3 md:mb-6">
                       {product.strikePrice && (
-                        <span class="text-xs md:text-sm text-white/60 line-through">{formatPrice(product.strikePrice)}</span>
+                        <span class="text-xs md:text-sm text-white/60 line-through">{formatCurrency(product.strikePrice)}</span>
                       )}
-                      <span class="text-xl md:text-2xl font-black text-primary">{formatPrice(product.price)}</span>
+                      <span class="text-xl md:text-2xl font-black text-primary">{formatCurrency(product.price)}</span>
                     </div>
 
                     <div class="flex gap-2 md:gap-3 relative z-30 pointer-events-auto">
@@ -201,7 +201,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
               {cat.image?.url ? (
                 <Image 
                   src={_getImageUrl(cat.image, 'thumbnail')} 
-                  alt={cat.name}
+                  alt={cat.name || 'Category Image'}
                   width={400}
                   height={300}
                   class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"

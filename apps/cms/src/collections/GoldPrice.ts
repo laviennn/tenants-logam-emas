@@ -35,12 +35,12 @@ export const GoldPrice: CollectionConfig = {
       type: 'number',
       required: true,
       defaultValue: 1500000,
-      label: 'Harga Emas Saat Ini (per gram, IDR)',
+      label: 'Harga Emas Saat Ini (per gram, Nominal)',
     },
     {
       name: 'strikePrice',
       type: 'number',
-      label: 'Harga Coret (IDR)',
+      label: 'Harga Coret (Nominal)',
       admin: {
         description: 'Harga asli sebelum diskon untuk tampilan coret.',
       },
@@ -49,7 +49,7 @@ export const GoldPrice: CollectionConfig = {
       name: 'discount',
       type: 'number',
       defaultValue: 0,
-      label: 'Jumlah Diskon (IDR)',
+      label: 'Jumlah Diskon (Nominal)',
     },
   ],
 }

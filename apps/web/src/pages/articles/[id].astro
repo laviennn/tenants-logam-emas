@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getImageUrl, resolveTenant, getSiteSettings } from '../../lib/cms';
+import { getImageUrl, resolveTenant, getSiteSettings, getDefaultLocale } from '../../lib/cms';
 import LexicalRenderer from '../../components/LexicalRenderer.astro';
 import { getLangFromUrl, useTranslations } from '../../i18n/utils';
 
@@ -20,7 +20,7 @@ export async function getStaticPaths() {
     console.log(`[Astro Build] Resolved Tenant: ${tenant?.name || 'None'} (ID: ${tenantId || 'None'})`);
     console.log(`[Astro Build] Fetching articles with filter: ${tenantFilter || 'None'}`);
     
-    const res = await fetch(`${CMS_URL}/api/articles?limit=100${tenantFilter}`);
+    const res = await fetch(`${CMS_URL}/api/articles?limit=100${tenantFilter}&locale=${getDefaultLocale()}`);
     if (!res.ok) return [];
     const data = await res.json();
     return (data.docs || []).map((article: any) => ({
@@ -44,7 +44,7 @@ const tenantId = tenant?.id;
 const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
 
 let article;
-const articleRes = await fetch(`${CMS_URL}/api/articles/${id}?locale=${lang}`, { cache: 'no-store' });
+const articleRes = await fetch(`${CMS_URL}/api/articles/${id}?locale=${lang || getDefaultLocale()}`, { cache: 'no-store' });
 if (articleRes.ok) {
   article = await articleRes.json();
 } else {
