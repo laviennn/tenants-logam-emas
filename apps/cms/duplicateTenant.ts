@@ -50,7 +50,7 @@ async function fetchAll(payload: any, collection: string, where: any) {
 }
 
 async function duplicateTenant() {
-  const { default: configPromise } = await import('./src/payload.config.ts');
+  const { default: configPromise } = await import('./src/payload.config');
   const payload = await getPayload({ config: configPromise });
   console.log(`🚀 Memulai duplikasi data dari Tenant ${SOURCE_TENANT_ID} ke Tenant ${TARGET_TENANT_ID}...`);
 
