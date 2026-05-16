@@ -1,10 +1,10 @@
-export const languages = {
-  id: '🇮🇩 ID',
-  en: '🇬🇧 EN',
-  my: '🇲🇾 MY',
-};
+const isMY = import.meta.env.PUBLIC_TENANT_REGION === 'MY';
 
-export const defaultLang = 'id';
+export const languages = isMY 
+  ? { en: '🇬🇧 EN', my: '🇲🇾 MY' } 
+  : { id: '🇮🇩 ID', en: '🇬🇧 EN', my: '🇲🇾 MY' };
+
+export const defaultLang = isMY ? 'my' : 'id';
 
 export const ui = {
   id: {
@@ -474,8 +474,8 @@ export const ui = {
     'nav.cart': 'Troli',
     'nav.login': 'Log Masuk',
     'nav.register': 'Daftar Akaun Baru',
-    'index.gold_price_today': 'Harga Emas Hari Ini',
-    'index.global_market': 'Pasaran Global',
+    'index.gold_price_today': 'Today\'s Gold Price',
+    'index.global_market': 'Global Market',
     'index.per_gram': 'per gram',
     'index.featured_products': 'Produk Pilihan Utama',
     'index.product_categories': 'Kategori Produk',

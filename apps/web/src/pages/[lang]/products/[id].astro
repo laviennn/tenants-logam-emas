@@ -1,6 +1,6 @@
 ---
 import ProductDetail from '../../../components/pages/ProductDetail.astro';
-import { resolveTenant } from '../../../lib/cms';
+import { resolveTenant, getDefaultLocale } from '../../../lib/cms';
 
 export async function getStaticPaths() {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
@@ -16,23 +16,48 @@ export async function getStaticPaths() {
   console.log(`[Astro Build] Resolved Hostname: ${hostname}`);
   console.log(`[Astro Build] Resolved Tenant: ${tenant?.name || 'None'} (ID: ${tenantId || 'None'})`);
   
+  // Non-default locales that get a URL prefix (exclude the default locale which is handled by /products/[id].astro)
   const locales = ['en', 'my'];
   const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
   
-  console.log(`[Astro Build] Fetching products with filter: ${tenantFilter || 'None'}`);
+  console.log(`[Astro Build] Fetching products for all locales...`);
   
-  const res = await fetch(`${CMS_URL}/api/products?limit=1000${tenantFilter}`);
-  const data = await res.json();
-  const products = data.docs || [];
-  
-  return locales.flatMap((lang) => {
-    return products.map((product: any) => ({
-      params: { lang, id: product.id.toString() },
-      props: { product, lang },
-    }));
-  });
+  // Fetch products per locale so each route gets correct localized data
+  const paths = (
+    await Promise.all(
+      locales.map(async (lang) => {
+        const res = await fetch(`${CMS_URL}/api/products?limit=1000${tenantFilter}&locale=${lang}`);
+        if (!res.ok) return [];
+        const data = await res.json();
+        const products: any[] = data.docs || [];
+        return products.map((product: any) => ({
+          params: { lang, id: product.id.toString() },
+          props: { product, lang },
+        }));
+      })
+    )
+  ).flat();
+
+  return paths;
 }
 
-const { product, lang } = Astro.props;
+const { id, lang } = { ...Astro.params, ...Astro.props };
+let { product } = Astro.props;
+
+// Live fallback for dev mode: when product is not in getStaticPaths cache
+// (e.g. newly created after server start) — fetch it live with correct locale
+if (!product && id) {
+  const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+  // Prefer the explicit URL lang, fallback to region default
+  const locale = (lang as string) || getDefaultLocale();
+  const res = await fetch(`${CMS_URL}/api/products/${id}?locale=${locale}`);
+  if (res.ok) {
+    product = await res.json();
+  }
+}
+
+if (!product) return Astro.redirect('/404');
 ---
 <ProductDetail product={product} lang={lang as any} />
+
+

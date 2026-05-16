@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionTitle from '../SectionTitle.astro';
 import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+import { formatCurrency } from '../../utils/currency';
 
 interface Props {
   lang?: 'id' | 'en' | 'my';
@@ -34,11 +35,11 @@ const t = useTranslations(lang);
           <div class="space-y-3 mb-6">
             <div class="flex justify-between text-gray-600 dark:text-gray-400 text-sm">
               <span data-i18n="cart.subtotal">{t('cart.subtotal')}</span>
-              <span id="summary-subtotal" class="font-medium text-gray-900 dark:text-white">Rp 0</span>
+              <span id="summary-subtotal" class="font-medium text-gray-900 dark:text-white">{formatCurrency(0)}</span>
             </div>
             <div class="flex justify-between items-center pt-2">
               <span data-i18n="cart.total_price" class="text-base font-bold text-cart-text">{t('cart.total_price')}</span>
-              <span id="summary-grandtotal" class="text-xl font-extrabold text-cart-text">Rp 0</span>
+              <span id="summary-grandtotal" class="text-xl font-extrabold text-cart-text">{formatCurrency(0)}</span>
             </div>
           </div>
  
@@ -66,7 +67,7 @@ const t = useTranslations(lang);
   import { langStore } from '../../lib/lang';
   import { ui } from '../../i18n/ui';
   
-  const formatCurrency = (val: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+  import { formatCurrency } from '../../utils/currency';
   
   let currentLang = 'id';
   

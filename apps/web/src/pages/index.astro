@@ -1,4 +1,6 @@
 ---
 import Home from '../components/pages/Home.astro';
+import { getDefaultLocale } from '../lib/cms';
+const defaultLang = getDefaultLocale() as 'id' | 'en' | 'my';
 ---
-<Home lang="id" />
+<Home lang={defaultLang} />

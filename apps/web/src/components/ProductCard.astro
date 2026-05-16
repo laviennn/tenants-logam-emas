@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import { formatCurrency } from '../utils/currency';
 
 interface Props {
   id: string;
@@ -21,12 +22,8 @@ const {
   rating = 5,
 } = Astro.props;
 
-// Format price to IDR
-const formattedPrice = new Intl.NumberFormat('id-ID', {
-  style: 'currency',
-  currency: 'IDR',
-  minimumFractionDigits: 0,
-}).format(price);
+// Format price using dynamic region-aware utility
+const formattedPrice = formatCurrency(price);
 
 const discountPercent = strikePrice
   ? Math.round(((strikePrice - price) / strikePrice) * 100)
@@ -56,7 +53,7 @@ const discountPercent = strikePrice
     class='relative aspect-square overflow-hidden bg-gray-50 dark:bg-gray-900 p-4 block'>
     <Image
       src={image}
-      alt={name}
+      alt={name || 'Product Image'}
       width={300}
       height={300}
       loading='lazy'
@@ -96,11 +93,7 @@ const discountPercent = strikePrice
       {
         strikePrice && (
           <span class='text-xs text-gray-400 line-through decoration-gray-400'>
-            {new Intl.NumberFormat('id-ID', {
-              style: 'currency',
-              currency: 'IDR',
-              minimumFractionDigits: 0,
-            }).format(strikePrice)}
+            {formatCurrency(strikePrice)}
           </span>
         )
       }

@@ -1,4 +1,6 @@
 ---
 import Products from '../../components/pages/Products.astro';
+import { getDefaultLocale } from '../../lib/cms';
+const defaultLang = getDefaultLocale() as 'id' | 'en' | 'my';
 ---
-<Products lang="id" />
+<Products lang={defaultLang} />

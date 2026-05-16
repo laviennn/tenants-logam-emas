@@ -15,10 +15,15 @@ interface Props {
 const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
 
 const brandName = siteSettings?.brandName || tenantName || 'Logam Mulia';
-const customMessage =
-  siteSettings?.whatsappDefaultMessage ||
-  'saya tertarik untuk bertransaksi emas. Bagaimana prosedur pembelian dan penjualannya?';
-const defaultMessage = `Halo Admin ${brandName}, ${customMessage}`;
+const isMY = import.meta.env.PUBLIC_TENANT_REGION === 'MY';
+
+// Default fallback message differs per region; CMS field overrides this if set
+const defaultCustomMessage = isMY
+  ? 'boleh ajar saya simpan emas?'
+  : 'saya tertarik untuk bertransaksi emas. Bagaimana prosedur pembelian dan penjualannya?';
+const customMessage = siteSettings?.whatsappDefaultMessage || defaultCustomMessage;
+const greeting = isMY ? `Salam ${brandName}` : `Halo Admin ${brandName}`;
+const defaultMessage = `${greeting}, ${customMessage}`;
 const waLink = `https://wa.me/${siteSettings?.whatsappNumber}?text=${encodeURIComponent(defaultMessage)}`;
 const showWA = siteSettings?.enableFloatingWA && siteSettings?.whatsappNumber;
 

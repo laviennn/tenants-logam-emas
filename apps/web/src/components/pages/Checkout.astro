@@ -3,6 +3,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionTitle from '../SectionTitle.astro';
 import { getLangFromUrl, useTranslations } from '../../i18n/utils';
 import { resolveTenant, getSiteSettings, getImageUrl } from '../../lib/cms';
+import { formatCurrency } from '../../utils/currency';
+
+// ── Region config (SSG build-time, read from ENV) ──────────────
+const regionCode = import.meta.env.PUBLIC_TENANT_REGION === 'MY' ? 'MY' : 'ID';
+const isMY = regionCode === 'MY';
 
 interface Props {
   lang?: 'id' | 'en' | 'my';
@@ -89,12 +94,14 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
                   id='phone'
                   required
                   class='w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-primary'
-                  placeholder='Contoh: 081234567890'
+                  placeholder={isMY ? 'Contoh: 0123456789 atau 60123456789' : 'Contoh: 081234567890'}
                 />
                 <p
                   id='phone-error'
                   class='text-red-500 text-[11px] font-bold mt-1 hidden uppercase tracking-wider bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-100 dark:border-red-900/30'>
-                  ⚠️ Format nomor salah. Harus diawali 08... atau 62... dan hanya angka.
+                  {isMY
+                    ? '⚠️ Format nombor salah. Mesti bermula 01... atau 60... dan nombor sahaja.'
+                    : '⚠️ Format nomor salah. Harus diawali 08... atau 62... dan hanya angka.'}
                 </p>
               </div>
             </div>
@@ -267,7 +274,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
                                 {method.name}
                               </p>
                               <p class='text-primary font-semibold text-sm mt-0.5'>
-                                Rp {method.price.toLocaleString('id-ID')}
+                                {formatCurrency(method.price)}
                               </p>
                             </div>
                             <div class='w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600 flex-shrink-0 shipping-radio' />
@@ -393,7 +400,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
               <span
                 id='summary-subtotal'
                 class='font-medium text-gray-900 dark:text-white'
-                >Rp 0</span
+                >{formatCurrency(0)}</span
               >
             </div>
             <div class='flex justify-between text-gray-600 dark:text-gray-400'>
@@ -403,7 +410,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
               <span
                 id='summary-shipping'
                 class='font-medium text-gray-900 dark:text-white'
-                >Rp 0</span
+                >{formatCurrency(0)}</span
               >
             </div>
             <div
@@ -416,7 +423,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
               <span
                 id='summary-total'
                 class='text-2xl font-extrabold text-primary'
-                >Rp 0</span
+                >{formatCurrency(0)}</span
               >
             </div>
           </div>
@@ -500,7 +507,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
           <span
             id='upload-total'
             class='font-bold text-primary'
-            >Rp 0</span>
+            >{formatCurrency(0)}</span>
         </p>
       </div>
 
@@ -591,11 +598,12 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
             ✅
           </div>
           <h3 class='text-2xl font-black text-gray-900 dark:text-white mb-2'>
-            Pesanan Berhasil!
+            {isMY ? 'Pesanan Berjaya!' : 'Pesanan Berhasil!'}
           </h3>
           <p class='text-gray-500 dark:text-gray-400 mb-8'>
-            Data pesanan Anda telah kami terima. Silakan klik tombol di bawah
-            untuk konfirmasi via WhatsApp dan melacak pesanan Anda.
+            {isMY
+              ? 'Data pesanan anda telah kami terima. Sila klik butang di bawah untuk pengesahan melalui WhatsApp dan menjejak pesanan anda.'
+              : 'Data pesanan Anda telah kami terima. Silakan klik tombol di bawah untuk konfirmasi via WhatsApp dan melacak pesanan Anda.'}
           </p>
 
           <div class='space-y-3'>
@@ -610,12 +618,13 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
                   d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z'
                 ></path></svg
               >
-              Konfirmasi WhatsApp
+              {isMY ? 'Pengesahan WhatsApp' : 'Konfirmasi WhatsApp'}
             </button>
             <p
               class='text-[10px] text-gray-400 uppercase font-black tracking-widest mt-4 italic'>
-              Otomatis diarahkan ke halaman lacak pesanan
-            </p>
+              {isMY
+                ? 'AKAN DIARAHKAN SECARA AUTOMATIK KE HALAMAN JEJAK PESANAN'
+                : 'OTOMATIS DIARAHKAN KE HALAMAN LACAK PESANAN'}
           </div>
         </div>
       </div>
@@ -678,9 +687,10 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
   </div>
 </BaseLayout>
 
-<!-- Bridge: pass tenantId from server to client -->
-<script is:inline define:vars={{ tenantId }}>
+<!-- Bridge: pass tenantId & regionCode from server to client -->
+<script is:inline define:vars={{ tenantId, regionCode }}>
   window.__tenantId = tenantId;
+  window.__regionCode = regionCode;
 </script>
 
 <script>
@@ -720,12 +730,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
     }
   };
 
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(val);
+  import { formatCurrency } from '../../utils/currency';
 
   // Render Cart Items
   const renderCheckoutItems = () => {
@@ -849,20 +854,15 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
     });
   });
 
-  // Phone Validation
-  const phoneInput = document.getElementById('phone') as HTMLInputElement;
-  const phoneError = document.getElementById('phone-error');
-  phoneInput?.addEventListener('input', () => {
-    const val = phoneInput.value.replace(/\D/g, '');
-    const phoneRegex = /^(08|628)[0-9]{8,13}$/;
-    if (val.length > 0 && !phoneRegex.test(val)) {
-      phoneError?.classList.remove('hidden');
-      phoneInput.classList.add('border-red-500', 'ring-red-500');
-    } else {
-      phoneError?.classList.add('hidden');
-      phoneInput.classList.remove('border-red-500', 'ring-red-500');
-    }
-  });
+  // ── Region config bridged from server ─────────────────────────
+  const regionCode = (window as any).__regionCode || 'ID';
+  const isMY = regionCode === 'MY';
+
+  // MY: 01XXXXXXXXX (10-11 digits) or 601XXXXXXXXX (11-12 digits)
+  // ID: 08XXXXXXXXXX (10-13 digits) or 628XXXXXXXXX (11-15 digits)
+  const phoneRegex = isMY
+    ? /^(60[1-9][0-9]{7,10}|0[1-9][0-9]{7,10})$/
+    : /^(08|628)[0-9]{8,13}$/;
 
   // Supabase Auth logic
   supabase.auth.getSession().then(({ data: { session } }) => {
@@ -904,11 +904,12 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
 
     const phoneInput = document.getElementById('phone') as HTMLInputElement;
     const phoneVal = phoneInput.value;
-    const phoneRegex = /^(08|62)[0-9]{8,13}$/;
-    
+
     if (!phoneRegex.test(phoneVal)) {
       showToast(
-        'Format nomor WhatsApp tidak valid. Harus diawali 08... atau 62... (10-15 digit).',
+        isMY
+          ? 'Format nombor WhatsApp tidak sah. Mesti bermula 01... atau 60... (10-12 digit).'
+          : 'Format nomor WhatsApp tidak valid. Harus diawali 08... atau 62... (10-15 digit).',
         'warning',
       );
       phoneInput.focus();
@@ -1192,7 +1193,24 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
     ).value;
 
     const brandName = btnConfirm?.dataset.brand || 'Mulia Gold';
-    const waText = `Halo Admin ${brandName}, saya ingin konfirmasi pembayaran:
+
+    // WhatsApp confirmation message — localized per region
+    const waText = isMY
+      ? `Salam ${brandName}, saya ingin mengesahkan pembayaran:
+
+*ID Pesanan:* ${orderId}
+*Nama Penuh:* ${name}
+*E-mel:* ${email}
+*No. Telefon:* ${phone}
+*Alamat Penghantaran:* ${address}, ${city}, ${province}
+*Kaedah Penghantaran:* ${shippingMethod}
+
+*Senarai Pesanan:*
+${orderList}
+*Jumlah Pembayaran:* ${total}
+
+*Bukti Pembayaran:* ${publicUrl}`
+      : `Halo Admin ${brandName}, saya ingin konfirmasi pembayaran:
 
 *Order ID:* ${orderId}
 *Nama Lengkap:* ${name}
@@ -1230,47 +1248,55 @@ ${orderList}
       });
     }
   });
-  // Real-time Phone Validation
+  // Real-time Phone Validation (region-aware)
   const phoneInputEl = document.getElementById('phone') as HTMLInputElement;
   const phoneErrorEl = document.getElementById('phone-error');
 
   phoneInputEl?.addEventListener('input', (e) => {
     const target = e.target as HTMLInputElement;
-    // Bersihkan karakter non-angka
+    // Strip non-digit characters
     const originalValue = target.value;
     const cleanedValue = originalValue.replace(/\D/g, '');
-    
-    if (originalValue !== cleanedValue) {
-      target.value = cleanedValue;
-    }
+    if (originalValue !== cleanedValue) target.value = cleanedValue;
 
-    // Validasi format awalan (08 atau 62)
     const val = target.value;
-    if (val.length >= 2) {
-      if (!val.startsWith('08') && !val.startsWith('62')) {
-        phoneErrorEl?.classList.remove('hidden');
-        target.classList.add('border-red-500', 'ring-red-500');
+
+    if (isMY) {
+      // MY: must start with 0 (local) or 6 (international)
+      if (val.length >= 2) {
+        const valid = val.startsWith('01') || val.startsWith('60');
+        phoneErrorEl?.classList.toggle('hidden', valid);
+        target.classList.toggle('border-red-500', !valid);
+        target.classList.toggle('ring-red-500', !valid);
+      } else if (val.length === 1) {
+        const validStart = val === '0' || val === '6';
+        phoneErrorEl?.classList.toggle('hidden', validStart);
       } else {
         phoneErrorEl?.classList.add('hidden');
         target.classList.remove('border-red-500', 'ring-red-500');
       }
-    } else if (val.length > 0) {
-       // Masih mengetik digit pertama, jangan show error dulu kecuali jika digit pertama bukan 0 atau 6
-       if (val !== '0' && val !== '6') {
-         phoneErrorEl?.classList.remove('hidden');
-       } else {
-         phoneErrorEl?.classList.add('hidden');
-       }
     } else {
-      phoneErrorEl?.classList.add('hidden');
-      target.classList.remove('border-red-500', 'ring-red-500');
+      // ID: must start with 08 or 62
+      if (val.length >= 2) {
+        const valid = val.startsWith('08') || val.startsWith('62');
+        phoneErrorEl?.classList.toggle('hidden', valid);
+        target.classList.toggle('border-red-500', !valid);
+        target.classList.toggle('ring-red-500', !valid);
+      } else if (val.length === 1) {
+        const validStart = val === '0' || val === '6';
+        phoneErrorEl?.classList.toggle('hidden', validStart);
+      } else {
+        phoneErrorEl?.classList.add('hidden');
+        target.classList.remove('border-red-500', 'ring-red-500');
+      }
     }
   });
 
   // Phone Validation on Blur
   phoneInputEl?.addEventListener('blur', () => {
     const val = phoneInputEl.value;
-    if (val.length > 0 && !val.startsWith('08') && !val.startsWith('62')) {
+    if (val.length === 0) return;
+    if (!phoneRegex.test(val)) {
       phoneErrorEl?.classList.remove('hidden');
       phoneInputEl.classList.add('border-red-500', 'ring-red-500');
     }
