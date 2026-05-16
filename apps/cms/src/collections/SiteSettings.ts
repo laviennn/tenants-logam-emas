@@ -167,6 +167,18 @@ export const SiteSettings: CollectionConfig = {
                 description: 'Teks singkat di bagian footer.',
               },
             },
+            {
+              name: 'footerCopyright',
+              type: 'text',
+              required: false,
+              localized: true,
+              label: 'Teks Copyright Footer (Opsional)',
+              admin: {
+                description:
+                  'Teks bebas yang ditampilkan di bagian bawah footer. Jika dikosongkan, otomatis menggunakan format: "© {tahun} {Brand Name}. All rights reserved."',
+                placeholder: 'Contoh: © 2026 Mulia Gold. Hak cipta dilindungi undang-undang.',
+              },
+            },
           ],
         },
         {
