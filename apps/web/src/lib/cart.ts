@@ -1,4 +1,13 @@
 import { persistentAtom } from '@nanostores/persistent';
+import { ui } from '../i18n/ui';
+import { langStore } from './lang';
+
+const getLang = () => {
+  if (typeof document !== 'undefined') {
+    return (document.documentElement.lang || langStore.get() || 'id') as 'id' | 'en' | 'my';
+  }
+  return 'id';
+};
 
 export type CartItem = {
   id: string;
@@ -45,8 +54,12 @@ export function addToCart(item: Omit<CartItem, 'quantity'>, quantity: number = 1
   }
 
   // Trigger Toast
+  const lang = getLang();
+  const rawMsg = ui[lang]?.[ 'toast.added_to_cart'] || '{name} ({quantity}x) berhasil ditambahkan ke keranjang';
+  const message = rawMsg.replace('{name}', item.name).replace('{quantity}', String(safeQtyToAdd));
+
   window.dispatchEvent(new CustomEvent('cart-toast', { 
-    detail: { message: `${item.name} (${safeQtyToAdd}x) berhasil ditambahkan ke keranjang`, type: 'success' } 
+    detail: { message, type: 'success' } 
   }));
 }
 
@@ -59,8 +72,12 @@ export function removeFromCart(id: string) {
     cartStore.set(newCart);
 
     // Trigger Toast
+    const lang = getLang();
+    const rawMsg = ui[lang]?.[ 'toast.removed_from_cart'] || '{name} dihapus dari keranjang';
+    const message = rawMsg.replace('{name}', itemName);
+
     window.dispatchEvent(new CustomEvent('cart-toast', { 
-      detail: { message: `${itemName} dihapus dari keranjang`, type: 'info' } 
+      detail: { message, type: 'info' } 
     }));
   }
 }
