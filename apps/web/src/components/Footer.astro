@@ -27,6 +27,20 @@ const defaultMessage = `${greeting}, ${customMessage}`;
 const waLink = `https://wa.me/${siteSettings?.whatsappNumber}?text=${encodeURIComponent(defaultMessage)}`;
 const showWA = siteSettings?.enableFloatingWA && siteSettings?.whatsappNumber;
 
+const copyrightMobileAlign = siteSettings?.copyrightMobileAlign || 'left';
+
+const alignContainerClasses = copyrightMobileAlign === 'center'
+  ? 'items-center text-center'
+  : copyrightMobileAlign === 'right'
+  ? 'items-end text-right md:items-center md:text-left'
+  : 'items-start text-left md:items-center md:text-left';
+
+const alignParagraphClasses = copyrightMobileAlign === 'center'
+  ? 'text-center w-full md:w-auto'
+  : copyrightMobileAlign === 'right'
+  ? 'text-right w-full md:w-auto'
+  : 'text-left w-full md:w-auto';
+
 const formatSocialUrl = (url: string, base: string) => {
   if (!url) return '';
   url = url.trim();
@@ -264,8 +278,8 @@ const twLink = formatSocialUrl(siteSettings?.twitter, 'https://twitter.com/');
   <div
     class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gray-100 dark:border-gray-800 pt-8'>
     <div
-      class='flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400'>
-      <p>
+      class={`flex flex-col md:flex-row justify-between gap-4 text-sm text-gray-500 dark:text-gray-400 ${alignContainerClasses}`}>
+      <p class={alignParagraphClasses}>
         {siteSettings?.footerCopyright
           ? siteSettings.footerCopyright
           : `© ${new Date().getFullYear()} ${brandName}. All rights reserved.`}

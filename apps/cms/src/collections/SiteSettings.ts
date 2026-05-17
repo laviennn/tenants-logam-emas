@@ -179,6 +179,20 @@ export const SiteSettings: CollectionConfig = {
                 placeholder: 'Contoh: © 2026 Mulia Gold. Hak cipta dilindungi undang-undang.',
               },
             },
+            {
+              name: 'copyrightMobileAlign',
+              type: 'select',
+              defaultValue: 'left',
+              label: 'Posisi Teks Copyright di Mobile',
+              options: [
+                { label: 'Kiri (Left)', value: 'left' },
+                { label: 'Tengah (Center)', value: 'center' },
+                { label: 'Kanan (Right)', value: 'right' },
+              ],
+              admin: {
+                description: 'Mengatur perataan teks copyright khusus pada tampilan mobile (layar kecil).',
+              },
+            },
           ],
         },
         {
