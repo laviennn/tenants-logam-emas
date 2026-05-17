@@ -47,8 +47,8 @@ const checkoutStrings = {
   errServer: t('checkout.err_server'),
   errNetwork: t('checkout.err_network'),
   errLoginFailed: t('checkout.err_login_failed'),
-  waGreetingMy: t('checkout.wa_greeting_my', { brandName: brandName }),
-  waGreetingId: t('checkout.wa_greeting_id', { brandName: brandName }),
+  waGreetingMy: t('checkout.wa_greeting_my').replace('{brandName}', brandName),
+  waGreetingId: t('checkout.wa_greeting_id').replace('{brandName}', brandName),
 };
 ---
 
