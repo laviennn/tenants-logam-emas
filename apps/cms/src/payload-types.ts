@@ -426,8 +426,13 @@ export interface SiteSetting {
     | {
         bankName: string;
         accountName: string;
-        accountNumber: string;
+        accountNumber?: string | null;
+        phoneNumber?: string | null;
         logo?: (number | null) | Media;
+        /**
+         * Gambar QRIS / QR Code pembayaran. Digunakan pada halaman upload bukti transaksi di checkout.
+         */
+        qrCode?: (number | null) | Media;
         id?: string | null;
       }[]
     | null;
@@ -923,7 +928,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         bankName?: T;
         accountName?: T;
         accountNumber?: T;
+        phoneNumber?: T;
         logo?: T;
+        qrCode?: T;
         id?: T;
       };
   facebook?: T;

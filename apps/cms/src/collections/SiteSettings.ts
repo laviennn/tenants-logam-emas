@@ -221,13 +221,29 @@ export const SiteSettings: CollectionConfig = {
               fields: [
                 { name: 'bankName', type: 'text', required: true, label: 'Nama Bank / e-Wallet' },
                 { name: 'accountName', type: 'text', required: true, label: 'Atas Nama' },
-                { name: 'accountNumber', type: 'text', required: true, label: 'Nomor Rekening' },
+                { name: 'accountNumber', type: 'text', required: false, label: 'Nomor Rekening (Opsional)' },
+                {
+                  name: 'phoneNumber',
+                  type: 'text',
+                  required: false,
+                  label: 'Nomor HP (E-wallet / Opsional)',
+                },
                 {
                   name: 'logo',
                   type: 'upload',
                   relationTo: 'media',
                   required: false,
                   label: 'Logo Bank',
+                },
+                {
+                  name: 'qrCode',
+                  type: 'upload',
+                  relationTo: 'media',
+                  required: false,
+                  label: 'QRIS / QR Code Image (Opsional)',
+                  admin: {
+                    description: 'Gambar QRIS / QR Code pembayaran. Digunakan pada halaman upload bukti transaksi di checkout.',
+                  },
                 },
               ],
             },

@@ -279,6 +279,9 @@ export const ui = {
     'toast.notice': 'Pemberitahuan',
     'toast.added_to_cart': '{name} ({quantity}x) berhasil ditambahkan ke keranjang',
     'toast.removed_from_cart': '{name} dihapus dari keranjang',
+    'checkout.scan_qr': 'Pindai QRIS Pembayaran',
+    'checkout.save_qr_desc': 'Simpan atau screenshot QR di atas untuk melakukan scan pembayaran',
+    'checkout.payment_phone': 'Nomor HP / WhatsApp',
   },
   en: {
     'nav.home': 'Home',
@@ -552,6 +555,9 @@ export const ui = {
     'toast.notice': 'Notice',
     'toast.added_to_cart': '{name} ({quantity}x) added to cart',
     'toast.removed_from_cart': '{name} removed from cart',
+    'checkout.scan_qr': 'Scan QRIS for Payment',
+    'checkout.save_qr_desc': 'Save or screenshot the QR above to perform payment scanning',
+    'checkout.payment_phone': 'Phone Number / WhatsApp',
   },
 my: {
     'nav.home': 'Home',
@@ -824,6 +830,9 @@ my: {
     'toast.success': 'Berjaya',
     'toast.notice': 'Pemberitahuan',
     'toast.added_to_cart': '{name} ({quantity}x) berjaya dimasukkan ke troli',
-    'toast.removed_from_cart': '{name} dikeluarkan dari troli'
+    'toast.removed_from_cart': '{name} dikeluarkan dari troli',
+    'checkout.scan_qr': 'Imbas QR Pembayaran',
+    'checkout.save_qr_desc': 'Simpan atau tangkapan skrin (screenshot) QR di atas untuk melakukan imbasan pembayaran',
+    'checkout.payment_phone': 'Nombor Telefon / WhatsApp',
 }
 } as const;

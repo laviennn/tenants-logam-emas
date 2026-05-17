@@ -339,9 +339,11 @@ const checkoutStrings = {
                           type='button'
                           class='payment-card text-left p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-primary transition-all duration-200'
                           data-bank={channel.bankName}
-                          data-acc={channel.accountNumber}
+                          data-acc={channel.accountNumber || ''}
+                          data-phone={channel.phoneNumber || ''}
                           data-accname={channel.accountName}
-                          data-logo={getImageUrl(channel.logo, 'thumbnail')}>
+                          data-logo={getImageUrl(channel.logo, 'thumbnail')}
+                          data-qr={channel.qrCode ? getImageUrl(channel.qrCode) : ''}>
                           <div class='flex items-center gap-3'>
                             {channel.logo ? (
                               <img
@@ -360,10 +362,17 @@ const checkoutStrings = {
                               <p class='font-bold text-gray-900 dark:text-white text-sm truncate'>
                                 {channel.bankName}
                               </p>
-                              <p class='text-gray-500 text-xs truncate'>
-                                {channel.accountNumber}
-                              </p>
-                              <p class='text-gray-500 text-xs truncate'>
+                              {channel.accountNumber && (
+                                <p class='text-gray-500 text-[11px] leading-tight truncate'>
+                                  Rek: {channel.accountNumber}
+                                </p>
+                              )}
+                              {channel.phoneNumber && (
+                                <p class='text-gray-500 text-[11px] leading-tight truncate'>
+                                  HP: {channel.phoneNumber}
+                                </p>
+                              )}
+                              <p class='text-gray-500 text-[11px] leading-tight truncate'>
                                 {channel.accountName}
                               </p>
                             </div>
@@ -393,6 +402,14 @@ const checkoutStrings = {
                 <input
                   type='hidden'
                   id='payment-logo'
+                />
+                <input
+                  type='hidden'
+                  id='payment-qr'
+                />
+                <input
+                  type='hidden'
+                  id='payment-phone'
                 />
               </div>
             </div>
@@ -549,13 +566,29 @@ const checkoutStrings = {
         <!-- Divider -->
         <div class='border-t border-gray-100 dark:border-gray-800 pt-4'>
           <!-- Account Number Section -->
-          <div class='mb-4'>
+          <div id='acc-container' class='hidden mb-4'>
             <p class='text-xs text-gray-500 mb-1'>Nomor Rekening</p>
             <div class='flex items-center justify-between gap-3'>
               <p id='bank-account' class='text-xl sm:text-2xl font-mono font-black text-primary tracking-wider'>
                 1234567890
               </p>
               <button id='btn-copy' class='flex items-center gap-1 p-2 text-xs text-primary hover:text-primary-dark transition-colors flex-shrink-0' title='Salin Nomor Rekening'>
+                <svg class='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3'></path>
+                </svg>
+                <span>Salin</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Phone Number Section -->
+          <div id='phone-container' class='hidden mb-4'>
+            <p data-i18n='checkout.payment_phone' class='text-xs text-gray-500 mb-1'>{t('checkout.payment_phone')}</p>
+            <div class='flex items-center justify-between gap-3'>
+              <p id='bank-phone' class='text-xl sm:text-2xl font-mono font-black text-primary tracking-wider'>
+                08123456789
+              </p>
+              <button id='btn-copy-phone' class='flex items-center gap-1 p-2 text-xs text-primary hover:text-primary-dark transition-colors flex-shrink-0' title='Salin Nomor HP'>
                 <svg class='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3'></path>
                 </svg>
@@ -571,6 +604,15 @@ const checkoutStrings = {
               PT Logam Mulia
             </p>
           </div>
+        </div>
+
+        <!-- QR Code Section (Optional, only visible if QRIS image is available) -->
+        <div id='qr-container' class='hidden border-t border-gray-100 dark:border-gray-800 pt-6 text-center'>
+          <p data-i18n="checkout.scan_qr" class='text-xs text-gray-500 mb-2 font-medium'>{t('checkout.scan_qr')}</p>
+          <div class='inline-block p-4 bg-white rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm'>
+            <img id='qr-image' src='' alt='QRIS Code' class='max-w-[200px] h-auto mx-auto object-contain rounded-lg' />
+          </div>
+          <p data-i18n="checkout.save_qr_desc" class='text-[10px] text-gray-400 mt-2 italic'>{t('checkout.save_qr_desc')}</p>
         </div>
       </div>
 
@@ -851,17 +893,22 @@ const checkoutStrings = {
     card.addEventListener('click', () => {
       const bank = (card as HTMLElement).dataset.bank || '';
       const acc = (card as HTMLElement).dataset.acc || '';
+      const phone = (card as HTMLElement).dataset.phone || '';
       const name = (card as HTMLElement).dataset.accname || '';
       const logo = (card as HTMLElement).dataset.logo || '';
+      const qr = (card as HTMLElement).dataset.qr || '';
 
       // Update hidden inputs
       (document.getElementById('payment-method') as HTMLInputElement).value =
         bank;
       (document.getElementById('payment-acc') as HTMLInputElement).value = acc;
+      (document.getElementById('payment-phone') as HTMLInputElement).value = phone;
       (document.getElementById('payment-accname') as HTMLInputElement).value =
         name;
       (document.getElementById('payment-logo') as HTMLInputElement).value =
         logo;
+      (document.getElementById('payment-qr') as HTMLInputElement).value =
+        qr;
 
       // Update UI active state
       document.querySelectorAll('.payment-card').forEach((c) => {
@@ -978,11 +1025,17 @@ const checkoutStrings = {
     ).value;
     const bankAcc = (document.getElementById('payment-acc') as HTMLInputElement)
       .value;
+    const bankPhone = (
+      document.getElementById('payment-phone') as HTMLInputElement
+    ).value;
     const bankAccName = (
       document.getElementById('payment-accname') as HTMLInputElement
     ).value;
     const bankLogo = (
       document.getElementById('payment-logo') as HTMLInputElement
+    ).value;
+    const bankQr = (
+      document.getElementById('payment-qr') as HTMLInputElement
     ).value;
 
     if (!bankName) {
@@ -997,8 +1050,29 @@ const checkoutStrings = {
     const bNameEl = document.getElementById('bank-name');
     if (bNameEl) bNameEl.innerText = bankName;
 
+    // Toggle Account Number container
+    const accContainer = document.getElementById('acc-container');
     const bAccEl = document.getElementById('bank-account');
-    if (bAccEl) bAccEl.innerText = bankAcc;
+    if (accContainer && bAccEl) {
+      if (bankAcc) {
+        bAccEl.innerText = bankAcc;
+        accContainer.classList.remove('hidden');
+      } else {
+        accContainer.classList.add('hidden');
+      }
+    }
+
+    // Toggle Phone Number container
+    const phoneContainer = document.getElementById('phone-container');
+    const bPhoneEl = document.getElementById('bank-phone');
+    if (phoneContainer && bPhoneEl) {
+      if (bankPhone) {
+        bPhoneEl.innerText = bankPhone;
+        phoneContainer.classList.remove('hidden');
+      } else {
+        phoneContainer.classList.add('hidden');
+      }
+    }
 
     const bAccNameEl = document.getElementById('bank-acc-name');
     if (bAccNameEl) bAccNameEl.innerText = bankAccName;
@@ -1013,11 +1087,23 @@ const checkoutStrings = {
       }
     }
 
+    // Optional QR Code display
+    const qrContainerEl = document.getElementById('qr-container');
+    const qrImageEl = document.getElementById('qr-image') as HTMLImageElement;
+    if (qrContainerEl && qrImageEl) {
+      if (bankQr) {
+        qrImageEl.src = bankQr;
+        qrContainerEl.classList.remove('hidden');
+      } else {
+        qrContainerEl.classList.add('hidden');
+      }
+    }
+
     document.getElementById('checkout-container')?.classList.add('hidden');
     document.getElementById('upload-section')?.classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Copy Button logic
+    // Copy Account Button logic
     const btnCopy = document.getElementById('btn-copy');
     btnCopy?.addEventListener('click', () => {
       navigator.clipboard.writeText(bankAcc).then(() => {
@@ -1026,6 +1112,19 @@ const checkoutStrings = {
           '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
         setTimeout(() => {
           btnCopy.innerHTML = originalIcon;
+        }, 2000);
+      });
+    });
+
+    // Copy Phone Button logic
+    const btnCopyPhone = document.getElementById('btn-copy-phone');
+    btnCopyPhone?.addEventListener('click', () => {
+      navigator.clipboard.writeText(bankPhone).then(() => {
+        const originalIcon = btnCopyPhone.innerHTML;
+        btnCopyPhone.innerHTML =
+          '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+        setTimeout(() => {
+          btnCopyPhone.innerHTML = originalIcon;
         }, 2000);
       });
     });
