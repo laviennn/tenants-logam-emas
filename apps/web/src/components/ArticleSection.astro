@@ -81,14 +81,14 @@ const formatDate = (dateStr: string) => {
         </p>
         
         <div class="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest group-hover:translate-x-2 transition-transform duration-300">
-          Baca Selengkapnya
+          {t('news.read_more')}
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
         </div>
       </div>
     </a>
   )) : (
     <div class="col-span-full py-20 text-center text-gray-400 bg-gray-50 dark:bg-gray-900/50 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-white/5">
-      <p class="font-black uppercase tracking-widest">Belum ada ulasan pelanggan.</p>
+      <p class="font-black uppercase tracking-widest">{t('news.no_articles')}</p>
     </div>
   )}
 </div>

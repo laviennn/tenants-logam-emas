@@ -27,6 +27,29 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
   paymentChannels: [],
   whatsappNumber: '6281234567890',
 };
+
+const brandName = siteSettings?.brandName || tenant?.brandName || 'Logam Mulia';
+
+const checkoutStrings = {
+  errCompleteForm: t('checkout.err_complete_form'),
+  errShipping: t('checkout.err_shipping'),
+  errPayment: t('checkout.err_payment'),
+  errPhoneMy: t('checkout.err_phone_my'),
+  errPhoneId: t('checkout.err_phone_id'),
+  errPasswordMismatch: t('checkout.err_password_mismatch'),
+  errSignupFailed: t('checkout.err_signup_failed'),
+  errEmailInvalid: t('checkout.err_email_invalid'),
+  errNoProof: t('checkout.err_no_proof'),
+  errFileSize: t('checkout.err_file_size'),
+  statusUploading: t('checkout.status_uploading'),
+  statusConfirmWa: t('checkout.status_confirm_wa'),
+  errUploadFailed: t('checkout.err_upload_failed'),
+  errServer: t('checkout.err_server'),
+  errNetwork: t('checkout.err_network'),
+  errLoginFailed: t('checkout.err_login_failed'),
+  waGreetingMy: t('checkout.wa_greeting_my', { brandName: brandName }),
+  waGreetingId: t('checkout.wa_greeting_id', { brandName: brandName }),
+};
 ---
 
 <BaseLayout title='Checkout' tenantId={tenantId} siteSettings={siteSettings}>
@@ -687,10 +710,10 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
   </div>
 </BaseLayout>
 
-<!-- Bridge: pass tenantId & regionCode from server to client -->
-<script is:inline define:vars={{ tenantId, regionCode }}>
+<script is:inline define:vars={{ tenantId, regionCode, checkoutStrings }}>
   window.__tenantId = tenantId;
   window.__regionCode = regionCode;
+  window.__CHECKOUT_STRINGS = checkoutStrings;
 </script>
 
 <script>
@@ -700,6 +723,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
 
   // tenantId passed from server via window.__tenantId
   const tenantIdVar = (window as any).__tenantId;
+  const checkoutStrings = (window as any).__CHECKOUT_STRINGS;
 
   console.log('[Checkout] Initializing with CMS_URL:', CMS_URL);
 
@@ -883,21 +907,21 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
   btnProceed?.addEventListener('click', async () => {
     const form = document.getElementById('checkout-form') as HTMLFormElement;
     if (!form.checkValidity()) {
-      showToast('Harap lengkapi seluruh form data pembeli dan alamat pengiriman.', 'warning');
+      showToast(checkoutStrings.errCompleteForm, 'warning');
       form.reportValidity();
       return;
     }
 
     const shippingMethodVal = (document.getElementById('shipping-method') as HTMLInputElement)?.value;
     if (!shippingMethodVal) {
-      showToast('Harap pilih jasa pengiriman terlebih dahulu.', 'warning');
+      showToast(checkoutStrings.errShipping, 'warning');
       document.getElementById('shipping-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
     const paymentMethodVal = (document.getElementById('payment-method') as HTMLInputElement)?.value;
     if (!paymentMethodVal) {
-      showToast('Harap pilih channel pembayaran terlebih dahulu.', 'warning');
+      showToast(checkoutStrings.errPayment, 'warning');
       document.getElementById('payment-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
@@ -906,12 +930,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
     const phoneVal = phoneInput.value;
 
     if (!phoneRegex.test(phoneVal)) {
-      showToast(
-        isMY
-          ? 'Format nombor WhatsApp tidak sah. Mesti bermula 01... atau 60... (10-12 digit).'
-          : 'Format nomor WhatsApp tidak valid. Harus diawali 08... atau 62... (10-15 digit).',
-        'warning',
-      );
+      showToast(isMY ? checkoutStrings.errPhoneMy : checkoutStrings.errPhoneId, 'warning');
       phoneInput.focus();
       const phoneError = document.getElementById('phone-error');
       phoneError?.classList.remove('hidden');
@@ -932,7 +951,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
     if (!session && password) {
       if (password !== confirmPassword) {
         showToast(
-          'Password dan konfirmasi password tidak cocok. Harap periksa kembali.',
+          checkoutStrings.errPasswordMismatch,
           'warning',
           'upload-toast',
         );
@@ -945,7 +964,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
       if (error) {
         console.error('[Checkout] Supabase signUp error:', error);
         showToast(
-          'Gagal membuat akun: ' + error.message,
+          checkoutStrings.errSignupFailed + error.message,
           'error',
           'upload-toast',
         );
@@ -968,7 +987,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
 
     if (!bankName) {
       showToast(
-        'Harap pilih channel pembayaran terlebih dahulu.',
+        checkoutStrings.errPayment,
         'warning',
         'upload-toast',
       );
@@ -1022,7 +1041,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
     const phoneInput = document.getElementById('phone') as HTMLInputElement;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailInput.value)) {
-      showToast('Harap masukkan format email yang valid.', 'warning');
+      showToast(checkoutStrings.errEmailInvalid, 'warning');
       return;
     }
 
@@ -1032,7 +1051,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
       'payment-proof',
     ) as HTMLInputElement;
     if (!fileInput.files || fileInput.files.length === 0) {
-      showToast('Harap upload foto bukti transfer terlebih dahulu.', 'warning');
+      showToast(checkoutStrings.errNoProof, 'warning');
       console.warn('[Checkout] User tried to confirm without uploading proof.');
       return;
     }
@@ -1041,7 +1060,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
     if (file.size > 4 * 1024 * 1024) {
       // 4MB
       showToast(
-        'Ukuran file maksimal 4MB. Harap kompres atau pilih file lain.',
+        checkoutStrings.errFileSize,
         'warning',
       );
       return;
@@ -1049,7 +1068,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
 
     const orderId = 'ORD-' + Date.now();
     if (btnConfirm) {
-      btnConfirm.innerText = 'Mengupload...';
+      btnConfirm.innerText = checkoutStrings.statusUploading;
       btnConfirm.setAttribute('disabled', 'true');
     }
 
@@ -1082,7 +1101,7 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
 
       // Show friendly non-blocking warning — order still proceeds
       showToast(
-        'Upload bukti gagal (storage belum dikonfigurasi). Pesanan tetap dilanjutkan — harap kirim bukti transfer manual ke admin.',
+        checkoutStrings.errUploadFailed,
         'warning',
       );
 
@@ -1153,11 +1172,11 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
         const errData = await response.json();
         console.error('[Checkout] Payload API error:', errData);
         showToast(
-          'Gagal memproses pesanan ke server. Silakan coba lagi.',
+          checkoutStrings.errServer,
           'error',
         );
         if (btnConfirm) {
-          btnConfirm.innerText = 'Konfirmasi & Hubungi Admin via WhatsApp';
+          btnConfirm.innerText = checkoutStrings.statusConfirmWa;
           btnConfirm.removeAttribute('disabled');
         }
         return; // Hentikan proses, jangan reset cart
@@ -1167,11 +1186,11 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
     } catch (e) {
       console.error('[Checkout] Failed to save transaction to Payload:', e);
       showToast(
-        'Gagal terhubung ke server (Network Error). Silakan periksa koneksi Anda.',
+        checkoutStrings.errNetwork,
         'error',
       );
       if (btnConfirm) {
-        btnConfirm.innerText = 'Konfirmasi & Hubungi Admin via WhatsApp';
+        btnConfirm.innerText = checkoutStrings.statusConfirmWa;
         btnConfirm.removeAttribute('disabled');
       }
       return; // Hentikan proses, jangan reset cart
@@ -1196,34 +1215,34 @@ const siteSettings = (tenantId ? await getSiteSettings(tenantId, lang) : null) |
 
     // WhatsApp confirmation message — localized per region
     const waText = isMY
-      ? `Salam ${brandName}, saya ingin mengesahkan pembayaran:
-
-*ID Pesanan:* ${orderId}
-*Nama Penuh:* ${name}
-*E-mel:* ${email}
-*No. Telefon:* ${phone}
-*Alamat Penghantaran:* ${address}, ${city}, ${province}
-*Kaedah Penghantaran:* ${shippingMethod}
-
-*Senarai Pesanan:*
-${orderList}
-*Jumlah Pembayaran:* ${total}
-
-*Bukti Pembayaran:* ${publicUrl}`
-      : `Halo Admin ${brandName}, saya ingin konfirmasi pembayaran:
-
-*Order ID:* ${orderId}
-*Nama Lengkap:* ${name}
-*Email:* ${email}
-*No Telephone:* ${phone}
-*Alamat Pengiriman:* ${address}, ${city}, ${province}
-*Jasa Pengiriman:* ${shippingMethod}
-
-*Daftar Pesanan:*
-${orderList}
-*Total Pembayaran:* ${total}
-
-*Bukti Pembayaran:* ${publicUrl}`;
+      ? `${checkoutStrings.waGreetingMy}
+ 
+ *ID Pesanan:* ${orderId}
+ *Nama Penuh:* ${name}
+ *E-mel:* ${email}
+ *No. Telefon:* ${phone}
+ *Alamat Penghantaran:* ${address}, ${city}, ${province}
+ *Kaedah Penghantaran:* ${shippingMethod}
+ 
+ *Senarai Pesanan:*
+ ${orderList}
+ *Jumlah Pembayaran:* ${total}
+ 
+ *Bukti Pembayaran:* ${publicUrl}`
+      : `${checkoutStrings.waGreetingId}
+ 
+ *Order ID:* ${orderId}
+ *Nama Lengkap:* ${name}
+ *Email:* ${email}
+ *No Telephone:* ${phone}
+ *Alamat Pengiriman:* ${address}, ${city}, ${province}
+ *Jasa Pengiriman:* ${shippingMethod}
+ 
+ *Daftar Pesanan:*
+ ${orderList}
+ *Total Pembayaran:* ${total}
+ 
+ *Bukti Pembayaran:* ${publicUrl}`;
 
     // 4. Show Success Modal instead of direct redirect (to avoid popup blocker)
     const adminWA = btnConfirm?.dataset.wa || '6281234567890';
@@ -1373,7 +1392,7 @@ ${orderList}
     if (error) {
       console.error('[Checkout Modal] Login error:', error);
       if (modalLoginErrorEl) {
-        modalLoginErrorEl.innerText = 'Gagal masuk: ' + error.message;
+        modalLoginErrorEl.innerText = checkoutStrings.errLoginFailed + error.message;
         modalLoginErrorEl.classList.remove('hidden');
       }
       return;

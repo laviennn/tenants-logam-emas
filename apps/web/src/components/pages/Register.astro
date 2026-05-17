@@ -10,6 +10,14 @@ interface Props {
 const { lang: propLang } = Astro.props;
 const lang = propLang || getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+
+const registerStrings = {
+  processing: t('login.processing'),
+  mismatch: t('register.mismatch'),
+  failed: t('register.failed'),
+  success: t('register.success'),
+  submit_btn: t('register.submit_btn'),
+};
 ---
 
 <BaseLayout title={t('nav.register')}>
@@ -54,9 +62,14 @@ const t = useTranslations(lang);
   </div>
 </BaseLayout>
 
+<script is:inline define:vars={{ registerStrings }}>
+  window.__REGISTER_STRINGS = registerStrings;
+</script>
+
 <script>
   import { supabase } from '../../lib/supabase';
 
+  const registerStrings = (window as any).__REGISTER_STRINGS;
   const form = document.getElementById('register-form') as HTMLFormElement;
   const btnRegister = document.getElementById('btn-register');
   const toast = document.getElementById('toast');
@@ -76,7 +89,7 @@ const t = useTranslations(lang);
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if(btnRegister) {
-      btnRegister.innerText = 'Memproses...';
+      btnRegister.innerText = registerStrings.processing;
       btnRegister.setAttribute('disabled', 'true');
     }
 
@@ -85,9 +98,9 @@ const t = useTranslations(lang);
     const confirmPassword = (document.getElementById('confirm-password') as HTMLInputElement).value;
 
     if (password !== confirmPassword) {
-      showToast("Password dan konfirmasi password tidak cocok!", 'error');
+      showToast(registerStrings.mismatch, 'error');
       if(btnRegister) {
-        btnRegister.innerText = 'Daftar Sekarang';
+        btnRegister.innerText = registerStrings.submit_btn;
         btnRegister.removeAttribute('disabled');
       }
       return;
@@ -99,13 +112,13 @@ const t = useTranslations(lang);
     });
 
     if (error) {
-      showToast('Pendaftaran Gagal: ' + error.message, 'error');
+      showToast(registerStrings.failed + error.message, 'error');
       if(btnRegister) {
-        btnRegister.innerText = 'Daftar Sekarang';
+        btnRegister.innerText = registerStrings.submit_btn;
         btnRegister.removeAttribute('disabled');
       }
     } else {
-      showToast('Pendaftaran berhasil! Mengalihkan...', 'success');
+      showToast(registerStrings.success, 'success');
       setTimeout(() => {
         window.location.href = '/';
       }, 1000);

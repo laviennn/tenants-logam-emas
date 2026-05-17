@@ -10,6 +10,13 @@ interface Props {
 const { lang: propLang } = Astro.props;
 const lang = propLang || getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+
+const loginStrings = {
+  processing: t('login.processing'),
+  failed: t('login.failed'),
+  success: t('login.success'),
+  submit_btn: t('login.submit_btn'),
+};
 ---
 
 <BaseLayout title={t('nav.login')}>
@@ -62,9 +69,14 @@ const t = useTranslations(lang);
   </div>
 </BaseLayout>
 
+<script is:inline define:vars={{ loginStrings }}>
+  window.__LOGIN_STRINGS = loginStrings;
+</script>
+
 <script>
   import { supabase } from '../../lib/supabase';
 
+  const loginStrings = (window as any).__LOGIN_STRINGS;
   const form = document.getElementById('login-form') as HTMLFormElement;
   const btnLogin = document.getElementById('btn-login');
   const toast = document.getElementById('toast');
@@ -84,7 +96,7 @@ const t = useTranslations(lang);
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if(btnLogin) {
-      btnLogin.innerText = 'Memproses...';
+      btnLogin.innerText = loginStrings.processing;
       btnLogin.setAttribute('disabled', 'true');
     }
 
@@ -97,13 +109,13 @@ const t = useTranslations(lang);
     });
 
     if (error) {
-      showToast('Login Gagal: ' + error.message, 'error');
+      showToast(loginStrings.failed + ' ' + error.message, 'error');
       if(btnLogin) {
-        btnLogin.innerText = 'Masuk';
+        btnLogin.innerText = loginStrings.submit_btn;
         btnLogin.removeAttribute('disabled');
       }
     } else {
-      showToast('Login Berhasil! Mengalihkan...', 'success');
+      showToast(loginStrings.success, 'success');
       setTimeout(() => {
         window.location.href = '/';
       }, 1000);

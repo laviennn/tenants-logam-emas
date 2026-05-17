@@ -1,5 +1,5 @@
 ---
-import { getLangFromUrl } from '../i18n/utils';
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
 import { getCopywriting } from '../lib/cms';
 
 interface Props {
@@ -8,15 +8,29 @@ interface Props {
 }
 
 const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
 const { tenantId, copywriting: propCopywriting } = Astro.props;
 
 // Use pre-fetched copywriting if passed (avoids extra network call from Home page)
 const copywriting = propCopywriting ?? (tenantId ? await getCopywriting(tenantId, lang) : null);
 
 // Use data from copywriting collection or fallback to local defaults
-const title = copywriting?.whyTitle || 'Mengapa Memilih Kami?';
-const subtitle = copywriting?.whySubtitle || 'Kami memiliki keunggulan yang memberikan nilai tambah untuk investasi Anda';
-const features = copywriting?.whyFeatures || [];
+const title = copywriting?.whyTitle || t('why.title');
+const subtitle = copywriting?.whySubtitle || t('why.subtitle');
+
+// Fallback features list (fully localized)
+const defaultFeatures = [
+  { icon: '🛡️', title: t('why.1.title'), description: t('why.1.desc') },
+  { icon: '💰', title: t('why.2.title'), description: t('why.2.desc') },
+  { icon: '📞', title: t('why.3.title'), description: t('why.3.desc') },
+  { icon: '🚚', title: t('why.4.title'), description: t('why.4.desc') },
+  { icon: '💵', title: t('why.5.title'), description: t('why.5.desc') },
+  { icon: '📜', title: t('why.6.title'), description: t('why.6.desc') },
+];
+
+const features = (copywriting?.whyFeatures && copywriting.whyFeatures.length > 0)
+  ? copywriting.whyFeatures
+  : defaultFeatures;
 ---
 
 <section class="py-24 bg-white dark:bg-background-dark">
