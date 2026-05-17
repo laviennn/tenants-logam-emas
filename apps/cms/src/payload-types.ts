@@ -411,6 +411,10 @@ export interface SiteSetting {
    * Teks bebas yang ditampilkan di bagian bawah footer. Jika dikosongkan, otomatis menggunakan format: "© {tahun} {Brand Name}. All rights reserved."
    */
   footerCopyright?: string | null;
+  /**
+   * Mengatur perataan teks copyright khusus pada tampilan mobile (layar kecil).
+   */
+  copyrightMobileAlign?: ('left' | 'center' | 'right') | null;
   shippingMethods?:
     | {
         name: string;
@@ -905,6 +909,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   address?: T;
   footerAbout?: T;
   footerCopyright?: T;
+  copyrightMobileAlign?: T;
   shippingMethods?:
     | T
     | {
