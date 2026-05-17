@@ -5,9 +5,16 @@
 <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
 
 <script>
+  import { ui } from '../i18n/ui';
+
   function showToast(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') {
     const container = document.getElementById('toast-container');
     if (!container) return;
+
+    const lang = (document.documentElement.lang || 'id') as 'id' | 'en' | 'my';
+    const defaultHeading = type === 'success' ? 'Berhasil' : 'Pemberitahuan';
+    const headingKey = type === 'success' ? 'toast.success' : 'toast.notice';
+    const heading = ui[lang]?.[headingKey] || defaultHeading;
 
     const toast = document.createElement('div');
     // Use direct tailwind classes instead of @apply in <style>
@@ -23,7 +30,7 @@
     toast.innerHTML = `
       ${icon}
       <div class="flex-1">
-        <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-0.5">${type === 'success' ? 'Berhasil' : 'Pemberitahuan'}</p>
+        <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-0.5">${heading}</p>
         <p class="text-sm font-bold text-gray-900 dark:text-white">${message}</p>
       </div>
       <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">

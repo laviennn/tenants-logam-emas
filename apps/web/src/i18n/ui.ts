@@ -275,6 +275,10 @@ export const ui = {
     'track.status_cancelled': 'Dibatalkan',
     'track.no_proof': 'Belum ada bukti pembayaran yang diunggah.',
     'track.product': 'Produk',
+    'toast.success': 'Berhasil',
+    'toast.notice': 'Pemberitahuan',
+    'toast.added_to_cart': '{name} ({quantity}x) berhasil ditambahkan ke keranjang',
+    'toast.removed_from_cart': '{name} dihapus dari keranjang',
   },
   en: {
     'nav.home': 'Home',
@@ -544,6 +548,10 @@ export const ui = {
     'track.status_cancelled': 'Cancelled',
     'track.no_proof': 'No payment proof uploaded yet.',
     'track.product': 'Product',
+    'toast.success': 'Success',
+    'toast.notice': 'Notice',
+    'toast.added_to_cart': '{name} ({quantity}x) added to cart',
+    'toast.removed_from_cart': '{name} removed from cart',
   },
 my: {
     'nav.home': 'Home',
@@ -812,6 +820,10 @@ my: {
     'track.status_completed': 'Completed',
     'track.status_cancelled': 'Cancelled',
     'track.no_proof': 'Belum ada bukti pembayaran dimuat naik.',
-    'track.product': 'Product'
+    'track.product': 'Product',
+    'toast.success': 'Berjaya',
+    'toast.notice': 'Pemberitahuan',
+    'toast.added_to_cart': '{name} ({quantity}x) berjaya dimasukkan ke troli',
+    'toast.removed_from_cart': '{name} dikeluarkan dari troli'
 }
 } as const;

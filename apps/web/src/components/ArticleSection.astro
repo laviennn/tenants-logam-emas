@@ -1,6 +1,6 @@
 ---
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
-import { getImageUrl } from '../lib/cms';
+import { getImageUrl, mergeWithFallback, getDefaultLocale } from '../lib/cms';
 
 interface Article {
   id: string;
@@ -26,7 +26,21 @@ try {
   const res = await fetch(`${CMS_URL}/api/articles?locale=${lang}&limit=3&sort=-publishDate${tenantFilter}`, { cache: 'no-store' });
   if (res.ok) {
     const data = await res.json();
-    articles = data.docs || [];
+    const targetDocs = data.docs || [];
+    const primaryLocale = getDefaultLocale();
+
+    if (lang === primaryLocale || targetDocs.length === 0) {
+      articles = targetDocs;
+    } else {
+      const fallbackRes = await fetch(`${CMS_URL}/api/articles?locale=${primaryLocale}&limit=3&sort=-publishDate${tenantFilter}`, { cache: 'no-store' });
+      if (fallbackRes.ok) {
+        const fallbackData = await fallbackRes.json();
+        const sourceDocs = fallbackData.docs || [];
+        articles = mergeWithFallback(targetDocs, sourceDocs);
+      } else {
+        articles = targetDocs;
+      }
+    }
   }
 } catch (e) {
   console.error("Failed to fetch articles", e);

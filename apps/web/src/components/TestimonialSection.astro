@@ -1,5 +1,5 @@
 ---
-import { getImageUrl } from '../lib/cms';
+import { getImageUrl, mergeWithFallback, getDefaultLocale } from '../lib/cms';
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
 
 interface Testimonial {
@@ -27,7 +27,21 @@ try {
   const res = await fetch(`${CMS_URL}/api/testimonials?locale=${lang}&limit=10${tenantFilter}`, { cache: 'no-store' });
   if (res.ok) {
     const data = await res.json();
-    testimonials = data.docs || [];
+    const targetDocs = data.docs || [];
+    const primaryLocale = getDefaultLocale();
+
+    if (lang === primaryLocale || targetDocs.length === 0) {
+      testimonials = targetDocs;
+    } else {
+      const fallbackRes = await fetch(`${CMS_URL}/api/testimonials?locale=${primaryLocale}&limit=10${tenantFilter}`, { cache: 'no-store' });
+      if (fallbackRes.ok) {
+        const fallbackData = await fallbackRes.json();
+        const sourceDocs = fallbackData.docs || [];
+        testimonials = mergeWithFallback(targetDocs, sourceDocs);
+      } else {
+        testimonials = targetDocs;
+      }
+    }
   }
 } catch (e) {
   console.error("Failed to fetch testimonials", e);

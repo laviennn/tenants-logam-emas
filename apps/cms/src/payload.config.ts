@@ -127,3 +127,5 @@ export default buildConfig({
     }),
   ],
 })
+// Schema reload trigger
+
