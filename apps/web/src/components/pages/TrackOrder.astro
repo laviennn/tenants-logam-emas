@@ -16,11 +16,26 @@ const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '
 const tenant = await resolveTenant(hostname);
 const tenantId = tenant?.id;
 const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
+
+const trackStrings = {
+  statusSearching: t('track.status_searching'),
+  errNotFound: t('track.err_not_found'),
+  statusPending: t('track.status_pending'),
+  statusPaid: t('track.status_paid'),
+  statusShipped: t('track.status_shipped'),
+  statusCompleted: t('track.status_completed'),
+  statusCancelled: t('track.status_cancelled'),
+  noProof: t('track.no_proof'),
+  product: t('track.product'),
+  errSystem: t('track.err_system'),
+};
 ---
 
 <!-- Bridge tenantId to client JS -->
-<script is:inline define:vars={{ tenantId }}>
+<script is:inline define:vars={{ tenantId, trackStrings }}>
   window.__tenantId = tenantId;
+  window.__TRACK_STRINGS = trackStrings;
+  window.__TRACK_ERR_SYSTEM = trackStrings.errSystem;
 </script>
 
 <BaseLayout title={t('nav.track')} tenantId={tenantId} siteSettings={siteSettings}>
@@ -49,13 +64,14 @@ const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
           id="track-btn"
           type="submit" 
           class="bg-[#f59e0b] hover:bg-[#d97706] text-white font-bold py-3.5 px-8 rounded-xl transition-colors shadow-sm flex items-center justify-center whitespace-nowrap"
+          data-original-text={t('track.track_btn')}
         >
-          <span id="btn-text">Search</span>
+          <span id="btn-text">{t('track.track_btn')}</span>
           <svg id="btn-icon" class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </button>
       </form>
       <div id="error-message" class="text-red-500 text-sm mt-3 font-medium hidden">
-        Pesanan tidak ditemukan. Pastikan Order ID atau Nomor Resi sudah benar.
+        {t('track.err_not_found')}
       </div>
     </div>
 
@@ -120,7 +136,7 @@ const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
 
       <!-- Total -->
       <div class="p-6 md:p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-        <span class="text-lg font-bold text-gray-900 dark:text-white">Total:</span>
+        <span class="text-lg font-bold text-gray-900 dark:text-white" data-i18n="cart.grand_total">{t('cart.grand_total')}:</span>
         <span id="res-total" class="text-xl md:text-2xl font-black text-[#d97706]">{formatCurrency(0)}</span>
       </div>
 
@@ -131,7 +147,7 @@ const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
           <img id="res-proof-img" src="" alt="Payment Proof" class="max-w-xs w-full rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 object-cover" />
         </div>
         <div id="res-no-proof" class="hidden text-sm font-medium text-gray-500 italic">
-          Belum ada bukti pembayaran yang diunggah.
+          {t('track.no_proof')}
         </div>
       </div>
 
@@ -141,14 +157,15 @@ const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
 
 <script>
   import { formatCurrency } from '../../utils/currency';
+  const trackStrings = (window as any).__TRACK_STRINGS;
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'Pending': return '<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">Belum Dibayar</span>';
-      case 'Paid': return '<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-blue-100 text-blue-800 border border-blue-200">Pembayaran Dikonfirmasi</span>';
-      case 'Shipped': return '<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-green-100 text-green-800 border border-green-200">Sedang Dikirim</span>';
-      case 'Completed': return '<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Selesai</span>';
-      case 'Cancelled': return '<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-red-100 text-red-800 border border-red-200">Dibatalkan</span>';
+      case 'Pending': return `<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">${trackStrings.statusPending}</span>`;
+      case 'Paid': return `<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-blue-100 text-blue-800 border border-blue-200">${trackStrings.statusPaid}</span>`;
+      case 'Shipped': return `<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-green-100 text-green-800 border border-green-200">${trackStrings.statusShipped}</span>`;
+      case 'Completed': return `<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">${trackStrings.statusCompleted}</span>`;
+      case 'Cancelled': return `<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-red-100 text-red-800 border border-red-200">${trackStrings.statusCancelled}</span>`;
       default: return `<span class="px-4 py-1.5 rounded-full text-sm font-bold bg-gray-100 text-gray-800 border border-gray-200">${status}</span>`;
     }
   };
@@ -188,7 +205,7 @@ const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
                 </div>
                 <div class="flex justify-between items-end">
                   <div>
-                    <p class="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">${order.items?.[0]?.productName || 'Produk'}${order.items?.length > 1 ? ` +${order.items.length - 1}` : ''}</p>
+                    <p class="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">${order.items?.[0]?.productName || trackStrings.product}${order.items?.length > 1 ? ` +${order.items.length - 1}` : ''}</p>
                     <p class="text-xs text-gray-500 mt-1">${new Date(order.createdAt).toLocaleDateString()}</p>
                   </div>
                   <p class="text-sm font-black text-primary">${formatCurrency(order.total)}</p>
@@ -234,7 +251,7 @@ const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
     
     if (btn && btnText) {
       btn.disabled = true;
-      btnText.innerText = 'Mencari...';
+      btnText.innerText = trackStrings.statusSearching;
       btn.classList.add('opacity-70');
     }
 
@@ -308,11 +325,11 @@ const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
     } catch (e) {
       console.error(e);
       errorMsg?.classList.remove('hidden');
-      if(errorMsg) errorMsg.innerText = "Terjadi kesalahan sistem saat melacak pesanan.";
+      if(errorMsg) errorMsg.innerText = (window as any).__TRACK_ERR_SYSTEM || "Error";
     } finally {
       if (btn && btnText) {
         btn.disabled = false;
-        btnText.innerText = 'Search';
+        btnText.innerText = (document.getElementById('track-btn') as any).dataset.originalText || 'Search';
         btn.classList.remove('opacity-70');
       }
     }

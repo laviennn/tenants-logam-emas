@@ -199,7 +199,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
                   class='px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50'>
                   <p
                     class='text-[10px] uppercase tracking-widest font-bold text-white mb-0.5'>
-                    Masuk sebagai
+                    {t('nav.logged_in_as')}
                   </p>
                   <p
                     id='profile-email'
@@ -222,7 +222,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
                         d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
                       ></path></svg
                     >
-                    Pesanan Saya
+                    {t('nav.my_orders')}
                   </a>
                   <button
                     id='btn-logout'
@@ -239,7 +239,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
                         d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'
                       ></path></svg
                     >
-                    Keluar
+                    {t('nav.logout')}
                   </button>
                 </div>
               </div>
@@ -332,7 +332,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
         id='mobile-profile-section'
         class='border-t border-gray-200 dark:border-gray-700 pt-3 flex flex-col space-y-2 hidden'>
         <div class='px-2 py-2'>
-          <p class='text-xs text-white'>Masuk sebagai</p>
+          <p class='text-xs text-white'>{t('nav.logged_in_as')}</p>
           <p
             id='mobile-profile-email'
             class='text-sm font-medium text-gray-900 dark:text-white truncate'>
@@ -341,7 +341,7 @@ const { logoUrl, tenantId, siteSettings, tenantName } = Astro.props;
         <button
           id='btn-mobile-logout'
           class='block text-left text-red-600 font-medium px-2 py-1'
-          >Keluar</button
+          >{t('nav.logout')}</button
         >
       </div>
     </div>
