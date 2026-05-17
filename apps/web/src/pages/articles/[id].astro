@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getImageUrl, resolveTenant, getSiteSettings, getDefaultLocale } from '../../lib/cms';
+import { getImageUrl, resolveTenant, getSiteSettings, getDefaultLocale, mergeWithFallback } from '../../lib/cms';
 import LexicalRenderer from '../../components/LexicalRenderer.astro';
 import { getLangFromUrl, useTranslations } from '../../i18n/utils';
 
@@ -44,9 +44,23 @@ const tenantId = tenant?.id;
 const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
 
 let article;
-const articleRes = await fetch(`${CMS_URL}/api/articles/${id}?locale=${lang || getDefaultLocale()}`, { cache: 'no-store' });
+const primaryLocale = getDefaultLocale();
+const articleRes = await fetch(`${CMS_URL}/api/articles/${id}?locale=${lang || primaryLocale}`, { cache: 'no-store' });
 if (articleRes.ok) {
-  article = await articleRes.json();
+  const targetData = await articleRes.json();
+  
+  if (lang === primaryLocale || !targetData) {
+    article = targetData;
+  } else {
+    // Fetch fallback primary locale article
+    const fallbackRes = await fetch(`${CMS_URL}/api/articles/${id}?locale=${primaryLocale}`, { cache: 'no-store' });
+    if (fallbackRes.ok) {
+      const sourceData = await fallbackRes.json();
+      article = mergeWithFallback(targetData, sourceData);
+    } else {
+      article = targetData;
+    }
+  }
 } else {
   return Astro.redirect('/404');
 }
