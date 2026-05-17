@@ -41,8 +41,8 @@ function prepareDataForLocale({
       Object.keys(value).length > 0 &&
       Object.keys(value).every((k) => ['en', 'my', 'id'].includes(k))
     ) {
-      // Ambil translasi yang sesuai, dengan fallback jika kosong
-      resolved[key] = value[locale] || value[fallbackLocale] || value[Object.keys(value)[0]] || null;
+      const val = value as any;
+      resolved[key] = val[locale] || val[fallbackLocale] || val[Object.keys(val)[0]] || null;
     } else {
       resolved[key] = value;
     }
@@ -143,7 +143,7 @@ async function duplicateTenant() {
   const commonOptions = {
     overrideAccess: true,
     depth: 0,
-    locale: 'all',
+    locale: 'all' as const,
   };
 
   // Helper untuk melakukan Create & Update Multibahasa secara sekuensial dan aman
@@ -154,7 +154,7 @@ async function duplicateTenant() {
     categoryMap,
     productMap,
   }: {
-    collection: string;
+    collection: any;
     sourceDoc: any;
     tenantId: number;
     categoryMap?: Map<number, number>;
