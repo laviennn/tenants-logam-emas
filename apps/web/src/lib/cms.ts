@@ -20,6 +20,44 @@ export const getDefaultLocale = (): string => {
   return 'id'
 }
 
+/**
+ * Recursively merges target object (localized data) with source object (default/primary locale fallback data).
+ * If a field in target is empty (null, undefined, or empty string ""), it will use the value from source.
+ */
+export const mergeWithFallback = (target: any, source: any): any => {
+  if (target === null || target === undefined || target === '') {
+    return source
+  }
+
+  if (typeof target !== 'object' || typeof source !== 'object') {
+    return target
+  }
+
+  if (Array.isArray(target)) {
+    if (target.length === 0) return source
+    const result = []
+    const maxLength = Math.max(target.length, source?.length || 0)
+    for (let i = 0; i < maxLength; i++) {
+      if (i < target.length) {
+        result.push(mergeWithFallback(target[i], source?.[i]))
+      } else {
+        result.push(source[i])
+      }
+    }
+    return result
+  }
+
+  const result: any = { ...target }
+  for (const key of Object.keys(source || {})) {
+    if (result[key] === undefined || result[key] === null || result[key] === '') {
+      result[key] = source[key]
+    } else if (typeof result[key] === 'object' && typeof source[key] === 'object') {
+      result[key] = mergeWithFallback(result[key], source[key])
+    }
+  }
+  return result
+}
+
 // ── Tenant Resolution Cache ─────────────────────────────────────
 type TenantCache = {
   data: any | null
@@ -112,13 +150,33 @@ export const getImageUrl = (image: any, size: string | null = null): string => {
 // ── Site Settings ────────────────────────────────────────────────
 export const getSiteSettings = async (tenantId: number | string, locale = 'id'): Promise<any | null> => {
   try {
+    const primaryLocale = getDefaultLocale()
     const res = await fetch(
       `${CMS_URL}/api/site-settings?where[tenant][equals]=${tenantId}&locale=${locale}&limit=1&depth=1`,
       { cache: 'no-store' },
     )
     if (!res.ok) return null
     const json = await res.json()
-    return json.docs?.[0] ?? null
+    const targetData = json.docs?.[0] ?? null
+
+    if (locale === primaryLocale || !targetData) {
+      return targetData
+    }
+
+    // Fetch primary locale settings for fallback
+    const fallbackRes = await fetch(
+      `${CMS_URL}/api/site-settings?where[tenant][equals]=${tenantId}&locale=${primaryLocale}&limit=1&depth=1`,
+      { cache: 'no-store' },
+    )
+    if (fallbackRes.ok) {
+      const fallbackJson = await fallbackRes.json()
+      const sourceData = fallbackJson.docs?.[0] ?? null
+      if (sourceData) {
+        return mergeWithFallback(targetData, sourceData)
+      }
+    }
+
+    return targetData
   } catch (error) {
     console.error('[CMS] getSiteSettings error:', error)
     return null
@@ -144,13 +202,33 @@ export const getGoldPrice = async (tenantId: number | string): Promise<any | nul
 // ── Copywriting ──────────────────────────────────────────────────
 export const getCopywriting = async (tenantId: number | string, locale = 'id'): Promise<any | null> => {
   try {
+    const primaryLocale = getDefaultLocale()
     const res = await fetch(
       `${CMS_URL}/api/copywriting?where[tenant][equals]=${tenantId}&locale=${locale}&limit=1&depth=2`,
       { cache: 'no-store' },
     )
     if (!res.ok) return null
     const json = await res.json()
-    return json.docs?.[0] ?? null
+    const targetData = json.docs?.[0] ?? null
+
+    if (locale === primaryLocale || !targetData) {
+      return targetData
+    }
+
+    // Fetch primary locale copywriting for fallback
+    const fallbackRes = await fetch(
+      `${CMS_URL}/api/copywriting?where[tenant][equals]=${tenantId}&locale=${primaryLocale}&limit=1&depth=2`,
+      { cache: 'no-store' },
+    )
+    if (fallbackRes.ok) {
+      const fallbackJson = await fallbackRes.json()
+      const sourceData = fallbackJson.docs?.[0] ?? null
+      if (sourceData) {
+        return mergeWithFallback(targetData, sourceData)
+      }
+    }
+
+    return targetData
   } catch (error) {
     console.error('[CMS] getCopywriting error:', error)
     return null
