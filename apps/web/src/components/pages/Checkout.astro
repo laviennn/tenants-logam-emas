@@ -702,7 +702,7 @@ const checkoutStrings = {
           </div>
 
           <!-- Account Name Section -->
-          <div>
+          <div id='acc-name-container'>
             <p class='text-xs text-gray-500 mb-1'>Atas Nama</p>
             <p
               id='bank-acc-name'
@@ -1393,7 +1393,15 @@ const checkoutStrings = {
       }
 
       const bAccNameEl = document.getElementById('bank-acc-name');
-      if (bAccNameEl) bAccNameEl.innerText = bankAccName;
+      const accNameContainer = document.getElementById('acc-name-container');
+      if (bAccNameEl && accNameContainer) {
+        if (bankAccName && bankAccName.trim() !== '') {
+          bAccNameEl.innerText = bankAccName;
+          accNameContainer.classList.remove('hidden');
+        } else {
+          accNameContainer.classList.add('hidden');
+        }
+      }
 
       const bLogoEl = document.getElementById('bank-logo') as HTMLImageElement;
       if (bLogoEl) {

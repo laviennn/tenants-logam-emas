@@ -214,6 +214,22 @@ export const Tenants: CollectionConfig = {
                 description: 'Aktifkan fitur Dark Mode di website front-end.',
               },
             },
+            {
+              name: 'savingsMemberIdPrefix',
+              type: 'text',
+              label: 'Prefix ID Anggota (Tabungan Emas)',
+              admin: {
+                description: 'Prefix kustom untuk ID Anggota Tabungan Emas (misal: CGM). Jika kosong, akan menggunakan inisial dari Brand Name atau AKUAN.',
+              },
+            },
+            {
+              name: 'savingsGoldSymbol',
+              type: 'text',
+              label: 'Simbol / Label Emas Tabungan',
+              admin: {
+                description: 'Label kustom untuk nama/simbol emas tabungan (misal: GAP). Jika kosong, akan menggunakan GAP.',
+              },
+            },
           ],
         },
       ],

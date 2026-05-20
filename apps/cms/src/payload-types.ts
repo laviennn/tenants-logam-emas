@@ -225,6 +225,14 @@ export interface Tenant {
    * Aktifkan fitur Dark Mode di website front-end.
    */
   enableDarkMode?: boolean | null;
+  /**
+   * Prefix kustom untuk ID Anggota Tabungan Emas (misal: CGM). Jika kosong, akan menggunakan inisial dari Brand Name atau AKUAN.
+   */
+  savingsMemberIdPrefix?: string | null;
+  /**
+   * Label kustom untuk nama/simbol emas tabungan (misal: GAP). Jika kosong, akan menggunakan GAP.
+   */
+  savingsGoldSymbol?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -904,6 +912,8 @@ export interface TenantsSelect<T extends boolean = true> {
   cloudflareDeployHookUrl?: T;
   enableGoldSavings?: T;
   enableDarkMode?: T;
+  savingsMemberIdPrefix?: T;
+  savingsGoldSymbol?: T;
   updatedAt?: T;
   createdAt?: T;
 }
