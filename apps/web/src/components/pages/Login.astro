@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionTitle from '../SectionTitle.astro';
 import { getLangFromUrl, useTranslations, localizePath } from '../../i18n/utils';
+import { resolveTenant } from '../../lib/cms';
 
 interface Props {
   lang?: 'id' | 'en' | 'my';
@@ -10,6 +11,12 @@ interface Props {
 const { lang: propLang } = Astro.props;
 const lang = propLang || getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+const tenantId = tenant?.id ?? null;
+
+const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register';
 
 const loginStrings = {
   processing: t('login.processing'),
@@ -26,7 +33,7 @@ const loginStrings = {
         <SectionTitle title={t('nav.login')} i18nTitle="nav.login" />
         <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
           <span data-i18n="login.or">{t('login.or')}</span>
-          <a href={localizePath('/register', lang)} class="font-medium text-primary hover:text-primary-dark" data-i18n="login.register_link">
+          <a href={localizePath(registerUrl, lang)} class="font-medium text-primary hover:text-primary-dark" data-i18n="login.register_link">
             {t('login.register_link')}
           </a>
         </p>
@@ -65,21 +72,45 @@ const loginStrings = {
           </button>
         </div>
       </form>
+
+      <!-- Blocked Account Modal -->
+      <div id="blocked-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center border border-red-200 dark:border-red-800">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-3xl text-red-600 dark:text-red-400">
+            🚫
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2" id="blocked-modal-title">Akun Diblokir</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-6" id="blocked-modal-desc">Akun dengan email ini telah diblokir. Sila hubungi admin untuk maklumat lanjut.</p>
+          <button id="blocked-modal-close" class="w-full py-3 px-6 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all">
+            Tutup
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </BaseLayout>
 
-<script is:inline define:vars={{ loginStrings }}>
+<script is:inline define:vars={{ loginStrings, tenantId }}>
   window.__LOGIN_STRINGS = loginStrings;
+  window.__TENANT_ID = tenantId;
 </script>
 
 <script>
   import { supabase } from '../../lib/supabase';
 
   const loginStrings = (window as any).__LOGIN_STRINGS;
+  const tenantId = (window as any).__TENANT_ID;
   const form = document.getElementById('login-form') as HTMLFormElement;
   const btnLogin = document.getElementById('btn-login');
   const toast = document.getElementById('toast');
+  const blockedModal = document.getElementById('blocked-modal');
+  const blockedModalTitle = document.getElementById('blocked-modal-title');
+  const blockedModalDesc = document.getElementById('blocked-modal-desc');
+  const blockedModalClose = document.getElementById('blocked-modal-close');
+
+  const apiUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+    ? 'http://localhost:3000'
+    : 'https://api-logam-tenants.creosphera.workers.dev';
 
   const showToast = (message: string, type: 'error' | 'success') => {
     if(!toast) return;
@@ -93,6 +124,17 @@ const loginStrings = {
     }
   };
 
+  const showBlockedModal = (title: string, desc: string) => {
+    if (!blockedModal || !blockedModalTitle || !blockedModalDesc) return;
+    blockedModalTitle!.innerText = title;
+    blockedModalDesc!.innerText = desc;
+    blockedModal.classList.remove('hidden');
+  };
+
+  blockedModalClose?.addEventListener('click', () => {
+    blockedModal?.classList.add('hidden');
+  });
+
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if(btnLogin) {
@@ -102,6 +144,42 @@ const loginStrings = {
 
     const email = (document.getElementById('email-address') as HTMLInputElement).value;
     const password = (document.getElementById('password') as HTMLInputElement).value;
+
+    // Check if customer is blocked or belongs to a different tenant
+    if (tenantId) {
+      try {
+        const checkRes = await fetch(`${apiUrl}/api/check-customer?email=${encodeURIComponent(email)}&tenantId=${tenantId}`);
+        const checkData = await checkRes.json();
+
+        if (checkData.blocked) {
+          await supabase.auth.signOut();
+          showBlockedModal(
+            'Akun Diblokir',
+            'Akun dengan email ini telah diblokir. Sila hubungi admin untuk maklumat lanjut.'
+          );
+          if(btnLogin) {
+            btnLogin.innerText = loginStrings.submit_btn;
+            btnLogin.removeAttribute('disabled');
+          }
+          return;
+        }
+
+        if (checkData.wrongTenant) {
+          showBlockedModal(
+            'Akun Tidak Terdaftar',
+            'Akun dengan email ini tidak terdaftar di website ini. Sila daftar akun baru.'
+          );
+          if(btnLogin) {
+            btnLogin.innerText = loginStrings.submit_btn;
+            btnLogin.removeAttribute('disabled');
+          }
+          return;
+        }
+      } catch (checkErr) {
+        // Fail open: if check fails, allow login to proceed
+        console.warn('[Login] Customer check failed, proceeding with login:', checkErr);
+      }
+    }
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -117,7 +195,9 @@ const loginStrings = {
     } else {
       showToast(loginStrings.success, 'success');
       setTimeout(() => {
-        window.location.href = '/';
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get('redirect');
+        window.location.href = redirectUrl ? redirectUrl : '/';
       }, 1000);
     }
   });

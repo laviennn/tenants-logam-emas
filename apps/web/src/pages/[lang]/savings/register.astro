@@ -1,0 +1,11 @@
+---
+import SavingsRegisterComponent from '../../../components/pages/SavingsRegister.astro';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'my' } },
+  ];
+}
+---
+<SavingsRegisterComponent />

@@ -57,5 +57,39 @@ export const Users: CollectionConfig = {
         condition: (data) => !data?.roles?.includes('owner'),
       },
     },
+    {
+      name: 'kyc',
+      type: 'group',
+      label: 'Data KYC (Simpanan Emas)',
+      admin: {
+        description: 'Data Know Your Customer untuk fitur tabungan emas.',
+      },
+      fields: [
+        {
+          name: 'kycType',
+          type: 'select',
+          label: 'Tipe Identitas',
+          options: [
+            { label: 'IC (KTP)', value: 'IC' },
+            { label: 'Passport', value: 'Passport' },
+          ],
+        },
+        {
+          name: 'kycNumber',
+          type: 'text',
+          label: 'Nomor Identitas',
+        },
+        {
+          name: 'bankName',
+          type: 'text',
+          label: 'Nama Bank',
+        },
+        {
+          name: 'bankAccountNumber',
+          type: 'text',
+          label: 'Nomor Rekening Bank',
+        },
+      ],
+    },
   ],
 }

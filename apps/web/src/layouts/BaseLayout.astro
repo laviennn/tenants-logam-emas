@@ -114,6 +114,9 @@ const googleFontUrl = `https://fonts.googleapis.com/css2?family=${fontName.repla
     <noscript><link rel="stylesheet" href={googleFontUrl} /></noscript>
 
     <!-- 🎨 Tenant CSS Custom Properties — injected server-side, no FOUC -->
+    <script is:inline define:vars={{ enableDarkMode: tenant?.enableDarkMode !== false }}>
+      window.__enableDarkMode = enableDarkMode;
+    </script>
     <style is:inline set:html={`
       :root:root {
 ${cssVars}
@@ -137,7 +140,7 @@ ${cssVars}
     )}
   </head>
   <body class="bg-gray-50 dark:bg-background-dark font-sans text-gray-900 dark:text-white min-h-screen flex flex-col">
-    <Navbar logoUrl={logoUrl} tenantId={tenantId} siteSettings={siteSettings} tenantName={tenant?.name} />
+    <Navbar logoUrl={logoUrl} tenantId={tenantId} siteSettings={siteSettings} tenantName={tenant?.name} tenant={tenant} />
     <main class="flex-grow">
       <slot />
     </main>

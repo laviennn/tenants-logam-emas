@@ -168,6 +168,13 @@ export const Tenants: CollectionConfig = {
                 { label: 'Nunito', value: 'Nunito' },
               ],
             },
+            {
+              name: 'successButtonColor',
+              type: 'text',
+              label: 'Warna Button Success & Form (Hex)',
+              defaultValue: '#25D366',
+              admin: { description: 'Warna untuk tombol di modal success & form upload bukti.' },
+            },
           ],
         },
         {
@@ -187,6 +194,24 @@ export const Tenants: CollectionConfig = {
               label: 'Cloudflare Deploy Hook URL',
               admin: {
                 description: 'URL untuk trigger rebuild Cloudflare Pages saat konten berubah.',
+              },
+            },
+            {
+              name: 'enableGoldSavings',
+              type: 'checkbox',
+              defaultValue: false,
+              label: 'Enable Gold Savings (AKUAN)',
+              admin: {
+                description: 'Aktifkan fitur Tabungan Emas (Dashboard Simpanan) untuk tenant ini.',
+              },
+            },
+            {
+              name: 'enableDarkMode',
+              type: 'checkbox',
+              defaultValue: true,
+              label: 'Enable Dark Mode',
+              admin: {
+                description: 'Aktifkan fitur Dark Mode di website front-end.',
               },
             },
           ],

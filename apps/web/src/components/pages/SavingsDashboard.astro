@@ -1,0 +1,1267 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+import SectionTitle from '../SectionTitle.astro';
+import { resolveTenant, getSiteSettings } from '../../lib/cms';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+
+// If tenant does not enable savings, we can't fully block here in SSG due to static build without request context, 
+// but we render an empty container if the API check fails on client side.
+
+const siteSettings = tenant?.id ? await getSiteSettings(tenant.id, lang) : null;
+const brandName = siteSettings?.brandName || tenant?.name || 'Logam Mulia';
+const waNumber = siteSettings?.whatsappNumber || '';
+
+// WhatsApp text template
+const waTemplate = t('savings.wa_message');
+---
+
+<BaseLayout title={t('savings.dashboard')}>
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <SectionTitle 
+      title={t('savings.dashboard')} 
+      subtitle="Urus dan pantau simpanan emas anda dengan selamat"
+      i18nTitle="savings.dashboard"
+    />
+    
+    <!-- Skeleton Loader -->
+    <div id="savings-skeleton" class="animate-pulse space-y-6 mt-8">
+      <div class="h-32 bg-gray-200 dark:bg-gray-800 rounded-2xl w-full"></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="h-12 bg-gray-200 dark:bg-gray-800 rounded-xl"></div>
+        <div class="h-12 bg-gray-200 dark:bg-gray-800 rounded-xl"></div>
+      </div>
+      <div class="h-64 bg-gray-200 dark:bg-gray-800 rounded-2xl w-full"></div>
+    </div>
+
+    <!-- Main Content (Hidden initially) -->
+    <div id="savings-content" class="hidden mt-8 max-w-lg mx-auto pb-12" data-wanumber={waNumber} data-brandname={brandName} data-watemplate={waTemplate} data-tenantid={tenant?.id || ''} data-lang={lang}>
+      
+      <!-- Golden Card Area -->
+      <div class="relative bg-gradient-to-br from-[#FFDE59] via-[#FFD700] to-[#E5C100] rounded-[2rem] p-6 shadow-2xl overflow-hidden pb-28">
+        <!-- Background accents -->
+        <div class="absolute -right-16 -top-16 w-64 h-64 bg-white/20 rounded-full blur-3xl mix-blend-overlay"></div>
+        <div class="absolute -right-8 -bottom-8 w-48 h-48 border-[1.5rem] border-white/10 rounded-full opacity-50"></div>
+        
+        <!-- Header: Profile & QR -->
+        <div class="flex justify-between items-start relative z-10">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-sm">
+              <span class="text-xl font-black text-red-700">AK</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 id="lbl-member-id" class="text-xl font-bold text-red-700 tracking-wide">AKUAN-000</h2>
+                <svg class="w-4 h-4 text-green-500 bg-white rounded-full p-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+              </div>
+              <p id="lbl-member-name" class="text-[10px] sm:text-xs font-semibold text-gray-800 uppercase tracking-wider">MEMBER NAME</p>
+            </div>
+          </div>
+          <button class="text-red-700 hover:text-red-800 transition-colors">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+          </button>
+        </div>
+
+        <!-- Balance Section -->
+        <div class="mt-8 grid grid-cols-2 gap-4 relative z-10 text-center divide-x divide-red-800/20">
+          <div class="flex flex-col items-center justify-center">
+            <div class="flex items-center gap-1.5 justify-center mb-1">
+              <p class="text-[11px] sm:text-xs font-semibold text-gray-800">GAP Total Balance</p>
+              <svg class="w-3.5 h-3.5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+            </div>
+            <div class="flex items-end justify-center">
+              <span class="text-3xl sm:text-4xl font-black text-[#C62828] tracking-tighter" id="lbl-balance">0.0000</span>
+              <span class="text-xs font-bold text-[#C62828] ml-1 mb-1">g</span>
+            </div>
+          </div>
+          <div class="flex flex-col items-center justify-center">
+            <div class="flex items-center gap-1.5 justify-center mb-1">
+              <p class="text-[11px] sm:text-xs font-semibold text-gray-800">Baki Tunai (RM)</p>
+              <svg class="w-3.5 h-3.5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div class="flex items-end justify-center">
+              <span class="text-3xl sm:text-4xl font-black text-[#C62828] tracking-tighter" id="lbl-cash-balance">RM 0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Floating Card -->
+      <div class="relative z-20 -mt-20 mx-4 bg-white dark:bg-surface-dark rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800 p-6">
+        <div class="grid grid-cols-5 gap-1 sm:gap-2">
+          <button data-tab="topup" class="tab-btn flex flex-col items-center gap-2 focus:outline-none group opacity-50 hover:opacity-100 transition-opacity">
+             <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors">
+               <svg class="w-6 h-6 text-red-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+             </div>
+             <span class="text-[10px] sm:text-xs font-bold text-gray-900 dark:text-gray-100 pointer-events-none">+ Top Up</span>
+          </button>
+          <button data-tab="buy" class="tab-btn flex flex-col items-center gap-2 focus:outline-none group opacity-50 hover:opacity-100 transition-opacity">
+             <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors">
+               <svg class="w-6 h-6 text-red-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+             </div>
+             <span class="text-[10px] sm:text-xs font-bold text-gray-900 dark:text-gray-100 pointer-events-none">Buy</span>
+          </button>
+          <button data-tab="sell" class="tab-btn flex flex-col items-center gap-2 focus:outline-none group opacity-50 hover:opacity-100 transition-opacity">
+             <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors">
+               <svg class="w-6 h-6 text-red-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+             </div>
+             <span class="text-[10px] sm:text-xs font-bold text-gray-900 dark:text-gray-100 pointer-events-none">Sell</span>
+          </button>
+          <button data-tab="withdraw" class="tab-btn flex flex-col items-center gap-2 focus:outline-none group opacity-50 hover:opacity-100 transition-opacity">
+             <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors">
+               <svg class="w-6 h-6 text-red-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+             </div>
+             <span class="text-[10px] sm:text-xs font-bold text-gray-900 dark:text-gray-100 pointer-events-none">Withdraw</span>
+          </button>
+          <button data-tab="history" class="tab-btn active flex flex-col items-center gap-2 focus:outline-none group opacity-100 transition-opacity">
+             <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors">
+               <svg class="w-6 h-6 text-red-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+             </div>
+             <span class="text-[10px] sm:text-xs font-bold text-gray-900 dark:text-gray-100 pointer-events-none">History</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Price Footer -->
+      <div class="mt-4 mx-4">
+        <div class="border border-[#FFD700] rounded-xl bg-yellow-50 dark:bg-yellow-900/20 overflow-hidden text-sm">
+          <div class="flex justify-between items-center px-4 py-2 border-b border-[#FFD700]/30 text-red-700 font-bold">
+            <span>Today GAP Price (Au 999.9)</span>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex justify-between items-center text-gray-800 dark:text-gray-200 font-semibold">
+              <span class="text-xs sm:text-sm">Harga Beli (Selling Price):</span>
+              <span id="lbl-price-1g" class="text-red-700 dark:text-red-400 text-sm font-bold">RM 0.00 / gram</span>
+            </div>
+            <div class="flex justify-between items-center text-gray-800 dark:text-gray-200 font-semibold border-t border-yellow-200/50 dark:border-yellow-950/50 pt-3">
+              <span class="text-xs sm:text-sm">Harga Jual Semula (Buyback Price):</span>
+              <span id="lbl-buyback-price" class="text-green-700 dark:text-green-400 text-sm font-bold">RM 0.00 / gram</span>
+            </div>
+            <div class="flex justify-center text-gray-500 dark:text-gray-400 text-[11px] font-medium border-t border-yellow-200/30 dark:border-yellow-950/30 pt-2" id="lbl-price-idr100">
+              RM 100 = 0.0000 gram (Buy)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Panes -->
+      <div class="mt-8 px-4 bg-white dark:bg-surface-dark rounded-2xl mx-4 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div class="p-6">
+          <!-- Top Up Form -->
+          <div id="pane-topup" class="tab-pane hidden space-y-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">Top Up</h3>
+            
+            <form id="form-topup-step1" class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Masukkan Jumlah Top Up (RM)</label>
+                <input type="number" id="input-topup" required class="block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 text-lg px-4 py-3" placeholder="Contoh: 100" />
+              </div>
+              <button type="submit" class="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors">Lanjut Pilih Kaedah Pembayaran</button>
+            </form>
+
+            <form id="form-topup-step2" class="hidden space-y-6">
+              <button type="button" id="btn-back-topup" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 mb-4">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Back
+              </button>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pilih Kaedah Pembayaran</label>
+                <div id="payment-methods-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  <div class="text-sm text-gray-500">Memuatkan kaedah pembayaran...</div>
+                </div>
+              </div>
+
+              <!-- Detail Rekening yang Stand Out -->
+              <div id="selected-payment-detail" class="hidden p-4 rounded-xl border border-red-100 bg-red-50/50 dark:bg-red-900/10 dark:border-red-900/30 space-y-2">
+                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Akaun Penerima Transfer</p>
+                <div class="flex justify-between items-center">
+                  <div>
+                    <p id="detail-bank-name" class="font-bold text-lg text-gray-900 dark:text-white">-</p>
+                    <p id="detail-account-name" class="text-sm text-gray-700 dark:text-gray-300">-</p>
+                    <p id="detail-account-number" class="text-xl font-mono font-black text-red-700 dark:text-red-400 mt-1">-</p>
+                  </div>
+                  <button type="button" id="btn-copy-account" class="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1 active:scale-95">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg> <span id="copy-btn-text">Copy</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div id="topup-proof-container" class="border-t border-gray-100 dark:border-gray-800 pt-4 mt-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Muat Naik Slip Pembayaran</label>
+                <input type="file" id="input-topup-proof" accept="image/*" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 dark:file:bg-red-900/20 dark:file:text-red-300" />
+                <p class="text-xs text-gray-500 mt-2">Format yang disokong: JPG, PNG. Maksimum 5MB.</p>
+              </div>
+
+              <button type="submit" id="btn-submit-topup" class="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors">Submit Top Up</button>
+            </form>
+          </div>
+
+          <!-- Buy Form -->
+          <form id="pane-buy" class="tab-pane hidden space-y-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">Buy Gold</h3>
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Gold Amount (Grams)</label>
+                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Baki Tunai: <span id="buy-cash-balance-helper" class="font-bold text-red-600 dark:text-red-400">RM 0.00</span></span>
+              </div>
+              <input type="number" id="input-buy" required min="0.0001" step="0.0001" class="block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 text-lg px-4 py-3" placeholder="Example: 0.5" />
+              <p class="text-xs text-gray-500 mt-2">Anggaran Harga: <span id="est-buy-price" class="font-bold text-red-600">RM 0.00</span></p>
+            </div>
+            <button type="submit" id="btn-submit-buy" class="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Buy Gold</button>
+          </form>
+
+          <!-- Sell Form -->
+          <form id="pane-sell" class="tab-pane hidden space-y-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">Sell Gold</h3>
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Jumlah Emas untuk Dijual (Gram)</label>
+                <button type="button" id="btn-sell-all" class="text-xs font-bold text-red-600 hover:text-red-800 transition-colors bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">Sell All</button>
+              </div>
+              <input type="number" id="input-sell" required min="0.01" step="0.01" class="block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 text-lg px-4 py-3" placeholder="Example: 1" />
+              <p class="text-xs text-gray-500 mt-2">Anggaran Dana Diterima: <span id="est-sell-price" class="font-bold text-red-600">RM 0</span></p>
+            </div>
+
+            <button type="submit" id="btn-submit-sell" class="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors">Sell Gold</button>
+          </form>
+
+          <!-- Withdraw Form -->
+          <form id="pane-withdraw" class="tab-pane hidden space-y-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">Pengeluaran Emas / Tunai</h3>
+            
+            <div class="flex gap-4 mb-4">
+              <label class="flex-1 relative border border-gray-200 dark:border-gray-700 rounded-xl p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-center gap-3">
+                <input type="radio" name="withdraw_type" value="rm" class="text-red-600 focus:ring-red-500 w-5 h-5" checked />
+                <span class="font-bold text-gray-900 dark:text-white">Tukar ke RM</span>
+              </label>
+              <label class="flex-1 relative border border-gray-200 dark:border-gray-700 rounded-xl p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-center gap-3">
+                <input type="radio" name="withdraw_type" value="fisik" class="text-red-600 focus:ring-red-500 w-5 h-5" />
+                <span class="font-bold text-gray-900 dark:text-white">Pengeluaran Fizikal</span>
+              </label>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Jumlah Pengeluaran (Gram)</label>
+              <input type="number" id="input-withdraw" required min="0.01" step="0.01" class="block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 text-lg px-4 py-3" placeholder="Contoh: 1" />
+              <p id="est-withdraw-info" class="text-xs text-gray-500 mt-2">Anggaran Dana Diterima: <span id="est-withdraw-price" class="font-bold text-red-600">RM 0</span></p>
+            </div>
+
+            <div id="withdraw-rm-fields" class="space-y-4 border-t border-gray-100 dark:border-gray-800 pt-4 mt-6">
+              <h4 class="text-sm font-bold text-gray-900 dark:text-white">Akaun Penerima Dana</h4>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Bank / E-Dompet</label>
+                <input type="text" id="input-withdraw-bank" class="block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 text-sm px-4 py-2" placeholder="Contoh: Maybank" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombor Akaun</label>
+                <input type="text" id="input-withdraw-account" class="block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 text-sm px-4 py-2" placeholder="Nombor Akaun" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Atas Nama Akaun</label>
+                <input type="text" id="input-withdraw-name" class="block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 text-sm px-4 py-2" placeholder="Nama Pemilik Akaun" />
+              </div>
+            </div>
+
+            <div id="withdraw-fisik-fields" class="hidden space-y-6 mt-6 border-t border-gray-100 dark:border-gray-800 pt-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Alamat Penghantaran Lengkap</label>
+                <textarea id="input-withdraw-address" rows="3" class="block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 text-sm px-4 py-3" placeholder="Masukkan alamat lengkap anda"></textarea>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kaedah Penghantaran</label>
+                <select id="input-withdraw-shipping" class="block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 text-sm px-4 py-3">
+                  <option value="">Memuatkan kaedah penghantaran...</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-submit-withdraw" class="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Mohon Pengeluaran</button>
+          </form>
+          
+          <!-- History Pane -->
+          <div id="pane-history" class="tab-pane block">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">Rekod Transaksi</h3>
+            <ul id="ledger-list" class="divide-y divide-gray-100 dark:divide-gray-800">
+              <!-- Populated via CSR -->
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notification Modal -->
+  <div id="status-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 hidden backdrop-blur-sm">
+    <div class="bg-white dark:bg-surface-dark rounded-[2rem] p-8 max-w-sm w-full shadow-2xl border border-gray-100 dark:border-gray-800 text-center relative overflow-hidden">
+      <div id="status-modal-icon" class="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center text-4xl shadow-inner">
+        <!-- Will be dynamically updated -->
+      </div>
+      <h3 class="text-xl font-black text-gray-900 dark:text-white mb-2">Notifikasi Transaksi</h3>
+      <p id="status-modal-desc" class="text-sm text-gray-600 dark:text-gray-400 mb-8 leading-relaxed"></p>
+      <button id="status-modal-close" class="w-full py-3 px-6 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all transform active:scale-95 shadow-lg shadow-red-500/20">Close</button>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    window.dispatchEvent(new CustomEvent('toast', { detail: { message, type } }));
+  };
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('ms-MY', { style: 'currency', currency: 'MYR' }).format(val);
+  };
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      const pathParts = window.location.pathname.split('/');
+      const hasLangPrefix = ['en', 'my'].includes(pathParts[1]);
+      const prefix = hasLangPrefix ? `/${pathParts[1]}` : '';
+      window.location.href = `${prefix}/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+    
+    const container = document.getElementById('savings-content');
+    const skeleton = document.getElementById('savings-skeleton');
+    
+    if (!container || !skeleton) return;
+
+    const waNumber = container.dataset.wanumber || '';
+    const brandName = container.dataset.brandname || '';
+    const waTemplate = container.dataset.watemplate || '';
+    const tenantId = container.dataset.tenantid || '';
+    const currentLang = container.dataset.lang || 'id';
+
+    // Validation helper
+    const setValidation = (inputEl: HTMLInputElement, isValid: boolean, errorMsg: string) => {
+       let errId = `${inputEl.id}-err-msg`;
+       let errEl = document.getElementById(errId);
+       if (!isValid) {
+          inputEl.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+          inputEl.classList.remove('border-gray-300', 'dark:border-gray-600');
+          if (!errEl) {
+             errEl = document.createElement('p');
+             errEl.id = errId;
+             errEl.className = 'text-xs text-red-600 dark:text-red-400 mt-1 font-semibold';
+             inputEl.parentNode?.appendChild(errEl);
+          }
+          errEl.innerText = errorMsg;
+       } else {
+          inputEl.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+          inputEl.classList.add('border-gray-300', 'dark:border-gray-600');
+          if (errEl) {
+             errEl.remove();
+          }
+       }
+    };
+
+    // Set Profile Info
+    const lblMemberName = document.getElementById('lbl-member-name');
+    const lblMemberId = document.getElementById('lbl-member-id');
+    if (lblMemberName) lblMemberName.innerText = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'CUSTOMER';
+    
+    const getInitials = (name: string) => name.split(' ').map((w: string) => w[0]).join('').toUpperCase().substring(0, 3);
+    const prefixId = brandName ? getInitials(brandName) : 'AKUAN';
+    if (lblMemberId) lblMemberId.innerText = session.user.user_metadata?.kycNumber ? `${prefixId}-${session.user.user_metadata.kycNumber.substring(0, 6)}` : `${prefixId}-${session.user.id.substring(0, 4).toUpperCase()}`;
+
+    // Outer scope variables
+    let livePrice = 0;
+    let buybackSpread = 4;
+    let balance = 0;
+    let cashBalance = 0;
+    let paymentChannels: any[] = [];
+    let shippingMethods: any[] = [];
+    let enableTopupProofUpload = true;
+    let selectedAmount = 0;
+
+    const inputBuy = document.getElementById('input-buy') as HTMLInputElement;
+    const estBuy = document.getElementById('est-buy-price');
+    const inputSell = document.getElementById('input-sell') as HTMLInputElement;
+    const estSell = document.getElementById('est-sell-price');
+    const btnSellAll = document.getElementById('btn-sell-all');
+    const formTopupStep1 = document.getElementById('form-topup-step1');
+    const formTopupStep2 = document.getElementById('form-topup-step2');
+    const btnBackTopup = document.getElementById('btn-back-topup');
+    const paymentContainer = document.getElementById('payment-methods-container');
+    const paymentDetail = document.getElementById('selected-payment-detail');
+    const detailBankName = document.getElementById('detail-bank-name');
+    const detailAccountName = document.getElementById('detail-account-name');
+    const detailAccountNumber = document.getElementById('detail-account-number');
+    const btnCopyAccount = document.getElementById('btn-copy-account');
+    const copyBtnText = document.getElementById('copy-btn-text');
+
+    const radiosWithdraw = document.querySelectorAll('input[name="withdraw_type"]');
+    const fisikFields = document.getElementById('withdraw-fisik-fields');
+    const rmFields = document.getElementById('withdraw-rm-fields');
+    const selectShipping = document.getElementById('input-withdraw-shipping') as HTMLSelectElement;
+    const estWithdrawPrice = document.getElementById('est-withdraw-price');
+    const estWithdrawInfo = document.getElementById('est-withdraw-info');
+    const inputWithdraw = document.getElementById('input-withdraw') as HTMLInputElement;
+
+    const apiUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://localhost:3000' : 'https://api-logam-tenants.creosphera.workers.dev';
+
+    const sendToWhatsapp = (msg: string) => {
+       if (!waNumber) {
+         showToast('Nombor WhatsApp admin belum dikonfigurasikan.', 'error');
+         return;
+       }
+       const formattedPhone = waNumber.startsWith('0') ? '60' + waNumber.slice(1) : waNumber.replace(/[^0-9]/g, '');
+       const waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
+       window.open(waUrl, '_blank');
+       showToast('Berjaya dihantar! Menunggu pengesahan admin.', 'success');
+       document.querySelectorAll('input[type="number"], textarea, input[type="text"], input[type="file"]').forEach(i => {
+          if (i instanceof HTMLInputElement) {
+             i.value = '';
+          }
+       });
+    };
+
+    const createLedger = async (data: any) => {
+       const customerName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'CUSTOMER';
+       const customerEmail = session.user.email || '';
+       const res = await fetch(`${apiUrl}/api/savings-ledgers`, {
+          method: 'POST',
+          headers: {
+             'Content-Type': 'application/json',
+             'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+             ...data,
+             supabaseUserId: session.user.id,
+             customerName,
+             customerEmail,
+             tenant: isNaN(Number(tenantId)) ? tenantId : Number(tenantId),
+             priceSnapshot: livePrice,
+             status: 'pending'
+          })
+       });
+       if (!res.ok) throw new Error('Gagal menyimpan transaksi ke dalam sistem');
+       return await res.json();
+    };
+
+    const updateSelectedPaymentDetail = () => {
+       const checkedRadio = document.querySelector('input[name="payment_method"]:checked') as HTMLInputElement;
+       if (!checkedRadio || !paymentChannels.length) {
+          paymentDetail?.classList.add('hidden');
+          return;
+       }
+       const selectedName = checkedRadio.value;
+       const p = paymentChannels.find((chan: any) => chan.bankName === selectedName);
+       if (p) {
+          if (detailBankName) detailBankName.innerText = p.bankName;
+          if (detailAccountName) {
+             if (p.accountName && p.accountName.trim() !== '') {
+                detailAccountName.innerText = p.accountName;
+                detailAccountName.classList.remove('hidden');
+             } else {
+                detailAccountName.innerText = '';
+                detailAccountName.classList.add('hidden');
+             }
+          }
+          if (detailAccountNumber) {
+             if (p.accountNumber && p.accountNumber.trim() !== '') {
+                detailAccountNumber.innerText = p.accountNumber;
+                detailAccountNumber.classList.remove('hidden');
+                if (btnCopyAccount) btnCopyAccount.classList.remove('hidden');
+             } else {
+                detailAccountNumber.innerText = '';
+                detailAccountNumber.classList.add('hidden');
+                if (btnCopyAccount) btnCopyAccount.classList.add('hidden');
+             }
+          }
+          paymentDetail?.classList.remove('hidden');
+       } else {
+          paymentDetail?.classList.add('hidden');
+       }
+    };
+
+    const checkTransactionNotifications = (docs: any[]) => {
+       const pendingNotification = docs.find(doc => {
+          if (doc.status === 'approved' || doc.status === 'rejected') {
+             const savedStatus = localStorage.getItem(`notified_ledger_${doc.id}`);
+             if (savedStatus !== doc.status) {
+                return true;
+             }
+          }
+          return false;
+       });
+
+       if (pendingNotification) {
+          const doc = pendingNotification;
+          const isFiat = doc.transactionType === 'withdraw_fiat' || doc.transactionType === 'top_up';
+          const displayAmount = isFiat ? formatCurrency(doc.amount) : `${Number(doc.amount).toFixed(4)} Gram`;
+          const statusText = doc.status === 'approved' ? 'DILULUSKAN' : 'DITOLAK';
+          
+          let typeLabel = doc.transactionType.replace('_', ' ').toUpperCase();
+          if (doc.transactionType === 'withdraw_fiat') {
+             typeLabel = 'WITHDRAW RM';
+          } else if (doc.transactionType === 'withdraw_physical') {
+             typeLabel = 'WITHDRAW PHYSICAL';
+          } else if (doc.transactionType === 'top_up') {
+             typeLabel = 'TOP UP';
+          } else if (doc.transactionType === 'buy') {
+             typeLabel = 'BUY';
+          } else if (doc.transactionType === 'sell') {
+             typeLabel = 'SELL';
+          }
+
+          const modal = document.getElementById('status-modal');
+          const iconEl = document.getElementById('status-modal-icon');
+          const descEl = document.getElementById('status-modal-desc');
+          const closeBtn = document.getElementById('status-modal-close');
+
+          if (modal && iconEl && descEl && closeBtn) {
+             // Reset modal styles and hide cancel button
+             closeBtn.className = "w-full py-3 px-6 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all transform active:scale-95 shadow-lg shadow-red-500/20";
+             closeBtn.innerText = "Close";
+             const cancelBtn = document.getElementById('status-modal-cancel');
+             if (cancelBtn) cancelBtn.classList.add('hidden');
+
+             if (doc.status === 'approved') {
+                iconEl.className = "w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center text-4xl shadow-inner";
+             iconEl.style.cssText = "background-color: color-mix(in srgb, var(--color-success-btn, #25D366) 20%, transparent); color: var(--color-success-btn, #25D366);";
+                iconEl.innerHTML = "✓";
+             } else {
+                iconEl.className = "w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center text-4xl shadow-inner bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400";
+                iconEl.innerHTML = "✗";
+             }
+
+             descEl.innerHTML = `Transaksi <strong>${typeLabel}</strong> berjumlah <strong>${displayAmount}</strong> telah <strong>${statusText}</strong> oleh Admin.`;
+             modal.classList.remove('hidden');
+
+             closeBtn.onclick = () => {
+                modal.classList.add('hidden');
+                localStorage.setItem(`notified_ledger_${doc.id}`, doc.status);
+                checkTransactionNotifications(docs);
+             };
+          }
+       }
+    };
+
+    const updateWithdrawEst = () => {
+       const val = Number(inputWithdraw.value);
+       const type = (document.querySelector('input[name="withdraw_type"]:checked') as HTMLInputElement)?.value;
+       if (type === 'rm' && estWithdrawPrice && livePrice) {
+          estWithdrawPrice.innerText = formatCurrency(val * (livePrice * (1 - buybackSpread / 100)));
+          if(estWithdrawInfo) estWithdrawInfo.classList.remove('hidden');
+       } else {
+          if(estWithdrawInfo) estWithdrawInfo.classList.add('hidden');
+       }
+    };
+
+    const loadData = async () => {
+      try {
+        // 1. Fetch Tenant Settings to check if feature is enabled
+        const tenantRes = await fetch(`${apiUrl}/api/tenants/${tenantId}`);
+        const tenantData = await tenantRes.json();
+        if (!tenantData.enableGoldSavings) {
+          window.location.href = '/';
+          return;
+        }
+
+        // 2. Fetch Live Price
+        const priceRes = await fetch(`${apiUrl}/api/gold-price?where[tenant][equals]=${tenantId}&limit=1&sort=-createdAt`);
+        const priceData = await priceRes.json();
+        if (priceData.docs && priceData.docs.length > 0) {
+          livePrice = priceData.docs[0].currentPrice || 0;
+          buybackSpread = priceData.docs[0].buybackSpread !== undefined ? Number(priceData.docs[0].buybackSpread) : 4;
+          const buybackPrice = livePrice * (1 - buybackSpread / 100);
+          
+          const lblPriceIdr100 = document.getElementById('lbl-price-idr100');
+          if (lblPriceIdr100) lblPriceIdr100.innerText = `RM 100 = ${(100 / livePrice).toFixed(4)} gram (Buy)`;
+
+          const lblPrice1g = document.getElementById('lbl-price-1g');
+          if (lblPrice1g) lblPrice1g.innerText = `${formatCurrency(livePrice)} / gram`;
+
+          const lblBuybackPrice = document.getElementById('lbl-buyback-price');
+          if (lblBuybackPrice) lblBuybackPrice.innerText = `${formatCurrency(buybackPrice)} / gram`;
+        }
+
+        // 3. Fetch Balance (Authenticated)
+        const balRes = await fetch(`${apiUrl}/api/savings-balances?where[supabaseUserId][equals]=${session.user.id}&where[tenant][equals]=${tenantId}`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        const balData = await balRes.json();
+        if (balData.docs && balData.docs.length > 0) {
+          balance = balData.docs[0].balanceGrams;
+        }
+        
+        const lblBalance = document.getElementById('lbl-balance');
+        if (lblBalance) lblBalance.innerText = Number(balance).toFixed(4);
+
+        // Max Sell Validation
+        if (inputSell) inputSell.max = balance.toString();
+
+        // Fetch SiteSettings for Payment & Shipping with locale & fallback
+        let settingsRes = await fetch(`${apiUrl}/api/site-settings?where[tenant][equals]=${tenantId}&locale=${currentLang}&depth=1`);
+        let settingsData = await settingsRes.json();
+        let settings = settingsData.docs && settingsData.docs.length > 0 ? settingsData.docs[0] : null;
+        
+        // Fallback to 'id' locale if settings/paymentChannels are empty
+        if ((!settings || !settings.paymentChannels || settings.paymentChannels.length === 0) && currentLang !== 'id') {
+           const fallbackRes = await fetch(`${apiUrl}/api/site-settings?where[tenant][equals]=${tenantId}&locale=id&depth=1`);
+           const fallbackData = await fallbackRes.json();
+           if (fallbackData.docs && fallbackData.docs.length > 0) {
+              const fallbackSettings = fallbackData.docs[0];
+              if (!settings) {
+                 settings = fallbackSettings;
+              } else {
+                 settings.paymentChannels = fallbackSettings.paymentChannels;
+              }
+           }
+        }
+
+        if (settings) {
+           enableTopupProofUpload = settings.enableTopupProofUpload === 'savings' || settings.enableTopupProofUpload === 'both' || settings.enableTopupProofUpload === undefined || settings.enableTopupProofUpload === true;
+           paymentChannels = (settings.paymentChannels || []).filter((channel: any) => !channel.displayLocation || channel.displayLocation === 'savings' || channel.displayLocation === 'both');
+           shippingMethods = settings.shippingMethods || [];
+        }
+
+        // Toggle visibility immediately in UI
+        const proofContainer = document.getElementById('topup-proof-container');
+        const proofInput = document.getElementById('input-topup-proof') as HTMLInputElement;
+        if (proofContainer) {
+           if (enableTopupProofUpload) {
+              proofContainer.classList.remove('hidden');
+              if (proofInput) proofInput.required = true;
+           } else {
+              proofContainer.classList.add('hidden');
+              if (proofInput) proofInput.required = false;
+           }
+        }
+
+        // Populate Shipping Dropdown
+        if (selectShipping) {
+           selectShipping.innerHTML = shippingMethods.length > 0 ? shippingMethods.map((s: any) => `
+              <option value="${s.name}">${s.name} (+ ${formatCurrency(s.price)})</option>
+           `).join('') : '<option value="">Pilih Pengiriman</option>';
+        }
+
+        // 4. Fetch Ledger
+        const ledgerRes = await fetch(`${apiUrl}/api/savings-ledgers?where[supabaseUserId][equals]=${session.user.id}&where[tenant][equals]=${tenantId}&sort=-createdAt`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        const ledgerData = await ledgerRes.json();
+        
+        // Compute cashBalance
+        cashBalance = 0;
+        if (ledgerData.docs && ledgerData.docs.length > 0) {
+           ledgerData.docs.forEach((doc: any) => {
+              if (doc.status === 'approved' && doc.transactionType === 'top_up') {
+                 cashBalance += Number(doc.amount);
+              } else if ((doc.status === 'approved' || doc.status === 'pending') && doc.transactionType === 'buy') {
+                 cashBalance -= Number(doc.amount) * Number(doc.priceSnapshot || livePrice);
+              } else if (doc.status === 'approved' && doc.transactionType === 'sell') {
+                 cashBalance += Number(doc.amount) * Number(doc.priceSnapshot || livePrice) * (1 - buybackSpread / 100);
+              }
+           });
+        }
+        cashBalance = Math.max(0, cashBalance);
+
+        const lblCashBalance = document.getElementById('lbl-cash-balance');
+        if (lblCashBalance) lblCashBalance.innerText = formatCurrency(cashBalance);
+
+        const buyCashHelper = document.getElementById('buy-cash-balance-helper');
+        if (buyCashHelper) buyCashHelper.innerText = formatCurrency(cashBalance);
+
+        const ledgerList = document.getElementById('ledger-list');
+        
+        const statusMap: any = {
+           approved: 'DILULUSKAN',
+           rejected: 'DITOLAK',
+           pending: 'SEDANG DIPROSES'
+        };
+
+        if (ledgerList) {
+          if (!ledgerData.docs || ledgerData.docs.length === 0) {
+            ledgerList.innerHTML = `<li class="p-6 text-center text-gray-500">Tiada rekod transaksi lagi.</li>`;
+          } else {
+            ledgerList.innerHTML = ledgerData.docs.map((doc: any) => {
+              const date = new Date(doc.createdAt).toLocaleDateString('ms-MY', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+              let badgeColor = doc.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : doc.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+              
+              let typeLabel = doc.transactionType.replace('_', ' ').toUpperCase();
+              if (doc.transactionType === 'withdraw_fiat') {
+                 typeLabel = 'WITHDRAW RM';
+              } else if (doc.transactionType === 'withdraw_physical') {
+                 typeLabel = 'WITHDRAW PHYSICAL';
+              } else if (doc.transactionType === 'top_up') {
+                 typeLabel = 'TOP UP';
+              } else if (doc.transactionType === 'buy') {
+                 typeLabel = 'BUY';
+              } else if (doc.transactionType === 'sell') {
+                 typeLabel = 'SELL';
+              }
+
+              const isFiat = doc.transactionType === 'withdraw_fiat' || doc.transactionType === 'top_up';
+              const displayAmount = isFiat ? formatCurrency(doc.amount) : `${Number(doc.amount).toFixed(4)} Gram`;
+              const displayStatus = statusMap[doc.status] || doc.status.toUpperCase();
+
+              return `
+                <li class="p-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-sm font-bold text-gray-900 dark:text-white">${typeLabel}</p>
+                      <p class="text-xs text-gray-500">${date}</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-sm font-bold text-gray-900 dark:text-white">${displayAmount}</p>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeColor}">${displayStatus}</span>
+                    </div>
+                  </div>
+                </li>
+              `;
+            }).join('');
+          }
+        }
+
+        if (ledgerData.docs) {
+           checkTransactionNotifications(ledgerData.docs);
+        }
+
+        skeleton.classList.add('hidden');
+        container.classList.remove('hidden');
+
+      } catch (err: any) {
+        console.error(err);
+        skeleton.innerHTML = `<div class="p-8 text-center bg-red-50 text-red-600 rounded-2xl">Gagal memuatkan data. Sila hubungi admin.</div>`;
+      }
+    };
+
+    // Load initial data
+    await loadData();
+
+    // Setup Listeners
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const currentBtn = e.currentTarget as HTMLElement;
+        const targetTab = currentBtn.dataset.tab;
+        
+        // Reset all buttons opacity
+        tabBtns.forEach(b => {
+          b.classList.remove('opacity-100', 'active');
+          b.classList.add('opacity-50');
+        });
+        
+        // Set active button
+        currentBtn.classList.remove('opacity-50');
+        currentBtn.classList.add('opacity-100', 'active');
+
+        // Show target pane
+        tabPanes.forEach(pane => {
+          if (pane.id === `pane-${targetTab}`) {
+            pane.classList.remove('hidden');
+          } else {
+            pane.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // Price Estimations & Real-Time Validations
+    const inputTopup = document.getElementById('input-topup') as HTMLInputElement;
+    inputTopup?.addEventListener('input', () => {
+       const val = Number(inputTopup.value);
+       if (inputTopup.value.trim() === '') {
+          setValidation(inputTopup, true, '');
+       } else if (val <= 0 || isNaN(val)) {
+          setValidation(inputTopup, false, 'Jumlah top up mesti melebihi RM 0!');
+       } else {
+          setValidation(inputTopup, true, '');
+       }
+    });
+
+    inputBuy?.addEventListener('input', (e) => {
+      const val = Number((e.target as HTMLInputElement).value);
+      if (estBuy && livePrice) estBuy.innerText = formatCurrency(val * livePrice);
+      
+      if (inputBuy.value.trim() === '') {
+         setValidation(inputBuy, true, '');
+      } else if (val <= 0 || isNaN(val)) {
+         setValidation(inputBuy, false, 'Jumlah emas mesti melebihi 0 gram!');
+      } else if (val * livePrice > cashBalance) {
+         setValidation(inputBuy, false, `Baki Tunai tidak mencukupi (Kurang ${formatCurrency(val * livePrice - cashBalance)}). Sila lakukan Top Up terlebih dahulu.`);
+      } else {
+         setValidation(inputBuy, true, '');
+      }
+    });
+
+    inputSell?.addEventListener('input', (e) => {
+      const val = Number((e.target as HTMLInputElement).value);
+      if (estSell && livePrice) estSell.innerText = formatCurrency(val * (livePrice * (1 - buybackSpread / 100)));
+      
+      if (inputSell.value.trim() === '') {
+         setValidation(inputSell, true, '');
+      } else if (val <= 0 || isNaN(val)) {
+         setValidation(inputSell, false, 'Jumlah emas mesti melebihi 0 gram!');
+      } else if (val > balance) {
+         setValidation(inputSell, false, 'Baki emas tidak mencukupi!');
+      } else {
+         setValidation(inputSell, true, '');
+      }
+    });
+
+    // Sell All Logic
+    btnSellAll?.addEventListener('click', () => {
+       if (inputSell) {
+         inputSell.value = balance.toString();
+         inputSell.dispatchEvent(new Event('input'));
+       }
+    });
+
+    paymentContainer?.addEventListener('change', updateSelectedPaymentDetail);
+
+    btnCopyAccount?.addEventListener('click', () => {
+       if (detailAccountNumber) {
+          navigator.clipboard.writeText(detailAccountNumber.innerText);
+          if (copyBtnText) copyBtnText.innerText = 'Disalin!';
+          setTimeout(() => {
+             if (copyBtnText) copyBtnText.innerText = 'Salin';
+          }, 2000);
+       }
+    });
+
+    formTopupStep1?.addEventListener('submit', (e) => {
+       e.preventDefault();
+       const inputTopup = document.getElementById('input-topup') as HTMLInputElement;
+       selectedAmount = Number(inputTopup.value);
+       
+       if (selectedAmount <= 0 || isNaN(selectedAmount)) {
+          showToast('Jumlah top up mesti melebihi RM 0!', 'warning');
+          setValidation(inputTopup, false, 'Jumlah top up mesti melebihi RM 0!');
+          return;
+       }
+       setValidation(inputTopup, true, '');
+       
+       if (paymentContainer) {
+          paymentContainer.innerHTML = paymentChannels.length > 0 ? paymentChannels.map((p: any, idx: number) => {
+             const hasAccount = p.accountNumber && p.accountNumber.trim() !== '';
+             return `
+               <label class="relative border border-gray-200 dark:border-gray-700 rounded-xl p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-start gap-4">
+                 <input type="radio" name="payment_method" value="${p.bankName}" required class="text-red-600 focus:ring-red-500 w-4 h-4 mt-1 flex-shrink-0" ${idx === 0 ? 'checked' : ''} />
+                 <div class="flex-1 flex flex-col gap-2">
+                   ${p.logo && p.logo.url ? `
+                     <div class="h-8 flex items-center">
+                       <img src="${p.logo.url}" alt="${p.bankName}" class="h-8 max-w-[120px] object-contain" />
+                     </div>
+                   ` : ''}
+                   <div>
+                     <p class="font-bold text-sm text-gray-900 dark:text-white">${p.bankName}</p>
+                     ${hasAccount ? `<p class="text-xs text-gray-500 mt-1">${p.accountNumber}${p.accountName && p.accountName.trim() !== '' ? ` a/n ${p.accountName}` : ''}</p>` : ''}
+                   </div>
+                 </div>
+               </label>
+             `;
+          }).join('') : '<p class="text-sm text-gray-500">Tidak ada metode pembayaran tersedia.</p>';
+          
+          updateSelectedPaymentDetail();
+       }
+
+       // Dynamic Upload Proof field toggle
+       const proofContainer = document.getElementById('topup-proof-container');
+       const proofInput = document.getElementById('input-topup-proof') as HTMLInputElement;
+       if (proofContainer) {
+          if (enableTopupProofUpload) {
+             proofContainer.classList.remove('hidden');
+             if (proofInput) proofInput.required = true;
+          } else {
+             proofContainer.classList.add('hidden');
+             if (proofInput) proofInput.required = false;
+          }
+       }
+
+       formTopupStep1.classList.add('hidden');
+       formTopupStep2?.classList.remove('hidden');
+    });
+
+    btnBackTopup?.addEventListener('click', () => {
+       formTopupStep2?.classList.add('hidden');
+       formTopupStep1?.classList.remove('hidden');
+    });
+
+    inputWithdraw?.addEventListener('input', (e) => {
+       updateWithdrawEst();
+       const val = Number((e.target as HTMLInputElement).value);
+       if (inputWithdraw.value.trim() === '') {
+          setValidation(inputWithdraw, true, '');
+       } else if (val <= 0 || isNaN(val)) {
+          setValidation(inputWithdraw, false, 'Jumlah pengeluaran mesti melebihi 0 gram!');
+       } else {
+          // We need to check if withdrawing physical or fiat (RM)
+          const type = (document.querySelector('input[name="withdraw_type"]:checked') as HTMLInputElement)?.value;
+          if (type === 'fisik' && val > balance) {
+             setValidation(inputWithdraw, false, 'Baki emas tidak mencukupi!');
+          } else {
+             setValidation(inputWithdraw, true, '');
+          }
+       }
+    });
+
+    radiosWithdraw.forEach(r => {
+       r.addEventListener('change', (e) => {
+          const val = (e.target as HTMLInputElement).value;
+          if (val === 'fisik') {
+             fisikFields?.classList.remove('hidden');
+             rmFields?.classList.add('hidden');
+          } else {
+             fisikFields?.classList.add('hidden');
+             rmFields?.classList.remove('hidden');
+          }
+          updateWithdrawEst();
+       });
+    });
+
+    formTopupStep2?.addEventListener('submit', async (e) => {
+       e.preventDefault();
+       const btn = document.getElementById('btn-submit-topup') as HTMLButtonElement;
+       btn.disabled = true;
+       btn.innerText = 'Memproses...';
+
+       try {
+          const payment = (document.querySelector('input[name="payment_method"]:checked') as HTMLInputElement)?.value;
+          const fileInput = document.getElementById('input-topup-proof') as HTMLInputElement;
+          let proofMediaId = null;
+          let proofUrl = '';
+
+          const customerName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Ahli';
+
+          // Upload image if proof is enabled and file selected
+          if (enableTopupProofUpload && fileInput.files && fileInput.files.length > 0) {
+             const uniqueId = Math.random().toString(36).substring(2, 8).toUpperCase();
+             const altText = `Slip Pembayaran Top Up - ${customerName} - ${uniqueId}`;
+
+             const formData = new FormData();
+             formData.append('alt', altText);
+             formData.append('_payload', JSON.stringify({ alt: altText }));
+             formData.append('file', fileInput.files[0]);
+
+             const uploadRes = await fetch(`${apiUrl}/api/media`, {
+                method: 'POST',
+                headers: {
+                   'Authorization': `Bearer ${session.access_token}`
+                },
+                body: formData
+             });
+             if (uploadRes.ok) {
+                const uploadData = await uploadRes.json();
+                proofMediaId = uploadData.doc.id;
+                proofUrl = uploadData.doc.url.startsWith('http') ? uploadData.doc.url : `${apiUrl}${uploadData.doc.url}`;
+             } else {
+                throw new Error('Gagal memuat naik slip pembayaran.');
+             }
+          }
+
+          await createLedger({
+             transactionType: 'top_up',
+             amount: selectedAmount,
+             paymentProof: proofMediaId
+          });
+
+          // Show Success Toast immediately
+          showToast('Permohonan Top Up Berjaya Dibuat! Sila hubungi admin untuk pengesahan.', 'success');
+
+          // Show confirmation modal
+          const modal = document.getElementById('status-modal');
+          const iconEl = document.getElementById('status-modal-icon');
+          const descEl = document.getElementById('status-modal-desc');
+          const closeBtn = document.getElementById('status-modal-close') as HTMLButtonElement;
+
+          if (modal && iconEl && descEl && closeBtn) {
+             iconEl.className = "w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center text-4xl shadow-inner" ;
+             iconEl.style.cssText = "background-color: color-mix(in srgb, var(--color-success-btn, #25D366) 20%, transparent); color: var(--color-success-btn, #25D366);";
+             iconEl.innerHTML = "✓";
+             descEl.innerHTML = `
+                <div class="space-y-3">
+                   <h4 class="text-lg font-bold text-gray-900 dark:text-white">Top Up Berjaya Dibuat!</h4>
+                   <p class="text-sm text-gray-600 dark:text-gray-400">Sila hubungi admin untuk pengesahan pembayaran.</p>
+                   <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl text-left text-xs text-gray-600 dark:text-gray-300 space-y-1 border border-gray-100 dark:border-gray-800">
+                      <p><strong>Jumlah Top Up:</strong> ${formatCurrency(selectedAmount)}</p>
+                      <p><strong>Kaedah Pembayaran:</strong> ${payment || 'N/A'}</p>
+                   </div>
+                </div>
+             `;
+             
+             closeBtn.className = "w-full py-3 px-6 bg-[var(--color-success-btn)] hover:opacity-90 text-white rounded-2xl font-bold transition-all transform active:scale-95 shadow-lg mb-2";
+             closeBtn.innerText = "Konfirmasi via WhatsApp";
+             closeBtn.onclick = () => {
+                let waMsg = `Halo Admin ${brandName},\nSaya ingin melakukan *Top Up* sebesar *${formatCurrency(selectedAmount)}* menggunakan kaedah pembayaran *${payment}*.\n\nDetail Ahli:\n- ID Ahli: ${lblMemberId?.innerText}\n- Nama Penuh: ${customerName}\n- E-mel: ${session.user.email}`;
+                if (enableTopupProofUpload) {
+                   waMsg += `\n\nBukti Pembayaran: ${proofUrl ? proofUrl : 'Tidak dilampirkan'}`;
+                }
+                const formattedPhone = waNumber.startsWith('0') ? '60' + waNumber.slice(1) : waNumber.replace(/[^0-9]/g, '');
+                const waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(waMsg)}`;
+                window.open(waUrl, '_blank');
+                modal.classList.add('hidden');
+             };
+             
+             let cancelBtn = document.getElementById('status-modal-cancel');
+             if (cancelBtn) {
+                cancelBtn.classList.add('hidden');
+             }
+
+             modal.classList.remove('hidden');
+          }
+
+          // Clear inputs
+          if (fileInput) fileInput.value = '';
+          const inputTopup = document.getElementById('input-topup') as HTMLInputElement;
+          if (inputTopup) inputTopup.value = '';
+
+          // Reload data in background to refresh history/balances
+          await loadData();
+          formTopupStep2?.classList.add('hidden');
+          formTopupStep1?.classList.remove('hidden');
+       } catch (err: any) {
+          showToast(err.message, 'error');
+       } finally {
+          btn.disabled = false;
+          btn.innerText = 'Submit Top Up';
+       }
+    });
+
+    document.getElementById('pane-buy')?.addEventListener('submit', async (e) => {
+       e.preventDefault();
+       const btn = document.getElementById('btn-submit-buy') as HTMLButtonElement;
+       btn.disabled = true;
+       btn.innerText = 'Memproses...';
+
+       try {
+          const inputBuyEl = document.getElementById('input-buy') as HTMLInputElement;
+          const gram = Number(inputBuyEl?.value);
+          
+          if (inputBuyEl?.value.trim() === '' || gram <= 0 || isNaN(gram)) {
+             showToast('Jumlah emas mesti melebihi 0 gram!', 'warning');
+             if (inputBuyEl) setValidation(inputBuyEl, false, 'Jumlah emas mesti melebihi 0 gram!');
+             return;
+          }
+
+          const cost = gram * livePrice;
+          if (cost > cashBalance) {
+             showToast(`Baki Tunai tidak mencukupi (Kurang ${formatCurrency(cost - cashBalance)}). Sila lakukan Top Up terlebih dahulu.`, 'warning');
+             if (inputBuyEl) setValidation(inputBuyEl, false, `Baki Tunai tidak mencukupi (Kurang ${formatCurrency(cost - cashBalance)}). Sila lakukan Top Up terlebih dahulu.`);
+             const topupBtn = document.querySelector('button[data-tab="topup"]') as HTMLElement;
+             topupBtn?.click();
+             return;
+          }
+
+          setValidation(inputBuyEl, true, '');
+          await createLedger({ transactionType: 'buy', amount: gram });
+          
+          showToast('Permohonan Pembelian Emas Berhasil Dibuat!', 'success');
+
+          const msg = `Halo Admin ${brandName},\nSaya ingin melakukan *Beli Emas* sebesar *${gram.toFixed(4)} Gram* (Anggaran: ${formatCurrency(cost)}) menggunakan Baki Tunai saya.\n\nDetail Ahli:\n- ID Ahli: ${lblMemberId?.innerText}\n- Nama Penuh: ${session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Ahli'}\n- E-mel: ${session.user.email}`;
+          
+          const modal = document.getElementById('status-modal');
+          const iconEl = document.getElementById('status-modal-icon');
+          const descEl = document.getElementById('status-modal-desc');
+          const closeBtn = document.getElementById('status-modal-close') as HTMLButtonElement;
+          if (modal && iconEl && descEl && closeBtn) {
+             iconEl.className = "w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center text-4xl shadow-inner";
+             iconEl.style.cssText = "background-color: color-mix(in srgb, var(--color-success-btn, #25D366) 20%, transparent); color: var(--color-success-btn, #25D366);";
+             iconEl.innerHTML = "✓";
+             descEl.innerHTML = `
+                <div class="space-y-3">
+                   <h4 class="text-lg font-bold text-gray-900 dark:text-white">Pembelian Emas Berjaya!</h4>
+                   <p class="text-sm text-gray-600 dark:text-gray-400">Sila hubungi admin untuk pengesahan pembelian.</p>
+                   <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl text-left text-xs text-gray-600 dark:text-gray-300 space-y-1 border border-gray-100 dark:border-gray-800">
+                      <p><strong>Jumlah Emas:</strong> ${gram.toFixed(4)} Gram</p>
+                      <p><strong>Anggaran Kos:</strong> ${formatCurrency(cost)}</p>
+                   </div>
+                </div>
+             `;
+             closeBtn.className = "w-full py-3 px-6 bg-[var(--color-success-btn)] hover:opacity-90 text-white rounded-2xl font-bold transition-all transform active:scale-95 mb-2 shadow-lg";
+             closeBtn.innerText = "Konfirmasi via WhatsApp";
+             closeBtn.onclick = () => {
+                sendToWhatsapp(msg);
+                modal.classList.add('hidden');
+             };
+             let cancelBtn = document.getElementById('status-modal-cancel');
+             if (cancelBtn) cancelBtn.classList.add('hidden');
+             modal.classList.remove('hidden');
+          }
+
+          await loadData();
+       } catch (err: any) {
+          showToast(err.message, 'error');
+       } finally {
+          btn.disabled = false;
+          btn.innerText = 'Buy Gold';
+       }
+    });
+
+    document.getElementById('pane-sell')?.addEventListener('submit', async (e) => {
+       e.preventDefault();
+       const btn = document.getElementById('btn-submit-sell') as HTMLButtonElement;
+       btn.disabled = true;
+       btn.innerText = 'Memproses...';
+
+       try {
+          const amt = Number(inputSell?.value);
+          if (inputSell?.value.trim() === '' || amt <= 0 || isNaN(amt)) {
+             showToast('Jumlah emas mesti melebihi 0 gram!', 'warning');
+             if (inputSell) setValidation(inputSell, false, 'Jumlah emas mesti melebihi 0 gram!');
+             return;
+          }
+          if (amt > balance) {
+             showToast('Baki emas tidak mencukupi!', 'warning');
+             if (inputSell) setValidation(inputSell, false, 'Baki emas tidak mencukupi!');
+             return;
+          }
+
+          setValidation(inputSell, true, '');
+
+          await createLedger({
+             transactionType: 'sell',
+             amount: amt
+          });
+
+          showToast('Permohonan Jualan Emas Berhasil Dibuat!', 'success');
+
+          const buybackPrice = livePrice * (1 - buybackSpread / 100);
+          const cost = amt * buybackPrice;
+          const msg = `Halo Admin ${brandName},\nSaya ingin melakukan *Jual Emas* sebesar *${amt} Gram* (Anggaran Diterima: ${formatCurrency(cost)}).\n\nDetail Ahli:\n- ID Ahli: ${lblMemberId?.innerText}\n- Nama Penuh: ${session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Ahli'}\n- E-mel: ${session.user.email}`;
+          
+          const modal = document.getElementById('status-modal');
+          const iconEl = document.getElementById('status-modal-icon');
+          const descEl = document.getElementById('status-modal-desc');
+          const closeBtn = document.getElementById('status-modal-close') as HTMLButtonElement;
+          if (modal && iconEl && descEl && closeBtn) {
+             iconEl.className = "w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center text-4xl shadow-inner";
+             iconEl.style.cssText = "background-color: color-mix(in srgb, var(--color-success-btn, #25D366) 20%, transparent); color: var(--color-success-btn, #25D366);";
+             iconEl.innerHTML = "✓";
+             descEl.innerHTML = `
+                <div class="space-y-3">
+                   <h4 class="text-lg font-bold text-gray-900 dark:text-white">Jualan Emas Berjaya!</h4>
+                   <p class="text-sm text-gray-600 dark:text-gray-400">Sila hubungi admin untuk pengesahan jualan.</p>
+                   <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl text-left text-xs text-gray-600 dark:text-gray-300 space-y-1 border border-gray-100 dark:border-gray-800">
+                      <p><strong>Jumlah Emas:</strong> ${amt} Gram</p>
+                      <p><strong>Anggaran Diterima:</strong> ${formatCurrency(cost)}</p>
+                   </div>
+                </div>
+             `;
+             closeBtn.className = "w-full py-3 px-6 bg-[var(--color-success-btn)] hover:opacity-90 text-white rounded-2xl font-bold transition-all transform active:scale-95 mb-2 shadow-lg";
+             closeBtn.innerText = "Konfirmasi via WhatsApp";
+             closeBtn.onclick = () => {
+                sendToWhatsapp(msg);
+                modal.classList.add('hidden');
+             };
+             let cancelBtn = document.getElementById('status-modal-cancel');
+             if (cancelBtn) cancelBtn.classList.add('hidden');
+             modal.classList.remove('hidden');
+          }
+
+          await loadData();
+       } catch (err: any) {
+          showToast(err.message, 'error');
+       } finally {
+          btn.disabled = false;
+          btn.innerText = 'Sell Gold';
+       }
+    });
+
+    document.getElementById('pane-withdraw')?.addEventListener('submit', async (e) => {
+       e.preventDefault();
+       const btn = document.getElementById('btn-submit-withdraw') as HTMLButtonElement;
+       btn.disabled = true;
+       btn.innerText = 'Memproses...';
+
+       try {
+          const amt = Number(inputWithdraw?.value);
+          if (inputWithdraw?.value.trim() === '' || amt <= 0 || isNaN(amt)) {
+             showToast('Jumlah pengeluaran mesti melebihi 0 gram!', 'warning');
+             if (inputWithdraw) setValidation(inputWithdraw, false, 'Jumlah pengeluaran mesti melebihi 0 gram!');
+             return;
+          }
+          if (amt > balance) {
+             showToast('Baki emas tidak mencukupi!', 'warning');
+             if (inputWithdraw) setValidation(inputWithdraw, false, 'Baki emas tidak mencukupi!');
+             return;
+          }
+
+          setValidation(inputWithdraw, true, '');
+          
+          const type = (document.querySelector('input[name="withdraw_type"]:checked') as HTMLInputElement)?.value;
+          let ledgerData: any = { amount: amt };
+          let msg = `Halo Admin ${brandName},\n`;
+
+          if (type === 'fisik') {
+             const address = (document.getElementById('input-withdraw-address') as HTMLTextAreaElement)?.value;
+             const shipping = selectShipping?.value;
+             ledgerData.transactionType = 'withdraw_physical';
+             ledgerData.shippingAddress = address;
+             ledgerData.shippingMethod = shipping;
+             
+             msg += `Saya ingin melakukan *Pengeluaran Fizikal Emas* sebesar *${amt} Gram*.\n\nDetail Ahli:\n- ID Ahli: ${lblMemberId?.innerText}\n- Nama Penuh: ${session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Ahli'}\n- E-mel: ${session.user.email}\n\nAlamat Penghantaran:\n${address}\n\nKaedah Penghantaran:\n${shipping}`;
+          } else {
+             const bank = (document.getElementById('input-withdraw-bank') as HTMLInputElement)?.value;
+             const account = (document.getElementById('input-withdraw-account') as HTMLInputElement)?.value;
+             const name = (document.getElementById('input-withdraw-name') as HTMLInputElement)?.value;
+             
+             ledgerData.transactionType = 'withdraw_fiat';
+             ledgerData.bankName = bank;
+             ledgerData.accountNumber = account;
+             ledgerData.accountName = name;
+
+             const buybackPrice = livePrice * (1 - buybackSpread / 100);
+             const cost = amt * buybackPrice;
+             msg += `Saya ingin melakukan *Tukar ke RM* untuk emas sebesar *${amt} Gram* (Anggaran Diterima: ${formatCurrency(cost)}).\n\nDetail Ahli:\n- ID Ahli: ${lblMemberId?.innerText}\n- Nama Penuh: ${session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Ahli'}\n- E-mel: ${session.user.email}\n\nAkaun Penerima Dana:\n- Bank / E-Dompet: ${bank}\n- Nombor Akaun: ${account}\n- Nama Pemilik Akaun: ${name}`;
+          }
+
+          await createLedger(ledgerData);
+          showToast('Permohonan Pengeluaran Emas Berhasil Dibuat!', 'success');
+
+          const withdrawTitle = type === 'fisik' ? 'Pengeluaran Fizikal Berjaya!' : 'Tukar ke RM Berjaya!';
+          const withdrawDesc = type === 'fisik' ? 'Sila hubungi admin untuk pengesahan penghantaran.' : 'Sila hubungi admin untuk pengesahan pengeluaran dana.';
+
+          const modal = document.getElementById('status-modal');
+          const iconEl = document.getElementById('status-modal-icon');
+          const descEl = document.getElementById('status-modal-desc');
+          const closeBtn = document.getElementById('status-modal-close') as HTMLButtonElement;
+          if (modal && iconEl && descEl && closeBtn) {
+             iconEl.className = "w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center text-4xl shadow-inner";
+             iconEl.style.cssText = "background-color: color-mix(in srgb, var(--color-success-btn, #25D366) 20%, transparent); color: var(--color-success-btn, #25D366);";
+             iconEl.innerHTML = "✓";
+             descEl.innerHTML = `
+                <div class="space-y-3">
+                   <h4 class="text-lg font-bold text-gray-900 dark:text-white">${withdrawTitle}</h4>
+                   <p class="text-sm text-gray-600 dark:text-gray-400">${withdrawDesc}</p>
+                   <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl text-left text-xs text-gray-600 dark:text-gray-300 space-y-1 border border-gray-100 dark:border-gray-800">
+                      <p><strong>Jumlah Emas:</strong> ${amt} Gram</p>
+                      <p><strong>Jenis Pengeluaran:</strong> ${type === 'fisik' ? 'Pengeluaran Fizikal' : 'Tukar ke RM'}</p>
+                   </div>
+                </div>
+             `;
+             closeBtn.className = "w-full py-3 px-6 bg-[var(--color-success-btn)] hover:opacity-90 text-white rounded-2xl font-bold transition-all transform active:scale-95 mb-2 shadow-lg";
+             closeBtn.innerText = "Konfirmasi via WhatsApp";
+             closeBtn.onclick = () => {
+                sendToWhatsapp(msg);
+                modal.classList.add('hidden');
+             };
+             let cancelBtn = document.getElementById('status-modal-cancel');
+             if (cancelBtn) cancelBtn.classList.add('hidden');
+             modal.classList.remove('hidden');
+          }
+
+          await loadData();
+       } catch (err: any) {
+          showToast(err.message, 'error');
+       } finally {
+          btn.disabled = false;
+          btn.innerText = 'Mohon Pengeluaran';
+       }
+    });
+
+  });
+</script>
