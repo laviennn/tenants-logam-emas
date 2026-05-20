@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations, localizePath } from '../../i18n/utils';
+import { resolveTenant, getSiteSettings } from '../../lib/cms';
+import LexicalRenderer from '../LexicalRenderer.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+const tenantId = tenant?.id ?? null;
+const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
+
+// If tenant does not enable savings, redirect to home
+if (!tenant?.enableGoldSavings) {
+  return Astro.redirect(localizePath('/', lang));
+}
+
+// Fetch full tenant details with depth=1 to populate media files in Rich Text content
+let fullTenant = null;
+if (tenantId) {
+  try {
+    const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+    const res = await fetch(`${CMS_URL}/api/tenants/${tenantId}?depth=1`, { cache: 'no-store' });
+    if (res.ok) {
+      fullTenant = await res.json();
+    }
+  } catch (err) {
+    console.error('[SavingsGuide] Error fetching full tenant details:', err);
+  }
+}
+
+const activeTenant = fullTenant || tenant;
+const guideTitle = activeTenant?.guideTitle || t('savings.guide') || 'Panduan Tabungan Emas';
+const guideContent = activeTenant?.guideContent || null;
+---
+
+<BaseLayout title={guideTitle} tenantId={tenantId} siteSettings={siteSettings}>
+  <div class="py-12 md:py-20 bg-gray-50 dark:bg-background-dark min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Breadcrumb -->
+      <nav class="flex mb-8 text-xs sm:text-sm font-bold uppercase tracking-widest text-gray-400">
+        <a href={localizePath('/', lang)} class="hover:text-primary transition-colors">Home</a>
+        <span class="mx-3">/</span>
+        <span class="text-gray-900 dark:text-white truncate">{guideTitle}</span>
+      </nav>
+
+      <header class="mb-12">
+        <h1 class="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-6 leading-tight">
+          {guideTitle}
+        </h1>
+        <div class="w-20 h-1.5 bg-primary rounded-full"></div>
+      </header>
+
+      {guideContent ? (
+        <div class="article-content bg-white dark:bg-surface-dark p-6 sm:p-10 md:p-12 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-xl">
+          <LexicalRenderer content={guideContent} />
+        </div>
+      ) : (
+        <div class="text-center py-16 px-4 bg-white dark:bg-surface-dark rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-xl">
+          <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-primary">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Panduan Belum Tersedia</h3>
+          <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Konten panduan sedang disiapkan oleh Admin dan akan segera dipublikasikan.</p>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

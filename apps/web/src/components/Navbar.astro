@@ -30,6 +30,7 @@ const { logoUrl, tenantId, siteSettings, tenantName, tenant } = Astro.props;
 
 if (tenant?.enableGoldSavings) {
   navLinks.push({ key: 'savings.dashboard', href: '/dashboard/savings' });
+  navLinks.push({ key: 'savings.guide', href: '/savings/guide' });
 }
 
 const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register';
@@ -42,8 +43,22 @@ const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register
       <div class='flex items-center h-full lg:w-1/4'>
         <button
           id='mobile-menu-btn'
-          class='md:hidden p-2 mr-2 text-gray-900 dark:text-gray-900 hover:text-white focus:outline-none'
-          aria-label='Toggle menu'>
+          class='md:hidden p-2 mr-2 text-gray-900 dark:text-gray-900 hover:text-white focus:outline-none relative z-50 cursor-pointer'
+          aria-label='Toggle menu'
+          onclick="
+            const menu = document.getElementById('mobile-menu');
+            if (menu) {
+              const isClosed = menu.classList.contains('max-h-0');
+              if (isClosed) {
+                menu.classList.remove('max-h-0');
+                menu.style.maxHeight = menu.scrollHeight + 'px';
+              } else {
+                menu.classList.add('max-h-0');
+                menu.style.maxHeight = '0px';
+              }
+            }
+          "
+        >
           <svg
             class='w-6 h-6'
             fill='none'
@@ -377,20 +392,7 @@ const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register
     }
   });
 
-  // Mobile menu logic
-  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-  const mobileMenu = document.getElementById('mobile-menu');
-  let isMenuOpen = false;
 
-  mobileMenuBtn?.addEventListener('click', () => {
-    isMenuOpen = !isMenuOpen;
-    if (isMenuOpen) {
-      if (mobileMenu)
-        mobileMenu.style.maxHeight = mobileMenu.scrollHeight + 'px';
-    } else {
-      if (mobileMenu) mobileMenu.style.maxHeight = '0px';
-    }
-  });
 
   // Dark mode toggle logic
   const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');

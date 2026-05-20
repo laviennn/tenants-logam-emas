@@ -233,6 +233,28 @@ export interface Tenant {
    * Label kustom untuk nama/simbol emas tabungan (misal: GAP). Jika kosong, akan menggunakan GAP.
    */
   savingsGoldSymbol?: string | null;
+  /**
+   * Judul halaman panduan tabungan emas.
+   */
+  guideTitle?: string | null;
+  /**
+   * Tulis panduan tabungan emas menggunakan rich text editor.
+   */
+  guideContent?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -914,6 +936,8 @@ export interface TenantsSelect<T extends boolean = true> {
   enableDarkMode?: T;
   savingsMemberIdPrefix?: T;
   savingsGoldSymbol?: T;
+  guideTitle?: T;
+  guideContent?: T;
   updatedAt?: T;
   createdAt?: T;
 }

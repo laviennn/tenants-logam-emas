@@ -285,6 +285,7 @@ export const ui = {
     
     // Savings Feature
     'savings.dashboard': 'Dashboard Simpanan',
+    'savings.guide': 'Panduan Simpanan',
     'savings.register_title': 'Daftar Simpanan Emas',
     'savings.kyc_type': 'Tipe Identitas',
     'savings.kyc_number': 'Nomor Identitas',
@@ -576,6 +577,7 @@ export const ui = {
     
     // Savings Feature
     'savings.dashboard': 'Savings Dashboard',
+    'savings.guide': 'Savings Guide',
     'savings.register_title': 'Register Gold Savings',
     'savings.kyc_type': 'ID Type',
     'savings.kyc_number': 'ID Number',
@@ -867,6 +869,7 @@ my: {
     
     // Savings Feature
     'savings.dashboard': 'Papan Pemuka Simpanan',
+    'savings.guide': 'Panduan Akaun Emas',
     'savings.register_title': 'Daftar Simpanan Emas',
     'savings.kyc_type': 'Jenis Pengenalan',
     'savings.kyc_number': 'Nombor Pengenalan',
