@@ -1,7 +1,7 @@
 const isMY = import.meta.env.PUBLIC_TENANT_REGION === 'MY';
 
-export const languages = isMY 
-  ? { en: '🇬🇧 EN', my: '🇲🇾 MY' } 
+export const languages = isMY
+  ? { en: '🇬🇧 EN', my: '🇲🇾 MY' }
   : { id: '🇮🇩 ID', en: '🇬🇧 EN', my: '🇲🇾 MY' };
 
 export const defaultLang = isMY ? 'my' : 'id';
@@ -127,7 +127,7 @@ export const ui = {
     'checkout.payment_instructions': 'Instruksi Pembayaran',
     'checkout.transfer_instruction': 'Silakan transfer sejumlah nominal di atas ke rekening berikut:',
     'checkout.upload_proof': 'Upload Bukti Transfer',
-    'checkout.confirm_wa': 'Konfirmasi & Hubungi Admin',
+    'checkout.confirm_wa': 'Kirim Bukti Transfers',
     'cart.title': 'Keranjang Belanja',
     'cart.summary_title': 'Ringkasan Belanja',
     'cart.total_items': 'Total Barang',
@@ -282,7 +282,7 @@ export const ui = {
     'checkout.scan_qr': 'Pindai QRIS Pembayaran',
     'checkout.save_qr_desc': 'Simpan atau screenshot QR di atas untuk melakukan scan pembayaran',
     'checkout.payment_phone': 'Nomor HP / WhatsApp',
-    
+
     // Savings Feature
     'savings.dashboard': 'Dashboard Simpanan',
     'savings.guide': 'Panduan Simpanan',
@@ -574,7 +574,7 @@ export const ui = {
     'checkout.scan_qr': 'Scan QRIS for Payment',
     'checkout.save_qr_desc': 'Save or screenshot the QR above to perform payment scanning',
     'checkout.payment_phone': 'Phone Number / WhatsApp',
-    
+
     // Savings Feature
     'savings.dashboard': 'Savings Dashboard',
     'savings.guide': 'Savings Guide',
@@ -591,7 +591,7 @@ export const ui = {
     'savings.history': 'Transaction History',
     'savings.wa_message': 'Hello Admin {brandName}, I would like to {action} gold savings for {amount}.',
   },
-my: {
+  my: {
     'nav.home': 'Home',
     'nav.products': 'Products',
     'nav.track': 'Jejak Pesanan',
@@ -866,7 +866,7 @@ my: {
     'checkout.scan_qr': 'Imbas QR Pembayaran',
     'checkout.save_qr_desc': 'Simpan atau tangkapan skrin (screenshot) QR di atas untuk melakukan imbasan pembayaran',
     'checkout.payment_phone': 'Nombor Telefon / WhatsApp',
-    
+
     // Savings Feature
     'savings.dashboard': 'Papan Pemuka Simpanan',
     'savings.guide': 'Panduan Akaun Emas',
@@ -882,5 +882,5 @@ my: {
     'savings.balance': 'Baki Emas Anda',
     'savings.history': 'Sejarah Transaksi',
     'savings.wa_message': 'Salam Admin {brandName}, saya ingin membuat {action} simpanan emas sebanyak {amount}.',
-}
+  }
 } as const;
