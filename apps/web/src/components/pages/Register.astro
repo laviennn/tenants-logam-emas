@@ -81,9 +81,7 @@ const registerStrings = {
 
   const registerStrings = (window as any).__REGISTER_STRINGS;
   const tenantId = (window as any).__TENANT_ID;
-  const apiUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-    ? 'http://localhost:3000'
-    : 'https://api-logam-tenants.creosphera.workers.dev';
+  const apiUrl = import.meta.env.PUBLIC_CMS_URL ?? 'http://localhost:3000';
 
   const form = document.getElementById('register-form') as HTMLFormElement;
   const btnRegister = document.getElementById('btn-register');

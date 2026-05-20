@@ -407,8 +407,7 @@ const waTemplate = t('savings.wa_message');
     const estWithdrawInfo = document.getElementById('est-withdraw-info');
     const inputWithdraw = document.getElementById('input-withdraw') as HTMLInputElement;
 
-    const apiUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://localhost:3000' : 'https://api-logam-tenants.creosphera.workers.dev';
-
+const apiUrl = import.meta.env.PUBLIC_CMS_URL ?? 'http://localhost:3000';
     const sendToWhatsapp = (msg: string) => {
        if (!waNumber) {
          showToast('Nombor WhatsApp admin belum dikonfigurasikan.', 'error');
