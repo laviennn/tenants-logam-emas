@@ -420,7 +420,7 @@ const checkoutStrings = {
                               </p>
                               {channel.accountNumber && (
                                 <p class='text-gray-500 text-[11px] leading-tight truncate'>
-                                  Rek: {channel.accountNumber}
+                                {channel.accountNumber}
                                 </p>
                               )}
                               {channel.phoneNumber && (
@@ -1193,7 +1193,7 @@ const checkoutStrings = {
                           </p>
                           ${channel.accountNumber ? `
                             <p class="text-gray-500 text-[11px] leading-tight truncate">
-                              Rek: ${channel.accountNumber}
+                            ${channel.accountNumber}
                             </p>
                           ` : ''}
                           ${channel.phoneNumber ? `
