@@ -270,5 +270,5 @@ export default buildConfig({
     }),
   ],
 })
-// Schema reload trigger - updated 2026-05-20
+// Schema reload trigger - updated 2026-05-20-v2
 

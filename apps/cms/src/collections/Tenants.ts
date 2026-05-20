@@ -232,6 +232,28 @@ export const Tenants: CollectionConfig = {
             },
           ],
         },
+        {
+          label: '📖 Copywriting Panduan',
+          fields: [
+            {
+              name: 'guideTitle',
+              type: 'text',
+              label: 'Judul Panduan',
+              defaultValue: 'Panduan Tabungan Emas',
+              admin: {
+                description: 'Judul halaman panduan tabungan emas.',
+              },
+            },
+            {
+              name: 'guideContent',
+              type: 'richText',
+              label: 'Konten Panduan',
+              admin: {
+                description: 'Tulis panduan tabungan emas menggunakan rich text editor.',
+              },
+            },
+          ],
+        },
       ],
     },
   ],

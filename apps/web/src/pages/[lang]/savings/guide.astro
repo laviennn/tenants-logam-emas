@@ -1,0 +1,11 @@
+---
+import SavingsGuideComponent from '../../../components/pages/SavingsGuide.astro';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'my' } },
+  ];
+}
+---
+<SavingsGuideComponent />
