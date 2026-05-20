@@ -214,13 +214,44 @@ export const SiteSettings: CollectionConfig = {
           label: '💳 Pembayaran',
           fields: [
             {
+              name: 'enableTopupProofUpload',
+              type: 'select',
+              required: true,
+              defaultValue: 'both',
+              label: 'Penempatan Upload Bukti Pembayaran',
+              options: [
+                { label: 'Hanya Halaman Checkout Emas saja', value: 'checkout' },
+                { label: 'Hanya Halaman AKUAN (Savings Dashboard) saja', value: 'savings' },
+                { label: 'Kedua-duanya sekaligus (Aktif)', value: 'both' },
+                { label: 'Mati keduanya (Nonaktif)', value: 'none' },
+              ],
+              admin: {
+                description: 'Tentukan di mana form upload bukti pembayaran akan ditampilkan.',
+              },
+            },
+            {
               name: 'paymentChannels',
               type: 'array',
               localized: true,
               label: 'Channel Pembayaran',
               fields: [
+                {
+                  name: 'displayLocation',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'both',
+                  label: 'Penempatan Pembayaran',
+                  options: [
+                    { label: 'Hanya Halaman Checkout Emas saja', value: 'checkout' },
+                    { label: 'Hanya Halaman AKUAN (Savings Dashboard) saja', value: 'savings' },
+                    { label: 'Kedua-duanya sekaligus', value: 'both' },
+                  ],
+                  admin: {
+                    description: 'Tentukan di mana channel pembayaran ini akan ditampilkan.',
+                  },
+                },
                 { name: 'bankName', type: 'text', required: true, label: 'Nama Bank / e-Wallet' },
-                { name: 'accountName', type: 'text', required: true, label: 'Atas Nama' },
+                { name: 'accountName', type: 'text', required: false, label: 'Atas Nama (Opsional)' },
                 { name: 'accountNumber', type: 'text', required: false, label: 'Nomor Rekening (Opsional)' },
                 {
                   name: 'phoneNumber',

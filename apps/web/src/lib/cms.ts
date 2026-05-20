@@ -35,16 +35,7 @@ export const mergeWithFallback = (target: any, source: any): any => {
 
   if (Array.isArray(target)) {
     if (target.length === 0) return source
-    const result = []
-    const maxLength = Math.max(target.length, source?.length || 0)
-    for (let i = 0; i < maxLength; i++) {
-      if (i < target.length) {
-        result.push(mergeWithFallback(target[i], source?.[i]))
-      } else {
-        result.push(source[i])
-      }
-    }
-    return result
+    return target
   }
 
   const result: any = { ...target }
@@ -290,6 +281,7 @@ export const buildTenantCssVars = (tenant: any): string => {
     '--color-cart-text': (tenant.cartTextColor && tenant.cartTextColor !== '#1e1e1e') ? tenant.cartTextColor : 'var(--color-text-default)',
     '--color-product-title': (tenant.productTitleColor && tenant.productTitleColor !== '#1e1e1e') ? tenant.productTitleColor : 'var(--color-text-default)',
     '--color-product-price': tenant.productPriceColor || '#d97706',
+    '--color-success-btn': tenant.successButtonColor || '#25D366',
     '--font-family-sans': `'${tenant.fontFamily || 'Inter'}', sans-serif`,
   }
 

@@ -15,6 +15,9 @@ import { Transactions } from './collections/Transactions'
 import { Articles } from './collections/Articles'
 import { Testimonials } from './collections/Testimonials'
 import { Reviews } from './collections/Reviews'
+import { SavingsBalances } from './collections/SavingsBalances'
+import { SavingsLedgers } from './collections/SavingsLedgers'
+import { Customers } from './collections/Customers'
 
 // Formerly globals — now collections for multi-tenant support
 import { SiteSettings } from './collections/SiteSettings'
@@ -70,6 +73,141 @@ export default buildConfig({
         }
       },
     },
+    {
+      path: '/register-customer',
+      method: 'post',
+      handler: async (req) => {
+        try {
+          const body = await (req as any).json();
+          console.log('\n======================================');
+          console.log(`[AUTH] Percobaan Registrasi Konsumen`);
+          console.log(`Waktu: ${new Date().toLocaleString()}`);
+          console.log(`Email: ${body.email}`);
+          console.log(`Tenant ID: ${body.tenantId}`);
+          if (body.kycType) {
+            console.log(`KYC Type: ${body.kycType}`);
+            console.log(`KYC Number: ${body.kycNumber}`);
+            console.log(`Bank Name: ${body.bankName}`);
+          }
+
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabaseAdmin = createClient(
+            process.env.PUBLIC_SUPABASE_URL || '',
+            process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+          );
+
+          const { data, error } = await supabaseAdmin.auth.admin.createUser({
+            email: body.email,
+            password: body.password,
+            email_confirm: true,
+            user_metadata: {
+              roles: ['customer'],
+              full_name: body.fullName,
+              kycType: body.kycType,
+              kycNumber: body.kycNumber,
+              bankName: body.bankName,
+              bankAccountNumber: body.bankAccountNumber,
+            }
+          });
+
+          if (error) {
+            console.log(`Status: Failed (Supabase)`);
+            console.log(`Error: ${error.message}`);
+            console.log('======================================\n');
+            return Response.json({ success: false, error: error.message }, { status: 400 });
+          }
+
+          // Create a Customer record in Payload CMS linked to the tenant
+          if (body.tenantId) {
+            try {
+              const customerData: any = {
+                email: body.email,
+                fullName: body.fullName || null,
+                tenant: body.tenantId,
+                supabaseUserId: data.user?.id || null,
+                isBlocked: false,
+              };
+
+              // Only add KYC if provided
+              if (body.kycType || body.kycNumber || body.bankName || body.bankAccountNumber) {
+                customerData.kyc = {
+                  kycType: body.kycType || null,
+                  kycNumber: body.kycNumber || null,
+                  bankName: body.bankName || null,
+                  bankAccountNumber: body.bankAccountNumber || null,
+                };
+              }
+
+              await (req as any).payload.create({
+                collection: 'customers',
+                data: customerData,
+                overrideAccess: true,
+              });
+
+              console.log(`Customer record created in Payload CMS for tenant ${body.tenantId}`);
+            } catch (cmsErr: any) {
+              // Non-fatal: log but don't block registration
+              console.warn(`[WARN] Failed to create Customer record in CMS: ${cmsErr.message}`);
+            }
+          }
+
+          console.log(`Status: Success`);
+          console.log('======================================\n');
+          return Response.json({ success: true, user: data.user });
+        } catch (error: any) {
+          console.log(`Status: Server Error`);
+          console.log(`Error: ${error.message}`);
+          console.log('======================================\n');
+          return Response.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+        }
+      },
+    },
+    {
+      path: '/check-customer',
+      method: 'get',
+      handler: async (req) => {
+        try {
+          const url = new URL((req as any).url);
+          const email = url.searchParams.get('email');
+          const tenantId = url.searchParams.get('tenantId');
+
+          if (!email || !tenantId) {
+            return Response.json({ success: false, error: 'Missing email or tenantId' }, { status: 400 });
+          }
+
+          const result = await (req as any).payload.find({
+            collection: 'customers',
+            where: { email: { equals: email } },
+            limit: 1,
+            overrideAccess: true,
+          });
+
+          const customer = result.docs?.[0];
+
+          if (!customer) {
+            // No customer record — allow login (legacy or cross-tenant users are ignored)
+            return Response.json({ success: true, blocked: false, wrongTenant: false, found: false });
+          }
+
+          const customerTenantId =
+            typeof customer.tenant === 'object' ? customer.tenant?.id : customer.tenant;
+
+          const wrongTenant = String(customerTenantId) !== String(tenantId);
+          const blocked = customer.isBlocked === true;
+
+          return Response.json({
+            success: true,
+            blocked,
+            wrongTenant,
+            found: true,
+          });
+        } catch (error: any) {
+          console.error('[check-customer] Error:', error.message);
+          // Fail open to not block legitimate users if CMS is down
+          return Response.json({ success: true, blocked: false, wrongTenant: false, found: false });
+        }
+      },
+    },
   ],
   collections: [
     // ── Core ──────────────────────────────────────────────────
@@ -89,6 +227,11 @@ export default buildConfig({
     Testimonials,
     // ── Sales ─────────────────────────────────────────────────
     Transactions,
+    // ── Gold Vault (AKUAN) ────────────────────────────────────
+    SavingsBalances,
+    SavingsLedgers,
+    // ── Customers ────────────────────────────────────────────
+    Customers,
   ],
   // globals removed — all migrated to tenant-scoped collections
   globals: [],

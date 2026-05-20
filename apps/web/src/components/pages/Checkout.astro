@@ -386,8 +386,10 @@ const checkoutStrings = {
                   class='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                   {
                     siteSettings.paymentChannels?.length > 0 ? (
-                      siteSettings.paymentChannels.map((channel: any) => (
-                        <button
+                      siteSettings.paymentChannels
+                        .filter((channel: any) => !channel.displayLocation || channel.displayLocation === 'checkout' || channel.displayLocation === 'both')
+                        .map((channel: any) => (
+                          <button
                           type='button'
                           class='payment-card text-left p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-primary transition-all duration-200'
                           data-bank={channel.bankName}
@@ -736,7 +738,7 @@ const checkoutStrings = {
         </div>
       </div>
 
-      <div class='space-y-4'>
+      <div id="checkout-proof-container" class={`space-y-4 ${(siteSettings?.enableTopupProofUpload === 'checkout' || siteSettings?.enableTopupProofUpload === 'both' || siteSettings?.enableTopupProofUpload === undefined || siteSettings?.enableTopupProofUpload === true) ? '' : 'hidden'}`}>
         <label
           data-i18n='checkout.upload_proof'
           class='block text-sm font-medium text-gray-700 dark:text-gray-300'
@@ -756,7 +758,7 @@ const checkoutStrings = {
         type='button'
         data-i18n='checkout.confirm_wa'
         data-wa={siteSettings.whatsappNumber}
-        class='mt-8 w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-3.5 px-4 rounded-xl transition-colors shadow-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed'>
+        class='mt-8 w-full bg-[var(--color-success-btn)] hover:opacity-90 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed'>
         {t('checkout.confirm_wa')}
         <svg
           class='w-5 h-5 ml-2'
@@ -779,7 +781,7 @@ const checkoutStrings = {
         id='success-modal-content'>
         <div class='p-8 text-center'>
           <div
-            class='w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl'>
+            class='w-20 h-20 bg-[var(--color-success-btn)]/20 text-[var(--color-success-btn)] rounded-full flex items-center justify-center mx-auto mb-6 text-4xl'>
             ✅
           </div>
           <h3 class='text-2xl font-black text-gray-900 dark:text-white mb-2'>
@@ -796,7 +798,7 @@ const checkoutStrings = {
           <div class='space-y-3'>
             <button
               id='btn-success-wa'
-              class='w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3'>
+              class='w-full bg-[var(--color-success-btn)] hover:opacity-90 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3'>
               {isMY ? 'Pengesahan WhatsApp' : 'Konfirmasi ke Admin'}
             </button>
             <p
@@ -935,10 +937,12 @@ const checkoutStrings = {
     </div>
   </div>
 
-  <script is:inline define:vars={{ tenantId, regionCode, checkoutStrings }}>
+  <script is:inline define:vars={{ tenantId, regionCode, checkoutStrings, lang, enableTopupProofUpload: siteSettings?.enableTopupProofUpload === 'checkout' || siteSettings?.enableTopupProofUpload === 'both' || siteSettings?.enableTopupProofUpload === undefined || siteSettings?.enableTopupProofUpload === true }}>
     window.__tenantId = tenantId;
     window.__regionCode = regionCode;
     window.__CHECKOUT_STRINGS = checkoutStrings;
+    window.__enableProofUpload = enableTopupProofUpload;
+    window.__currentLang = lang;
   </script>
 
   <script>
@@ -1071,43 +1075,151 @@ const checkoutStrings = {
       });
     });
 
-    // Payment Card Selection
-    document.querySelectorAll('.payment-card').forEach((card) => {
-      card.addEventListener('click', () => {
-        const bank = (card as HTMLElement).dataset.bank || '';
-        const acc = (card as HTMLElement).dataset.acc || '';
-        const phone = (card as HTMLElement).dataset.phone || '';
-        const name = (card as HTMLElement).dataset.accname || '';
-        const logo = (card as HTMLElement).dataset.logo || '';
-        const qr = (card as HTMLElement).dataset.qr || '';
+    // Payment Card Selection function definition
+    const setupPaymentCardListeners = () => {
+      document.querySelectorAll('.payment-card').forEach((card) => {
+        // Clone card element to remove any previous listeners
+        const newCard = card.cloneNode(true) as HTMLElement;
+        card.parentNode?.replaceChild(newCard, card);
 
-        // Update hidden inputs
-        (document.getElementById('payment-method') as HTMLInputElement).value =
-          bank;
-        (document.getElementById('payment-acc') as HTMLInputElement).value =
-          acc;
-        (document.getElementById('payment-phone') as HTMLInputElement).value =
-          phone;
-        (document.getElementById('payment-accname') as HTMLInputElement).value =
-          name;
-        (document.getElementById('payment-logo') as HTMLInputElement).value =
-          logo;
-        (document.getElementById('payment-qr') as HTMLInputElement).value = qr;
+        newCard.addEventListener('click', () => {
+          const bank = newCard.dataset.bank || '';
+          const acc = newCard.dataset.acc || '';
+          const phone = newCard.dataset.phone || '';
+          const name = newCard.dataset.accname || '';
+          const logo = newCard.dataset.logo || '';
+          const qr = newCard.dataset.qr || '';
 
-        // Update UI active state
-        document.querySelectorAll('.payment-card').forEach((c) => {
-          c.classList.remove('border-primary', 'bg-primary/5');
-          c.querySelector('.payment-radio')?.classList.remove(
-            'bg-primary',
-            'border-primary',
-          );
+          // Update hidden inputs
+          (document.getElementById('payment-method') as HTMLInputElement).value = bank;
+          (document.getElementById('payment-acc') as HTMLInputElement).value = acc;
+          (document.getElementById('payment-phone') as HTMLInputElement).value = phone;
+          (document.getElementById('payment-accname') as HTMLInputElement).value = name;
+          (document.getElementById('payment-logo') as HTMLInputElement).value = logo;
+          (document.getElementById('payment-qr') as HTMLInputElement).value = qr;
+
+          // Update UI active state
+          document.querySelectorAll('.payment-card').forEach((c) => {
+            c.classList.remove('border-primary', 'bg-primary/5');
+            c.querySelector('.payment-radio')?.classList.remove(
+              'bg-primary',
+              'border-primary',
+            );
+          });
+          newCard.classList.add('border-primary', 'bg-primary/5');
+          newCard
+            .querySelector('.payment-radio')
+            ?.classList.add('bg-primary', 'border-primary');
         });
-        card.classList.add('border-primary', 'bg-primary/5');
-        card
-          .querySelector('.payment-radio')
-          ?.classList.add('bg-primary', 'border-primary');
       });
-    });
+    };
+
+    // Initialize listeners initially
+    setupPaymentCardListeners();
+
+    // Fetch site settings dynamically on the client side to bypass static build issues
+    const loadDynamicSettings = async () => {
+      try {
+        const pathParts = window.location.pathname.split('/');
+        const defaultLocale = (window as any).__currentLang || 'id';
+        const currentLang = hasLangPrefix ? pathParts[1] : defaultLocale;
+        
+        let res = await fetch(`${CMS_URL}/api/site-settings?where[tenant][equals]=${tenantIdVar}&locale=${currentLang}&depth=1`);
+        let settingsData = await res.json();
+        let settings = settingsData.docs && settingsData.docs.length > 0 ? settingsData.docs[0] : null;
+
+        // Fallback to default lang if currentLang settings are empty/not configured
+        if ((!settings || !settings.paymentChannels || settings.paymentChannels.length === 0) && currentLang !== defaultLocale) {
+           const fallbackRes = await fetch(`${CMS_URL}/api/site-settings?where[tenant][equals]=${tenantIdVar}&locale=${defaultLocale}&depth=1`);
+           const fallbackData = await fallbackRes.json();
+           if (fallbackData.docs && fallbackData.docs.length > 0) {
+              const fallbackSettings = fallbackData.docs[0];
+              if (!settings) {
+                 settings = fallbackSettings;
+              } else {
+                 settings.paymentChannels = fallbackSettings.paymentChannels;
+              }
+           }
+        }
+
+        if (settings) {
+            const enableProofUpload = settings.enableTopupProofUpload === 'checkout' || settings.enableTopupProofUpload === 'both' || settings.enableTopupProofUpload === undefined || settings.enableTopupProofUpload === true;
+           (window as any).__enableProofUpload = enableProofUpload;
+           
+           const checkoutProofContainer = document.getElementById('checkout-proof-container');
+           if (checkoutProofContainer) {
+              if (enableProofUpload) {
+                 checkoutProofContainer.classList.remove('hidden');
+              } else {
+                 checkoutProofContainer.classList.add('hidden');
+              }
+           }
+
+           const channels = (settings.paymentChannels || []).filter((channel: any) => !channel.displayLocation || channel.displayLocation === 'checkout' || channel.displayLocation === 'both');
+           const paymentCardsContainer = document.getElementById('payment-cards');
+           if (paymentCardsContainer && channels.length > 0) {
+              paymentCardsContainer.innerHTML = channels.map((channel: any) => {
+                 const logoUrl = channel.logo ? (typeof channel.logo === 'object' && channel.logo.url ? channel.logo.url : `${CMS_URL}${channel.logo.url || channel.logo}`) : '';
+                 const qrUrl = channel.qrCode ? (typeof channel.qrCode === 'object' && channel.qrCode.url ? channel.qrCode.url : `${CMS_URL}${channel.qrCode.url || channel.qrCode}`) : '';
+                 
+                 return `
+                    <button
+                      type="button"
+                      class="payment-card text-left p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-primary transition-all duration-200"
+                      data-bank="${channel.bankName}"
+                      data-acc="${channel.accountNumber || ''}"
+                      data-phone="${channel.phoneNumber || ''}"
+                      data-accname="${channel.accountName}"
+                      data-logo="${logoUrl}"
+                      data-qr="${qrUrl}"
+                    >
+                      <div class="flex items-center gap-3">
+                        ${logoUrl ? `
+                          <img
+                            src="${logoUrl}"
+                            alt="${channel.bankName}"
+                            class="h-8 w-16 object-contain flex-shrink-0"
+                          />
+                        ` : `
+                          <div class="h-8 w-16 bg-primary/10 rounded flex items-center justify-center flex-shrink-0">
+                            <span class="text-primary font-bold text-xs">
+                              ${channel.bankName.slice(0, 3)}
+                            </span>
+                          </div>
+                        `}
+                        <div class="flex-1 min-w-0">
+                          <p class="font-bold text-gray-900 dark:text-white text-sm truncate">
+                            ${channel.bankName}
+                          </p>
+                          ${channel.accountNumber ? `
+                            <p class="text-gray-500 text-[11px] leading-tight truncate">
+                              Rek: ${channel.accountNumber}
+                            </p>
+                          ` : ''}
+                          ${channel.phoneNumber ? `
+                            <p class="text-gray-500 text-[11px] leading-tight truncate">
+                              HP: ${channel.phoneNumber}
+                            </p>
+                          ` : ''}
+                          <p class="text-gray-500 text-[11px] leading-tight truncate">
+                            ${channel.accountName}
+                          </p>
+                        </div>
+                        <div class="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600 flex-shrink-0 payment-radio" />
+                      </div>
+                    </button>
+                 `;
+              }).join('');
+              
+              setupPaymentCardListeners();
+           }
+        }
+      } catch (err) {
+         console.error('[Checkout] Failed to fetch settings dynamically:', err);
+      }
+    };
+
+    loadDynamicSettings();
 
     // ── Region config bridged from server ─────────────────────────
     const regionCode = (window as any).__regionCode || 'ID';
@@ -1202,12 +1314,26 @@ const checkoutStrings = {
           return;
         }
 
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const fullName = (document.getElementById('name') as HTMLInputElement)?.value || '';
+        try {
+          const res = await fetch(`${CMS_URL}/api/register-customer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, tenantId: tenantIdVar, fullName }),
+          });
 
-        if (error) {
-          console.error('[Checkout] Supabase signUp error:', error);
+          const resData = await res.json();
+          if (!res.ok || !resData.success) {
+            throw new Error(resData.error || checkoutStrings.errSignupFailed);
+          }
+
+          // Auto-login
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+          if (signInError) throw signInError;
+        } catch (err: any) {
+          console.error('[Checkout] signup error:', err);
           showToast(
-            checkoutStrings.errSignupFailed + error.message,
+            checkoutStrings.errSignupFailed + (err.message || ''),
             'error',
             'upload-toast',
           );
@@ -1336,27 +1462,32 @@ const checkoutStrings = {
         return;
       }
 
+      const enableProofUpload = (window as any).__enableProofUpload !== false;
       const fileInput = document.getElementById(
         'payment-proof',
       ) as HTMLInputElement;
-      if (!fileInput.files || fileInput.files.length === 0) {
-        showToast(checkoutStrings.errNoProof, 'warning');
-        console.warn(
-          '[Checkout] User tried to confirm without uploading proof.',
-        );
-        return;
-      }
 
-      const file = fileInput.files[0];
-      if (file.size > 4 * 1024 * 1024) {
-        // 4MB
-        showToast(checkoutStrings.errFileSize, 'warning');
-        return;
+      let file: File | null = null;
+      if (enableProofUpload) {
+        if (!fileInput.files || fileInput.files.length === 0) {
+          showToast(checkoutStrings.errNoProof, 'warning');
+          console.warn(
+            '[Checkout] User tried to confirm without uploading proof.',
+          );
+          return;
+        }
+
+        file = fileInput.files[0];
+        if (file.size > 4 * 1024 * 1024) {
+          // 4MB
+          showToast(checkoutStrings.errFileSize, 'warning');
+          return;
+        }
       }
 
       const orderId = 'ORD-' + Date.now();
       if (btnConfirm) {
-        btnConfirm.innerText = checkoutStrings.statusUploading;
+        btnConfirm.innerText = enableProofUpload ? checkoutStrings.statusUploading : 'Memproses...';
         btnConfirm.setAttribute('disabled', 'true');
       }
 
@@ -1371,33 +1502,38 @@ const checkoutStrings = {
 
       // 1. Upload to Supabase Storage (bucket: payment-proofs, must be public)
       let publicUrl = '(tidak tersedia)';
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('payment-proofs')
-        .upload(`proofs/${orderId}-${file.name}`, file);
+      let uploadError = null;
 
-      if (uploadError) {
-        // 1. Log to browser console
-        console.error('[Checkout] Supabase Storage upload error:', uploadError);
-
-        // 2. Log to CMS Terminal (as requested)
-        await logToTerminal(`Upload gagal untuk Order ID: ${orderId}`, {
-          error: uploadError.message,
-          hint: 'Pastikan SQL Policy sudah dijalankan di Dashboard Supabase!',
-          bucket: 'payment-proofs',
-          fileName: file.name,
-        });
-
-        // Show friendly non-blocking warning — order still proceeds
-        showToast(checkoutStrings.errUploadFailed, 'warning');
-
-        // Give user 2s to read the warning before proceeding
-        await new Promise((r) => setTimeout(r, 2000));
-      } else {
-        const { data: urlData } = supabase.storage
+      if (enableProofUpload && file) {
+        const { data: uploadData, error: uErr } = await supabase.storage
           .from('payment-proofs')
-          .getPublicUrl(`proofs/${orderId}-${file.name}`);
-        publicUrl = urlData?.publicUrl || publicUrl;
-        console.log('[Checkout] Upload success. Public URL:', publicUrl);
+          .upload(`proofs/${orderId}-${file.name}`, file);
+
+        if (uErr) {
+          uploadError = uErr;
+          // 1. Log to browser console
+          console.error('[Checkout] Supabase Storage upload error:', uErr);
+
+          // 2. Log to CMS Terminal (as requested)
+          await logToTerminal(`Upload gagal untuk Order ID: ${orderId}`, {
+            error: uErr.message,
+            hint: 'Pastikan SQL Policy sudah dijalankan di Dashboard Supabase!',
+            bucket: 'payment-proofs',
+            fileName: file.name,
+          });
+
+          // Show friendly non-blocking warning — order still proceeds
+          showToast(checkoutStrings.errUploadFailed, 'warning');
+
+          // Give user 2s to read the warning before proceeding
+          await new Promise((r) => setTimeout(r, 2000));
+        } else {
+          const { data: urlData } = supabase.storage
+            .from('payment-proofs')
+            .getPublicUrl(`proofs/${orderId}-${file.name}`);
+          publicUrl = urlData?.publicUrl || publicUrl;
+          console.log('[Checkout] Upload success. Public URL:', publicUrl);
+        }
       }
 
       // 2. Save to Payload CMS API
@@ -1495,7 +1631,7 @@ const checkoutStrings = {
       const brandName = btnConfirm?.dataset.brand || 'Mulia Gold';
 
       // WhatsApp confirmation message — localized per region
-      const waText = isMY
+      let waText = isMY
         ? `${checkoutStrings.waGreetingMy}
  
  *ID Pesanan:* ${orderId}
@@ -1507,9 +1643,7 @@ const checkoutStrings = {
  
  *Senarai Pesanan:*
  ${orderList}
- *Jumlah Pembayaran:* ${total}
- 
- *Bukti Pembayaran:* ${publicUrl}`
+ *Jumlah Pembayaran:* ${total}`
         : `${checkoutStrings.waGreetingId}
  
  *Order ID:* ${orderId}
@@ -1521,9 +1655,11 @@ const checkoutStrings = {
  
  *Daftar Pesanan:*
  ${orderList}
- *Total Pembayaran:* ${total}
- 
- *Bukti Pembayaran:* ${publicUrl}`;
+ *Total Pembayaran:* ${total}`;
+
+      if (enableProofUpload) {
+        waText += `\n\n*Bukti Pembayaran:* ${publicUrl}`;
+      }
 
       // 4. Show Success Modal instead of direct redirect (to avoid popup blocker)
       const adminWA = btnConfirm?.dataset.wa || '6281234567890';
@@ -1679,6 +1815,32 @@ const checkoutStrings = {
       modalLoginErrorEl?.classList.add('hidden');
 
       console.log('[Checkout Modal] Attempting login for:', email);
+
+      if (tenantIdVar) {
+        try {
+          const checkRes = await fetch(`${CMS_URL}/api/check-customer?email=${encodeURIComponent(email)}&tenantId=${tenantIdVar}`);
+          const checkData = await checkRes.json();
+
+          if (checkData.blocked) {
+            if (modalLoginErrorEl) {
+              modalLoginErrorEl.innerText = 'Akun dengan email ini telah diblokir. Sila hubungi admin.';
+              modalLoginErrorEl.classList.remove('hidden');
+            }
+            return;
+          }
+
+          if (checkData.wrongTenant) {
+            if (modalLoginErrorEl) {
+              modalLoginErrorEl.innerText = 'Akun tidak terdaftar di website ini.';
+              modalLoginErrorEl.classList.remove('hidden');
+            }
+            return;
+          }
+        } catch (checkErr) {
+          console.warn('[Checkout Login] Customer check failed, proceeding:', checkErr);
+        }
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

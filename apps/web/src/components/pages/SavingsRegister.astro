@@ -1,0 +1,188 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations, localizePath } from '../../i18n/utils';
+import SectionTitle from '../SectionTitle.astro';
+import { resolveTenant } from '../../lib/cms';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+
+// If tenant does not enable savings, redirect to 404 or home
+if (!tenant?.enableGoldSavings) {
+  return Astro.redirect(localizePath('/register', lang));
+}
+const tenantId = tenant?.id ?? null;
+---
+
+<script is:inline define:vars={{ tenantId }}>
+  window.__TENANT_ID = tenantId;
+</script>
+
+<BaseLayout title={t('savings.register_title')}>
+  <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <SectionTitle 
+      title={t('savings.register_title')} 
+      subtitle="Buat akun untuk mulai menabung emas"
+      i18nTitle="savings.register_title"
+    />
+
+    <div class="bg-white dark:bg-surface-dark rounded-2xl shadow-xl p-6 sm:p-8 mt-8 border border-gray-100 dark:border-gray-800">
+      <form id="savings-register-form" class="space-y-6">
+        <!-- Account Info -->
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">Informasi Akun</h3>
+          <div class="space-y-4">
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+              <input type="email" id="email" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-4 py-3 bg-gray-50/50" />
+            </div>
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+              <input type="password" id="password" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-4 py-3 bg-gray-50/50" />
+            </div>
+          </div>
+        </div>
+
+        <!-- KYC Info -->
+        <div class="pt-4">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b pb-2 dark:border-gray-700">Data KYC (Know Your Customer)</h3>
+          <div class="space-y-4">
+            <div>
+              <label for="kycType" data-i18n="savings.kyc_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('savings.kyc_type')}</label>
+              <select id="kycType" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-4 py-3 bg-gray-50/50">
+                <option value="IC">IC (KTP)</option>
+                <option value="Passport">Passport</option>
+              </select>
+            </div>
+            <div>
+              <label for="kycNumber" data-i18n="savings.kyc_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('savings.kyc_number')}</label>
+              <input type="text" id="kycNumber" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-4 py-3 bg-gray-50/50" />
+            </div>
+            <div>
+              <label for="bankName" data-i18n="savings.bank_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('savings.bank_name')}</label>
+              <input type="text" id="bankName" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-4 py-3 bg-gray-50/50" />
+            </div>
+            <div>
+              <label for="bankAccountNumber" data-i18n="savings.bank_account" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('savings.bank_account')}</label>
+              <input type="text" id="bankAccountNumber" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-4 py-3 bg-gray-50/50" />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+          Daftar Sekarang
+        </button>
+      </form>
+      
+      <div class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+        Sudah punya akun? 
+        <a href="/login" class="font-bold text-primary hover:text-primary-dark hover:underline">Log in di sini</a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { z } from 'zod';
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    window.dispatchEvent(new CustomEvent('toast', { detail: { message, type } }));
+  };
+
+  const registerSchema = z.object({
+    email: z.string().email('Format email tidak valid'),
+    password: z.string().min(6, 'Password minimal 6 karakter'),
+    kycType: z.enum(['IC', 'Passport']),
+    kycNumber: z.string().min(3, 'Nomor identitas wajib diisi'),
+    bankName: z.string().min(2, 'Nama bank wajib diisi'),
+    bankAccountNumber: z.string().min(5, 'Nomor rekening tidak valid'),
+  });
+
+  const form = document.getElementById('savings-register-form');
+  const btnSubmit = document.getElementById('btn-submit') as HTMLButtonElement;
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!btnSubmit) return;
+
+    const email = (document.getElementById('email') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const kycType = (document.getElementById('kycType') as HTMLSelectElement).value;
+    const kycNumber = (document.getElementById('kycNumber') as HTMLInputElement).value;
+    const bankName = (document.getElementById('bankName') as HTMLInputElement).value;
+    const bankAccountNumber = (document.getElementById('bankAccountNumber') as HTMLInputElement).value;
+
+    try {
+      const parsedData = registerSchema.parse({
+        email, password, kycType, kycNumber, bankName, bankAccountNumber
+      });
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = 'Mendaftar...';
+
+      const apiUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://localhost:3000' : 'https://api-logam-tenants.creosphera.workers.dev';
+      const tenantId = (window as any).__TENANT_ID;
+
+      // 1. Register via Payload CMS Endpoint (Bypasses Supabase Email Signups Disabled & Auto-Confirms)
+      const res = await fetch(`${apiUrl}/api/register-customer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: parsedData.email,
+          password: parsedData.password,
+          tenantId,
+          kycType: parsedData.kycType,
+          kycNumber: parsedData.kycNumber,
+          bankName: parsedData.bankName,
+          bankAccountNumber: parsedData.bankAccountNumber
+        })
+      });
+
+      const resData = await res.json();
+
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.error || 'Gagal melakukan pendaftaran. Silakan coba lagi.');
+      }
+
+      // 2. Auto Login after successful registration
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: parsedData.email,
+        password: parsedData.password,
+      });
+
+      if (error) {
+        // If login somehow fails, prompt them to login manually
+        showToast('Pendaftaran berhasil, tetapi gagal login otomatis. Silakan log in secara manual.', 'warning');
+        setTimeout(() => {
+           const pathParts = window.location.pathname.split('/');
+           const hasLangPrefix = ['en', 'my'].includes(pathParts[1]);
+           const prefix = hasLangPrefix ? `/${pathParts[1]}` : '';
+           window.location.href = `${prefix}/login`;
+        }, 3000);
+        return;
+      }
+
+      showToast('Pendaftaran berhasil! Mengalihkan ke dashboard...', 'success');
+      
+      setTimeout(() => {
+        // Find current language prefix
+        const pathParts = window.location.pathname.split('/');
+        const hasLangPrefix = ['en', 'my'].includes(pathParts[1]);
+        const prefix = hasLangPrefix ? `/${pathParts[1]}` : '';
+        window.location.href = `${prefix}/dashboard/savings`;
+      }, 1500);
+
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        showToast(error.errors[0].message, 'error');
+      } else {
+        showToast(error.message || 'Terjadi kesalahan saat pendaftaran', 'error');
+      }
+      btnSubmit.disabled = false;
+      btnSubmit.innerText = 'Daftar Sekarang';
+    }
+  });
+</script>

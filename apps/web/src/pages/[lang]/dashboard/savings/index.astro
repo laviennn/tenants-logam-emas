@@ -1,0 +1,11 @@
+---
+import SavingsDashboardComponent from '../../../../components/pages/SavingsDashboard.astro';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'my' } },
+  ];
+}
+---
+<SavingsDashboardComponent />

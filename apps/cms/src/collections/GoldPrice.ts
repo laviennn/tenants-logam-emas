@@ -10,7 +10,7 @@ export const GoldPrice: CollectionConfig = {
     description: 'Harga emas live per tenant.',
   },
   access: {
-    read: tenantRead,
+    read: () => true,
     create: tenantWrite,
     update: tenantWrite,
     delete: tenantDelete,
@@ -36,6 +36,15 @@ export const GoldPrice: CollectionConfig = {
       required: true,
       defaultValue: 1500000,
       label: 'Harga Emas Saat Ini (per gram, Nominal)',
+    },
+    {
+      name: 'buybackSpread',
+      type: 'number',
+      label: 'Spread Jual Semula (Buyback Spread %)',
+      defaultValue: 4,
+      admin: {
+        description: 'Persentase spread potongan untuk harga jual semula (buyback). Default adalah 4 (4%).',
+      },
     },
     {
       name: 'strikePrice',

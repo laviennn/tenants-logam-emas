@@ -79,6 +79,9 @@ export interface Config {
     articles: Article;
     testimonials: Testimonial;
     transactions: Transaction;
+    'savings-balances': SavingsBalance;
+    'savings-ledgers': SavingsLedger;
+    customers: Customer;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -98,6 +101,9 @@ export interface Config {
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     transactions: TransactionsSelect<false> | TransactionsSelect<true>;
+    'savings-balances': SavingsBalancesSelect<false> | SavingsBalancesSelect<true>;
+    'savings-ledgers': SavingsLedgersSelect<false> | SavingsLedgersSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -200,6 +206,10 @@ export interface Tenant {
   productPriceColor?: string | null;
   fontFamily?: ('Inter' | 'Poppins' | 'Roboto' | 'Outfit' | 'Plus Jakarta Sans' | 'Nunito') | null;
   /**
+   * Warna untuk tombol di modal success & form upload bukti.
+   */
+  successButtonColor?: string | null;
+  /**
    * URL untuk trigger rebuild Vercel saat konten berubah.
    */
   vercelDeployHookUrl?: string | null;
@@ -207,6 +217,14 @@ export interface Tenant {
    * URL untuk trigger rebuild Cloudflare Pages saat konten berubah.
    */
   cloudflareDeployHookUrl?: string | null;
+  /**
+   * Aktifkan fitur Tabungan Emas (Dashboard Simpanan) untuk tenant ini.
+   */
+  enableGoldSavings?: boolean | null;
+  /**
+   * Aktifkan fitur Dark Mode di website front-end.
+   */
+  enableDarkMode?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -224,6 +242,15 @@ export interface User {
    * Tenant yang dimiliki user ini. Owner tidak perlu isi field ini.
    */
   tenant?: (number | null) | Tenant;
+  /**
+   * Data Know Your Customer untuk fitur tabungan emas.
+   */
+  kyc?: {
+    kycType?: ('IC' | 'Passport') | null;
+    kycNumber?: string | null;
+    bankName?: string | null;
+    bankAccountNumber?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -422,10 +449,18 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Tentukan di mana form upload bukti pembayaran akan ditampilkan.
+   */
+  enableTopupProofUpload: 'checkout' | 'savings' | 'both' | 'none';
   paymentChannels?:
     | {
+        /**
+         * Tentukan di mana channel pembayaran ini akan ditampilkan.
+         */
+        displayLocation: 'checkout' | 'savings' | 'both';
         bankName: string;
-        accountName: string;
+        accountName?: string | null;
         accountNumber?: string | null;
         phoneNumber?: string | null;
         logo?: (number | null) | Media;
@@ -466,6 +501,10 @@ export interface GoldPrice {
   id: number;
   tenant?: (number | null) | Tenant;
   currentPrice: number;
+  /**
+   * Persentase spread potongan untuk harga jual semula (buyback). Default adalah 4 (4%).
+   */
+  buybackSpread?: number | null;
   /**
    * Harga asli sebelum diskon untuk tampilan coret.
    */
@@ -618,6 +657,96 @@ export interface Transaction {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "savings-balances".
+ */
+export interface SavingsBalance {
+  id: number;
+  tenant: number | Tenant;
+  /**
+   * ID pengguna dari sistem otentikasi Supabase.
+   */
+  supabaseUserId: string;
+  customerName?: string | null;
+  customerEmail?: string | null;
+  balanceGrams: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "savings-ledgers".
+ */
+export interface SavingsLedger {
+  id: number;
+  tenant: number | Tenant;
+  /**
+   * ID pengguna dari sistem otentikasi Supabase.
+   */
+  supabaseUserId: string;
+  customerName?: string | null;
+  customerEmail?: string | null;
+  transactionType: 'top_up' | 'buy' | 'sell' | 'withdraw_physical' | 'withdraw_fiat';
+  /**
+   * Bisa berupa Gram atau Fiat tergantung tipe transaksi.
+   */
+  amount: number;
+  /**
+   * Mencatat harga emas saat transaksi dilakukan.
+   */
+  priceSnapshot?: number | null;
+  status: 'pending' | 'approved' | 'rejected';
+  /**
+   * Foto bukti transfer pembayaran untuk transaksi Top Up.
+   */
+  paymentProof?: (number | null) | Media;
+  shippingAddress?: string | null;
+  shippingMethod?: string | null;
+  bankName?: string | null;
+  accountNumber?: string | null;
+  accountName?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers".
+ */
+export interface Customer {
+  id: number;
+  /**
+   * Alamat email customer.
+   */
+  email: string;
+  /**
+   * Nama lengkap customer.
+   */
+  fullName?: string | null;
+  /**
+   * Tenant tempat customer terdaftar.
+   */
+  tenant: number | Tenant;
+  /**
+   * ID pengguna dari sistem otentikasi Supabase.
+   */
+  supabaseUserId?: string | null;
+  /**
+   * Ceklis untuk memblokir customer ini agar tidak bisa login ke website.
+   */
+  isBlocked?: boolean | null;
+  /**
+   * Data Know Your Customer untuk fitur tabungan emas.
+   */
+  kyc?: {
+    kycType?: ('IC' | 'Passport') | null;
+    kycNumber?: string | null;
+    bankName?: string | null;
+    bankAccountNumber?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -687,6 +816,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'transactions';
         value: number | Transaction;
+      } | null)
+    | ({
+        relationTo: 'savings-balances';
+        value: number | SavingsBalance;
+      } | null)
+    | ({
+        relationTo: 'savings-ledgers';
+        value: number | SavingsLedger;
+      } | null)
+    | ({
+        relationTo: 'customers';
+        value: number | Customer;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -758,8 +899,11 @@ export interface TenantsSelect<T extends boolean = true> {
   productTitleColor?: T;
   productPriceColor?: T;
   fontFamily?: T;
+  successButtonColor?: T;
   vercelDeployHookUrl?: T;
   cloudflareDeployHookUrl?: T;
+  enableGoldSavings?: T;
+  enableDarkMode?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -770,6 +914,14 @@ export interface TenantsSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   roles?: T;
   tenant?: T;
+  kyc?:
+    | T
+    | {
+        kycType?: T;
+        kycNumber?: T;
+        bankName?: T;
+        bankAccountNumber?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -922,9 +1074,11 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         price?: T;
         id?: T;
       };
+  enableTopupProofUpload?: T;
   paymentChannels?:
     | T
     | {
+        displayLocation?: T;
         bankName?: T;
         accountName?: T;
         accountNumber?: T;
@@ -948,6 +1102,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
 export interface GoldPriceSelect<T extends boolean = true> {
   tenant?: T;
   currentPrice?: T;
+  buybackSpread?: T;
   strikePrice?: T;
   discount?: T;
   updatedAt?: T;
@@ -1048,6 +1203,62 @@ export interface TransactionsSelect<T extends boolean = true> {
   paymentProofUrl?: T;
   trackingNumber?: T;
   supabaseUserId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "savings-balances_select".
+ */
+export interface SavingsBalancesSelect<T extends boolean = true> {
+  tenant?: T;
+  supabaseUserId?: T;
+  customerName?: T;
+  customerEmail?: T;
+  balanceGrams?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "savings-ledgers_select".
+ */
+export interface SavingsLedgersSelect<T extends boolean = true> {
+  tenant?: T;
+  supabaseUserId?: T;
+  customerName?: T;
+  customerEmail?: T;
+  transactionType?: T;
+  amount?: T;
+  priceSnapshot?: T;
+  status?: T;
+  paymentProof?: T;
+  shippingAddress?: T;
+  shippingMethod?: T;
+  bankName?: T;
+  accountNumber?: T;
+  accountName?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers_select".
+ */
+export interface CustomersSelect<T extends boolean = true> {
+  email?: T;
+  fullName?: T;
+  tenant?: T;
+  supabaseUserId?: T;
+  isBlocked?: T;
+  kyc?:
+    | T
+    | {
+        kycType?: T;
+        kycNumber?: T;
+        bankName?: T;
+        bankAccountNumber?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

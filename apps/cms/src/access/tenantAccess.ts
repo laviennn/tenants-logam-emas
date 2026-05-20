@@ -70,8 +70,23 @@ export const tenantDelete: Access = ({ req: { user } }) => {
  * Access for global collections (like Media) 
  * Allow any logged-in user to perform actions regardless of their tenant
  */
-export const anyAuthenticated: Access = ({ req: { user } }) => {
-  return !!user
+export const anyAuthenticated: Access = async ({ req }) => {
+  if (req.user) return true
+
+  const authHeader = req.headers.get?.('authorization') || (req.headers as any)?.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(process.env.PUBLIC_SUPABASE_URL || '', process.env.PUBLIC_SUPABASE_ANON_KEY || '');
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (user) return true;
+    } catch (e) {
+      console.error('[tenantAccess] anyAuthenticated: Supabase JWT verification failed', e);
+    }
+  }
+
+  return false
 }
 
 /** 

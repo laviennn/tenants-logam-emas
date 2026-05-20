@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionTitle from '../SectionTitle.astro';
 import { getLangFromUrl, useTranslations, localizePath } from '../../i18n/utils';
+import { resolveTenant } from '../../lib/cms';
 
 interface Props {
   lang?: 'id' | 'en' | 'my';
@@ -10,6 +11,14 @@ interface Props {
 const { lang: propLang } = Astro.props;
 const lang = propLang || getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+
+const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '');
+const tenant = await resolveTenant(hostname);
+const tenantId = tenant?.id ?? null;
+
+if (tenant?.enableGoldSavings) {
+  return Astro.redirect(localizePath('/savings/register', lang));
+}
 
 const registerStrings = {
   processing: t('login.processing'),
@@ -62,14 +71,20 @@ const registerStrings = {
   </div>
 </BaseLayout>
 
-<script is:inline define:vars={{ registerStrings }}>
+<script is:inline define:vars={{ registerStrings, tenantId }}>
   window.__REGISTER_STRINGS = registerStrings;
+  window.__TENANT_ID = tenantId;
 </script>
 
 <script>
   import { supabase } from '../../lib/supabase';
 
   const registerStrings = (window as any).__REGISTER_STRINGS;
+  const tenantId = (window as any).__TENANT_ID;
+  const apiUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+    ? 'http://localhost:3000'
+    : 'https://api-logam-tenants.creosphera.workers.dev';
+
   const form = document.getElementById('register-form') as HTMLFormElement;
   const btnRegister = document.getElementById('btn-register');
   const toast = document.getElementById('toast');
@@ -106,22 +121,38 @@ const registerStrings = {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      // Use Payload CMS endpoint to register so Customer record is linked to tenant
+      const res = await fetch(`${apiUrl}/api/register-customer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, tenantId }),
+      });
 
-    if (error) {
-      showToast(registerStrings.failed + error.message, 'error');
+      const resData = await res.json();
+
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.error || registerStrings.failed);
+      }
+
+      // Auto login after registration
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (signInError) {
+        showToast(registerStrings.success, 'success');
+        setTimeout(() => { window.location.href = '/'; }, 1500);
+        return;
+      }
+
+      showToast(registerStrings.success, 'success');
+      setTimeout(() => { window.location.href = '/'; }, 1000);
+
+    } catch (err: any) {
+      showToast(err.message || registerStrings.failed, 'error');
       if(btnRegister) {
         btnRegister.innerText = registerStrings.submit_btn;
         btnRegister.removeAttribute('disabled');
       }
-    } else {
-      showToast(registerStrings.success, 'success');
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1000);
     }
   });
 
