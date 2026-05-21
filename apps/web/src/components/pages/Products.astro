@@ -113,6 +113,11 @@ const regionCode = import.meta.env.PUBLIC_TENANT_REGION === 'MY' ? 'MY' : 'ID';
 
 <script id="products-data" type="application/json" set:html={JSON.stringify(allProducts)}></script>
 <script id="region-config" type="application/json" set:html={JSON.stringify({ regionCode })}></script>
+<script id="wa-config" type="application/json" set:html={JSON.stringify({
+  showWhatsAppBuyButton: tenant?.showWhatsAppBuyButton || false,
+  whatsappNumber: siteSettings?.whatsappNumber || '',
+  brandName: siteSettings?.brandName || 'Admin'
+})}></script>
 
 <script>
   import { langStore } from '../../lib/lang';
@@ -120,6 +125,9 @@ const regionCode = import.meta.env.PUBLIC_TENANT_REGION === 'MY' ? 'MY' : 'ID';
 
   const productsDataScript = document.getElementById('products-data');
   const allProducts = productsDataScript ? JSON.parse(productsDataScript.textContent || '[]') : [];
+
+  const waConfigEl = document.getElementById('wa-config');
+  const waConfig = waConfigEl ? JSON.parse(waConfigEl.textContent || '{}') : { showWhatsAppBuyButton: false, whatsappNumber: '', brandName: 'Admin' };
 
   let currentLang = document.documentElement.lang || 'id';
   const ITEMS_PER_PAGE = 8;
@@ -166,6 +174,22 @@ const regionCode = import.meta.env.PUBLIC_TENANT_REGION === 'MY' ? 'MY' : 'ID';
 
     grid.innerHTML = paginated.map(p => {
       const discountPercent = p.strikePrice ? Math.round(((p.strikePrice - p.price) / p.strikePrice) * 100) : 0;
+      
+      // Calculate dynamic WA Message
+      let waLink = '';
+      if (waConfig.showWhatsAppBuyButton) {
+        const formattedPrice = formatPrice(p.price);
+        let waMsg = '';
+        if (currentLang === 'id') {
+          waMsg = `Halo Admin ${waConfig.brandName}, saya ingin konfirmasi pembayaran:\n\n*Daftar Pesanan:*\n- ${p.name} (1x)\n\n*Total Pembayaran:* ${formattedPrice}`;
+        } else if (currentLang === 'my') {
+          waMsg = `Salam ${waConfig.brandName}, saya ingin mengesahkan pembayaran:\n\n*Senarai Pesanan:*\n- ${p.name} (1x)\n\n*Jumlah Pembayaran:* ${formattedPrice}`;
+        } else {
+          waMsg = `Hi ${waConfig.brandName}, I would like to confirm my payment:\n\n*Order List:*\n- ${p.name} (1x)\n\n*Total Payment:* ${formattedPrice}`;
+        }
+        waLink = `https://wa.me/${waConfig.whatsappNumber}?text=${encodeURIComponent(waMsg)}`;
+      }
+
       return `
       <div class="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-md transition-all duration-300 group flex flex-col h-full relative">
         <a href="/products/${p.id}" class="absolute inset-0 z-10" aria-label="View ${p.name}"></a>
@@ -198,6 +222,14 @@ const regionCode = import.meta.env.PUBLIC_TENANT_REGION === 'MY' ? 'MY' : 'ID';
             <button class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--color-cart-button)] hover:opacity-90 text-white text-sm font-bold transition-all shadow-sm" onclick="window.dispatchEvent(new CustomEvent('buy-now', {detail: ${JSON.stringify(p).replace(/"/g, '&quot;')}}))">
               ${(ui[currentLang as keyof typeof ui] as any)['index.buy']}
             </button>
+            ${waConfig.showWhatsAppBuyButton ? `
+              <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white text-sm font-bold transition-all shadow-sm relative z-30">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.963C16.588 2.03 14.113.999 11.5.999c-5.442 0-9.87 4.372-9.874 9.802-.001 1.73.46 3.42 1.332 4.927l-.995 3.635 3.738-.971c1.479.807 3.12 1.233 4.805 1.234zm10.51-6.912c-.297-.148-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                </svg>
+                ${(ui[currentLang as keyof typeof ui] as any)['product.buy_via_wa']}
+              </a>
+            ` : ''}
           </div>
         </div>
       </div>

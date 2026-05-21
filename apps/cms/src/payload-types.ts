@@ -234,6 +234,10 @@ export interface Tenant {
    */
   savingsGoldSymbol?: string | null;
   /**
+   * Aktifkan tombol "Beli via WA" pada setiap kartu produk di beranda dan halaman produk.
+   */
+  showWhatsAppBuyButton?: boolean | null;
+  /**
    * Judul halaman panduan tabungan emas.
    */
   guideTitle?: string | null;
@@ -936,6 +940,7 @@ export interface TenantsSelect<T extends boolean = true> {
   enableDarkMode?: T;
   savingsMemberIdPrefix?: T;
   savingsGoldSymbol?: T;
+  showWhatsAppBuyButton?: T;
   guideTitle?: T;
   guideContent?: T;
   updatedAt?: T;

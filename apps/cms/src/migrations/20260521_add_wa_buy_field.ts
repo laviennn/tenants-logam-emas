@@ -1,0 +1,15 @@
+import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
+
+export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+  await db.execute(sql`
+    ALTER TABLE "tenants" 
+      ADD COLUMN IF NOT EXISTS "show_whats_app_buy_button" boolean DEFAULT false
+  `)
+}
+
+export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+  await db.execute(sql`
+    ALTER TABLE "tenants" 
+      DROP COLUMN IF EXISTS "show_whats_app_buy_button"
+  `)
+}
