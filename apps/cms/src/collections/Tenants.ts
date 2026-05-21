@@ -230,6 +230,15 @@ export const Tenants: CollectionConfig = {
                 description: 'Label kustom untuk nama/simbol emas tabungan (misal: GAP). Jika kosong, akan menggunakan GAP.',
               },
             },
+            {
+              name: 'showWhatsAppBuyButton',
+              type: 'checkbox',
+              defaultValue: false,
+              label: 'Tampilkan Tombol Beli via WhatsApp',
+              admin: {
+                description: 'Aktifkan tombol "Beli via WA" pada setiap kartu produk di beranda dan halaman produk.',
+              },
+            },
           ],
         },
         {
