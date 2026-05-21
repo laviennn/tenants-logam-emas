@@ -181,7 +181,7 @@ const regionCode = import.meta.env.PUBLIC_TENANT_REGION === 'MY' ? 'MY' : 'ID';
         const formattedPrice = formatPrice(p.price);
         let waMsg = '';
         if (currentLang === 'id') {
-          waMsg = `Halo Admin ${waConfig.brandName}, saya ingin konfirmasi pembayaran:\n\n*Daftar Pesanan:*\n- ${p.name} (1x)\n\n*Total Pembayaran:* ${formattedPrice}`;
+          waMsg = `Halo Admin ${waConfig.brandName}, saya ingin Beli:\n\n*Daftar Pesanan:*\n- ${p.name} (1x)\n\n*Total Harga:* ${formattedPrice}`;
         } else if (currentLang === 'my') {
           waMsg = `Salam ${waConfig.brandName}, saya ingin mengesahkan pembayaran:\n\n*Senarai Pesanan:*\n- ${p.name} (1x)\n\n*Jumlah Pembayaran:* ${formattedPrice}`;
         } else {

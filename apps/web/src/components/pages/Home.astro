@@ -143,7 +143,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
             const brandName = siteSettings?.brandName || 'Admin';
             let waMsg = '';
             if (lang === 'id') {
-              waMsg = `Halo Admin ${brandName}, saya ingin konfirmasi pembayaran:\n\n*Daftar Pesanan:*\n- ${product.name} (1x)\n\n*Total Pembayaran:* ${formattedPrice}`;
+              waMsg = `Halo Admin ${brandName}, saya ingin Beli:\n\n*Daftar Pesanan:*\n- ${product.name} (1x)\n\n*Total Harga:* ${formattedPrice}`;
             } else if (lang === 'my') {
               waMsg = `Salam ${brandName}, saya ingin mengesahkan pembayaran:\n\n*Senarai Pesanan:*\n- ${product.name} (1x)\n\n*Jumlah Pembayaran:* ${formattedPrice}`;
             } else {
