@@ -1,0 +1,12 @@
+---
+import TermsOfService from '../../components/pages/TermsOfService.astro';
+
+export async function getStaticPaths() {
+  const isMY = import.meta.env.PUBLIC_TENANT_REGION === 'MY';
+  if (isMY) return [];
+  return [
+    { params: { my_locale: 'my' } }
+  ];
+}
+---
+<TermsOfService lang="my" />

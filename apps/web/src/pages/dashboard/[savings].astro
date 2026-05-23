@@ -1,0 +1,15 @@
+---
+import SavingsDashboardComponent from '../../components/pages/SavingsDashboard.astro';
+import { getTenantForBuild } from '../../lib/cache';
+
+export async function getStaticPaths() {
+  const tenant = await getTenantForBuild();
+  if (!tenant?.enableGoldSavings) {
+    return [];
+  }
+  return [
+    { params: { savings: 'savings' } }
+  ];
+}
+---
+<SavingsDashboardComponent />

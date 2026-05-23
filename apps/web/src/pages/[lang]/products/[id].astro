@@ -17,7 +17,8 @@ export async function getStaticPaths() {
   console.log(`[Astro Build] Resolved Hostname: ${hostname}`);
   console.log(`[Astro Build] Resolved Tenant: ${tenant?.name || 'None'} (ID: ${tenantId || 'None'})`);
   
-  const locales = ['en', 'my'];
+  const isMY = import.meta.env.PUBLIC_TENANT_REGION === 'MY';
+  const locales = isMY ? ['en'] : ['en', 'my'];
   const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
   
   console.log(`[Astro Build] Fetching products for all locales...`);
