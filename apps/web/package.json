@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "npx tsx ./src/scripts/cache-cms.ts",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"

@@ -8,9 +8,11 @@ import { formatCurrency } from '../../utils/currency';
 interface Props {
   product: any;
   lang: 'id' | 'en' | 'my';
+  prefetchedReviews?: any[];
+  prefetchedRelated?: any[];
 }
 
-const { product, lang } = Astro.props;
+const { product, lang, prefetchedReviews, prefetchedRelated } = Astro.props;
 const t = useTranslations(lang);
 const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
 
@@ -25,15 +27,22 @@ const isBrandedTheme = tenant?.theme_layout === 'luxury-branded';
 
 const id = product.id;
 
-// ── Parallel Fetch Reviews + Related Products ─────────────────
-const [reviewsData, relatedData] = await Promise.all([
-  fetch(`${CMS_URL}/api/reviews?where[product][equals]=${id}${tenantFilter}&sort=-createdAt&limit=100`, { cache: 'no-store' })
-    .then(r => r.ok ? r.json() : { docs: [] })
-    .catch(() => ({ docs: [] })),
-  fetch(`${CMS_URL}/api/products?where[category][equals]=${product.category?.id || product.category}&where[id][not_equals]=${id}${tenantFilter}&limit=4&locale=${defaultLocale}`, { cache: 'no-store' })
-    .then(r => r.ok ? r.json() : { docs: [] })
-    .catch(() => ({ docs: [] })),
-]);
+// ── Conditional Fetch Reviews + Related Products ─────────────────
+let reviewsData = { docs: prefetchedReviews || [] };
+let relatedData = { docs: prefetchedRelated || [] };
+
+if (!prefetchedReviews || !prefetchedRelated) {
+  const [fetchedReviews, fetchedRelated] = await Promise.all([
+    fetch(`${CMS_URL}/api/reviews?where[product][equals]=${id}${tenantFilter}&sort=-createdAt&limit=100`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { docs: [] })
+      .catch(() => ({ docs: [] })),
+    fetch(`${CMS_URL}/api/products?where[category][equals]=${product.category?.id || product.category}&where[id][not_equals]=${id}${tenantFilter}&limit=4&locale=${defaultLocale}`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { docs: [] })
+      .catch(() => ({ docs: [] })),
+  ]);
+  reviewsData = fetchedReviews;
+  relatedData = fetchedRelated;
+}
 
 const reviews = reviewsData.docs || [];
 const relatedProducts = relatedData.docs || [];
