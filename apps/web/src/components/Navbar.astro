@@ -5,6 +5,7 @@ import {
   languages,
   localizePath,
 } from '../i18n/utils';
+import { defaultLang } from '../i18n/ui';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -359,6 +360,8 @@ const getName = (name: any, l: string) => typeof name === 'string' ? name : (nam
             <!-- Hover Bridge -->
             <div class='absolute inset-x-0 -top-2 h-2'></div>
             <div
+              id="lang-switcher-container"
+              data-default-lang={defaultLang}
               class='bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden p-1 ring-1 ring-black/5'>
               {
                 Object.entries(languages).map(([key, label]) => (
@@ -579,25 +582,27 @@ const getName = (name: any, l: string) => typeof name === 'string' ? name : (nam
     btn.addEventListener('click', (e) => {
       const target = e.currentTarget as HTMLButtonElement;
       const key = target.getAttribute('data-lang-key') as string;
+      const defaultLang = document.getElementById('lang-switcher-container')?.getAttribute('data-default-lang') || 'id';
+      
       if (key) {
         const currentPath = window.location.pathname;
         const parts = currentPath.split('/');
 
         // Check if current path already has a lang prefix
-        const locales = ['en', 'my']; // 'id' is default (no prefix)
+        const locales = ['en', 'my', 'id'].filter((l) => l !== defaultLang);
         let newPath = '';
 
         if (locales.includes(parts[1])) {
-          // Current is /en/... or /my/...
-          if (key === 'id') {
+          // Current is a prefixed route (e.g., /en/... or /my/...)
+          if (key === defaultLang) {
             newPath = '/' + parts.slice(2).join('/');
           } else {
             parts[1] = key;
             newPath = parts.join('/');
           }
         } else {
-          // Current is / (id)
-          if (key === 'id') {
+          // Current is the default/un-prefixed route (e.g., /...)
+          if (key === defaultLang) {
             newPath = currentPath;
           } else {
             newPath = '/' + key + currentPath;

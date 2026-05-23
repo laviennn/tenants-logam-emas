@@ -1,0 +1,15 @@
+---
+import SavingsRegisterComponent from '../../components/pages/SavingsRegister.astro';
+import { getTenantForBuild } from '../../lib/cache';
+
+export async function getStaticPaths() {
+  const tenant = await getTenantForBuild();
+  if (!tenant?.enableGoldSavings) {
+    return [];
+  }
+  return [
+    { params: { register: 'register' } }
+  ];
+}
+---
+<SavingsRegisterComponent />

@@ -1,11 +1,18 @@
 ---
 import SavingsRegisterComponent from '../../../components/pages/SavingsRegister.astro';
+import { getTenantForBuild } from '../../../lib/cache';
 
-export function getStaticPaths() {
+export async function getStaticPaths() {
+  const tenant = await getTenantForBuild();
+  if (!tenant?.enableGoldSavings) {
+    return [];
+  }
+  const isMY = import.meta.env.PUBLIC_TENANT_REGION === 'MY';
   return [
     { params: { lang: 'en' } },
-    { params: { lang: 'my' } },
+    ...(!isMY ? [{ params: { lang: 'my' } }] : []),
   ];
 }
+
 ---
 <SavingsRegisterComponent />

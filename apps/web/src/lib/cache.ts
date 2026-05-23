@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { resolveTenant } from './cms';
 
 let cacheData: any = null;
 let cacheLoaded = false;
@@ -44,3 +45,20 @@ export function hasCache(): boolean {
   loadCache();
   return !!cacheData;
 }
+
+export async function getTenantForBuild() {
+  if (hasCache()) {
+    const cached = getCachedTenant();
+    if (cached) return cached;
+  }
+  const SITE_URL = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
+  try {
+    const url = new URL(SITE_URL);
+    const hostname = url.hostname + (url.port ? `:${url.port}` : '');
+    return await resolveTenant(hostname);
+  } catch (err) {
+    console.error('❌ [getTenantForBuild] Error:', err);
+    return null;
+  }
+}
+
