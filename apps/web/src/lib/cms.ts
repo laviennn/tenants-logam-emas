@@ -73,7 +73,7 @@ export const resolveTenant = async (hostname: string): Promise<any | null> => {
 
   try {
     const res = await fetch(
-      `${CMS_URL}/api/tenants?where[domains.domain][equals]=${encodeURIComponent(hostname)}&limit=1&depth=0`,
+      `${CMS_URL}/api/tenants?where[domains.domain][equals]=${encodeURIComponent(hostname)}&limit=1&depth=1`,
       { cache: 'no-store' },
     )
     if (!res.ok) throw new Error(`Tenant lookup failed: ${res.status}`)

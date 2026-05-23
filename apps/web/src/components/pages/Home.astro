@@ -4,6 +4,7 @@ import { Image, getImage } from 'astro:assets';
 import emasHero from '../../assets/img/emas_hero_11zon.webp';
 import SectionTitle from '../SectionTitle.astro';
 import ProductCard from '../ProductCard.astro';
+import LuxuryProductCard from '../LuxuryProductCard.astro';
 import GoldCalculator from '../GoldCalculator.astro';
 import TestimonialSection from '../TestimonialSection.astro';
 import ArticleSection from '../ArticleSection.astro';
@@ -35,12 +36,15 @@ const hostname = Astro.url.hostname + (Astro.url.port ? `:${Astro.url.port}` : '
 const tenant = await resolveTenant(hostname);
 const tenantId = tenant?.id;
 const themeLayout = tenant?.theme_layout || 'default';
+const isBrandedTheme = themeLayout === 'luxury-branded';
+const heroSlider = isBrandedTheme ? (tenant?.heroSlider || []) : [];
 
 const optimizedHero = await getImage({ src: emasHero });
 
 // ── 2. Parallel Fetch All Data for Performance ────────────────
 const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
 const defaultLocale = getDefaultLocale();
+const homepageProductFilter = isBrandedTheme ? '&where[showOnHomepage][equals]=true' : '';
 
 const [siteSettings, goldPriceData, copywriting, categoriesData, latestProductsData] =
   await Promise.all([
@@ -50,7 +54,7 @@ const [siteSettings, goldPriceData, copywriting, categoriesData, latestProductsD
     fetch(`${CMS_URL}/api/categories?sort=sortOrder,name&limit=10${tenantFilter}&locale=${defaultLocale}`, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { docs: [] })
       .catch(() => ({ docs: [] })),
-    fetch(`${CMS_URL}/api/products?sort=sortOrder,-createdAt&limit=8${tenantFilter}&locale=${defaultLocale}`, { cache: 'no-store' })
+    fetch(`${CMS_URL}/api/products?sort=sortOrder,-createdAt&limit=8${tenantFilter}${homepageProductFilter}&locale=${defaultLocale}`, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { docs: [] })
       .catch(() => ({ docs: [] })),
   ]);
@@ -83,12 +87,51 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
 ---
 
 <BaseLayout title={t('nav.home') as string} tenantId={tenantId} tenant={tenant} siteSettings={siteSettings}>
+  {isBrandedTheme && heroSlider.length > 0 && (
+    <section class="relative w-full overflow-hidden bg-black">
+      <div id="branded-hero-slider" class="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth aspect-[4/5] md:aspect-auto md:h-[80vh]">
+        {heroSlider.map((slide: any) => (
+          <div class="flex-shrink-0 w-full h-full snap-center relative">
+            <Image 
+              src={_getImageUrl(slide.image, 'large')} 
+              alt={slide.title || "Hero Banner"}
+              width={1920}
+              height={1080}
+              class="w-full h-full object-cover object-center"
+            />
+            <div class="absolute inset-0 bg-black/20"></div>
+            {slide.title && (
+              <div class="absolute inset-0 flex items-center justify-center p-6 md:p-12 pointer-events-none">
+                <h2 
+                  class="hero-slide-title opacity-0 text-center font-black text-5xl md:text-7xl tracking-tight leading-tight" 
+                  style={`color: ${slide.textColor || '#FFFFFF'}; font-family: var(--font-family, 'Fjalla One', sans-serif);`}
+                >
+                  {slide.title}
+                </h2>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      {heroSlider.length > 1 && (
+        <>
+          <button id="hero-prev" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/40 transition-colors z-10">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          </button>
+          <button id="hero-next" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/40 transition-colors z-10">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+        </>
+      )}
+    </section>
+  )}
+
   {themeLayout === 'luxury' ? (
     <>
       <HeroLuxury lang={lang} goldPrice={goldPrice} />
       <ReasonsLuxury lang={lang} />
     </>
-  ) : (
+  ) : !isBrandedTheme ? (
     <!-- Hero Section: Gold Price Card (Default) -->
     <section class="py-12 md:py-20 bg-white dark:bg-background-dark">
       <div class="w-full md:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -111,9 +154,10 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
         </div>
       </div>
     </section>
-  )}
+  ) : null}
 
   <!-- Produk Unggulan -->
+  {!isBrandedTheme && (
   <section class="py-12 bg-white dark:bg-background-dark overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between mb-8">
@@ -131,14 +175,32 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
       <div id="featured-slider" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide scroll-smooth">
         {featuredProducts.length > 0 ? (
           featuredProducts.map((product: any) => {
-            const discountPercent = product.strikePrice ? Math.round(((product.strikePrice - product.price) / product.strikePrice) * 100) : 0;
+            let finalPrice = product.price;
+            let originalPrice = product.strikePrice;
+            let displayedDiscount = 0;
+            const pDiscount = product.discountPercent || 0;
+            const pSpread = product.spreadPrice || 0;
+            
+            if (pDiscount !== 0 || pSpread !== 0) {
+              let discounted = product.price * (1 - (pDiscount / 100));
+              finalPrice = discounted + pSpread;
+              if (finalPrice < 0) finalPrice = 0;
+              originalPrice = product.price;
+              if (product.price > 0 && finalPrice < product.price) {
+                displayedDiscount = Math.round(((product.price - finalPrice) / product.price) * 100);
+              }
+            } else if (product.strikePrice && product.strikePrice > product.price) {
+              finalPrice = product.price;
+              originalPrice = product.strikePrice;
+              displayedDiscount = Math.round(((product.strikePrice - product.price) / product.strikePrice) * 100);
+            }
             
             // Build WA Link for featured product
             const isMY = lang === 'my';
             const currencyPrefix = isMY ? 'RM ' : 'Rp ';
             const formattedPrice = isMY 
-              ? currencyPrefix + product.price.toFixed(2)
-              : currencyPrefix + product.price.toLocaleString('id-ID');
+              ? currencyPrefix + finalPrice.toFixed(2)
+              : currencyPrefix + finalPrice.toLocaleString('id-ID');
 
             const brandName = siteSettings?.brandName || 'Admin';
             let waMsg = '';
@@ -156,9 +218,9 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
                 <div class="group relative overflow-hidden rounded-3xl bg-gray-100 dark:bg-gray-800 aspect-[4/5] md:aspect-[16/9] shadow-sm">
                   <a href={localizePath(`/products/${product.id}`, lang)} class="absolute inset-0 z-10" aria-label={`View ${product.name}`}></a>
                   
-                  {discountPercent > 0 && (
+                  {displayedDiscount > 0 && (
                     <div class="absolute top-4 left-4 z-30 bg-red-600 text-white text-xs font-black px-3 py-1 rounded-xl shadow-lg pointer-events-none">
-                      <span data-i18n="index.discount">{t('index.discount')}</span> {discountPercent}%
+                      <span data-i18n="index.discount">{t('index.discount')}</span> {displayedDiscount}%
                     </div>
                   )}
 
@@ -184,15 +246,15 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
                     </div>
 
                     <div class="flex flex-col items-center gap-0 md:gap-1 mb-3 md:mb-6">
-                      {product.strikePrice && (
-                        <span class="text-xs md:text-sm text-white/60 line-through">{formatCurrency(product.strikePrice)}</span>
+                      {originalPrice && (
+                        <span class="text-xs md:text-sm text-white/60 line-through">{formatCurrency(originalPrice)}</span>
                       )}
-                      <span class="text-xl md:text-2xl font-black text-primary">{formatCurrency(product.price)}</span>
+                      <span class="text-xl md:text-2xl font-black text-primary">{formatCurrency(finalPrice)}</span>
                     </div>
 
                     <div class="flex flex-wrap gap-2 md:gap-3 justify-center relative z-30 pointer-events-auto">
-                      <button data-action="add-cart" data-id={product.id} data-name={product.name} data-price={product.price} data-image={_getImageUrl(product.image, 'thumbnail')} data-i18n="index.cart" class="px-4 md:px-6 py-1.5 md:py-2 rounded-xl border border-white text-white font-bold text-xs md:text-sm hover:bg-white hover:text-black transition-all">{t('index.cart')}</button>
-                      <button data-action="buy-now" data-id={product.id} data-name={product.name} data-price={product.price} data-image={_getImageUrl(product.image, 'thumbnail')} data-i18n="index.buy" class="px-4 md:px-6 py-1.5 md:py-2 rounded-xl bg-primary text-white font-bold text-xs md:text-sm hover:bg-[#b45309] transition-all shadow-lg shadow-primary/20">{t('index.buy')}</button>
+                      <button data-action="add-cart" data-id={product.id} data-name={product.name} data-price={finalPrice} data-image={_getImageUrl(product.image, 'thumbnail')} data-i18n="index.cart" class="px-4 md:px-6 py-1.5 md:py-2 rounded-xl border border-white text-white font-bold text-xs md:text-sm hover:bg-white hover:text-black transition-all">{t('index.cart')}</button>
+                      <button data-action="buy-now" data-id={product.id} data-name={product.name} data-price={finalPrice} data-image={_getImageUrl(product.image, 'thumbnail')} data-i18n="index.buy" class="px-4 md:px-6 py-1.5 md:py-2 rounded-xl bg-primary text-white font-bold text-xs md:text-sm hover:bg-[#b45309] transition-all shadow-lg shadow-primary/20">{t('index.buy')}</button>
                       {
                         tenant?.showWhatsAppBuyButton && (
                           <a
@@ -222,12 +284,37 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
       </div>
     </div>
   </section>
+  )}
 
   <!-- Kategori Produk -->
+  {(!isBrandedTheme || (isBrandedTheme && categories.filter((c: any) => c.showOnHomepage).length > 0)) && (
   <section class="py-12 bg-white dark:bg-background-dark">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 data-i18n="index.product_categories" class="text-2xl font-bold text-gray-900 dark:text-white mb-8 border-l-4 border-primary pl-4">{t('index.product_categories')}</h2>
+      {!isBrandedTheme && <h2 data-i18n="index.product_categories" class="text-2xl font-bold text-gray-900 dark:text-white mb-8 border-l-4 border-primary pl-4">{t('index.product_categories')}</h2>}
       
+      {isBrandedTheme ? (
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6">
+          {categories.filter((c: any) => c.showOnHomepage).slice(0, 3).map((cat: any, index: number) => (
+            <a href={localizePath(`/products?category=${cat.id}`, lang)} class={`group block relative overflow-hidden aspect-square border border-gray-100 dark:border-gray-800 ${index === 2 ? 'col-span-2 md:col-span-1 aspect-[2/1] md:aspect-square' : ''}`}>
+              {cat.image?.url ? (
+                <Image 
+                  src={_getImageUrl(cat.image, 'large')} 
+                  alt={cat.name || 'Category Image'}
+                  width={600}
+                  height={600}
+                  class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                />
+              ) : (
+                <div class="absolute inset-0 bg-gray-100 dark:bg-gray-800"></div>
+              )}
+              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/90 transition-colors duration-300 flex flex-col justify-end items-start p-6 md:p-8">
+                <h3 class="text-white font-black text-2xl md:text-3xl tracking-widest uppercase" style="font-family: var(--font-family, 'Fjalla One', sans-serif);">{cat.name}</h3>
+                <div class="w-8 h-1.5 bg-[var(--color-cart-button,#FFDF00)] mt-3 shadow-sm"></div>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {categories.map((cat: any) => (
           <a href={localizePath(`/products?category=${cat.id}`, lang)} class="group">
@@ -251,8 +338,10 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
           </a>
         ))}
       </div>
+      )}
     </div>
   </section>
+  )}
 
   <!-- Produk Terbaru -->
   <section class="py-12 bg-white dark:bg-background-dark">
@@ -266,24 +355,39 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
       
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
         {latestProducts.map((product: any) => (
-          <ProductCard 
-            id={product.id}
-            name={product.name}
-            price={product.price}
-            strikePrice={product.strikePrice}
-            rating={product.rating}
-            soldCount={product.soldCount}
-            image={_getImageUrl(product.image, 'card')}
-            showWhatsAppBuyButton={tenant?.showWhatsAppBuyButton}
-            whatsappNumber={siteSettings?.whatsappNumber}
-            brandName={siteSettings?.brandName}
-          />
+          isBrandedTheme ? (
+            <LuxuryProductCard 
+              id={product.id}
+              name={product.name}
+              price={product.price}
+              strikePrice={product.strikePrice}
+              discountPercent={product.discountPercent}
+              spreadPrice={product.spreadPrice}
+              image={_getImageUrl(product.image, 'card')}
+            />
+          ) : (
+            <ProductCard 
+              id={product.id}
+              name={product.name}
+              price={product.price}
+              strikePrice={product.strikePrice}
+              discountPercent={product.discountPercent}
+              spreadPrice={product.spreadPrice}
+              rating={product.rating}
+              soldCount={product.soldCount}
+              image={_getImageUrl(product.image, 'card')}
+              showWhatsAppBuyButton={tenant?.showWhatsAppBuyButton}
+              whatsappNumber={siteSettings?.whatsappNumber}
+              brandName={siteSettings?.brandName}
+            />
+          )
         ))}
       </div>
     </div>
   </section>
 
   <!-- Layanan Kami -->
+  {!isBrandedTheme && (
   <section style={`background-image: url('${optimizedHero.src}')`} class="relative py-24 bg-gray-900 bg-cover bg-center bg-fixed">
     <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-sm"></div>
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
@@ -295,6 +399,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
       </p>
     </div>
   </section>
+  )}
 
   <!-- Kelebihan Menyimpan Emas (Default Theme Only) -->
   {themeLayout === 'default' && (
@@ -317,6 +422,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
   )}
 
   <!-- Gold Calculator Section -->
+  {!isBrandedTheme && (
   <section class="py-20 bg-gray-50 dark:bg-gray-900/30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-12">
@@ -333,20 +439,41 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
       </div>
     </div>
   </section>
+  )}
+
+  <!-- Parallax Section (Luxury Branded Theme) -->
+  {isBrandedTheme && copywriting?.luxuryParallaxImage && (
+    <section 
+      style={`background-image: url('${_getImageUrl(copywriting.luxuryParallaxImage, 'large')}'); min-height: 60vh;`} 
+      class="relative w-full bg-fixed bg-center bg-cover flex items-center justify-center"
+    >
+      <div class="absolute inset-0 bg-black/20"></div>
+    </section>
+  )}
 
   <!-- Testimonials Section -->
   <section class="py-24 bg-white dark:bg-background-dark overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <h2 data-i18n="index.testimonials_title" class="text-3xl md:text-4xl font-black text-amber-500 mb-2">{t('index.testimonials_title')}</h2>
-        <p data-i18n="index.testimonials_desc" class="text-gray-500 font-medium italic">{t('index.testimonials_desc')}</p>
+        {isBrandedTheme ? (
+          <>
+            <h2 class="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 uppercase tracking-wide" style="font-family: var(--font-family, 'Fjalla One', sans-serif);">Customer Say!</h2>
+            <p class="text-gray-500 font-medium text-lg">Customers love our products and we always strive to please them all.</p>
+          </>
+        ) : (
+          <>
+            <h2 data-i18n="index.testimonials_title" class="text-3xl md:text-4xl font-black text-amber-500 mb-2">{t('index.testimonials_title')}</h2>
+            <p data-i18n="index.testimonials_desc" class="text-gray-500 font-medium italic">{t('index.testimonials_desc')}</p>
+          </>
+        )}
       </div>
       
-      <TestimonialSection tenantId={tenantId} />
+      <TestimonialSection tenantId={tenantId} isBrandedTheme={isBrandedTheme} />
     </div>
   </section>
 
   <!-- News/Articles Section -->
+  {!isBrandedTheme && (
   <section class="py-24 bg-gray-50 dark:bg-gray-900/30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
@@ -357,9 +484,10 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
       <ArticleSection tenantId={tenantId} />
     </div>
   </section>
+  )}
 
   <!-- Mengapa Memilih Kami -->
-  <WhyChooseUs tenantId={tenantId} copywriting={copywriting} />
+  {!isBrandedTheme && <WhyChooseUs tenantId={tenantId} copywriting={copywriting} />}
 </BaseLayout>
 
 <style>
@@ -421,6 +549,38 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
     });
   };
 
+  const initHeroSlider = () => {
+    const slider = document.getElementById('branded-hero-slider');
+    const btnPrev = document.getElementById('hero-prev');
+    const btnNext = document.getElementById('hero-next');
+
+    if (slider && btnPrev && btnNext) {
+      btnNext.addEventListener('click', () => {
+        slider.scrollLeft += slider.clientWidth;
+      });
+      btnPrev.addEventListener('click', () => {
+        slider.scrollLeft -= slider.clientWidth;
+      });
+    }
+  };
+
   initFeaturedSlider();
+  initHeroSlider();
   setupButtons();
 </script>
+
+<style is:global>
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .hero-slide-title {
+    animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+  }
+</style>

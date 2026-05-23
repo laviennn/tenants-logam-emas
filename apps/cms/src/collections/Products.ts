@@ -89,6 +89,22 @@ export const Products: CollectionConfig = {
       ],
     },
     {
+      name: 'colors',
+      type: 'array',
+      label: 'Varian Warna (Opsional)',
+      admin: {
+        description: 'Masukkan pilihan warna untuk produk ini. Khusus untuk tema Luxury (Branded Goods).',
+      },
+      fields: [
+        {
+          name: 'name',
+          type: 'text',
+          required: true,
+          label: 'Nama Warna',
+        },
+      ],
+    },
+    {
       name: 'description',
       type: 'textarea',
       localized: true,
@@ -105,17 +121,45 @@ export const Products: CollectionConfig = {
       name: 'price',
       type: 'number',
       required: true,
+      label: 'Harga Dasar',
+    },
+    {
+      name: 'discountPercent',
+      type: 'number',
+      label: 'Diskon (%) (Opsional)',
+      min: 0,
+      max: 100,
+      admin: {
+        description: 'Persentase diskon. Jika diisi bersama Spread Price, Harga Akhir = (Harga Dasar * (1 - Diskon/100)) - Spread Price. (Khusus Luxury Branded Goods)',
+      },
+    },
+    {
+      name: 'spreadPrice',
+      type: 'number',
+      label: 'Spread Price (Opsional)',
+      admin: {
+        description: 'Potongan/penambahan nilai tetap setelah diskon dihitung. (Khusus Luxury Branded Goods)',
+      },
     },
     {
       name: 'strikePrice',
       type: 'number',
-      label: 'Harga Coret (Opsional)',
+      label: 'Harga Coret Manual (Opsional)',
     },
     {
       name: 'isFeatured',
       type: 'checkbox',
       label: 'Tampilkan sebagai Produk Unggulan',
       defaultValue: false,
+    },
+    {
+      name: 'showOnHomepage',
+      type: 'checkbox',
+      label: 'Tampilkan di Homepage',
+      defaultValue: false,
+      admin: {
+        description: 'Jika diaktifkan, produk ini akan muncul di Homepage. Jika tidak, hanya di halaman Products. (Khusus Luxury Branded Goods)',
+      },
     },
     {
       name: 'category',

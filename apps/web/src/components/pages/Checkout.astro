@@ -1013,6 +1013,7 @@ const checkoutStrings = {
               <img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded bg-gray-100 mr-3" />
               <div>
                 <p class="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">${item.name}</p>
+                ${item.selectedColor ? `<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Varian: ${item.selectedColor}</p>` : ''}
                 <p class="text-xs text-gray-500">${item.quantity} x ${formatCurrency(item.price)}</p>
               </div>
             </div>
@@ -1503,7 +1504,8 @@ const checkoutStrings = {
       const cart = cartStore.get();
       let orderList = '';
       Object.values(cart).forEach((item) => {
-        orderList += `- ${item.name} (${item.quantity}x)\n`;
+        const variantSuffix = item.selectedColor ? ` (${item.selectedColor})` : '';
+        orderList += `- ${item.name}${variantSuffix} (${item.quantity}x)\n`;
       });
       const name = (document.getElementById('name') as HTMLInputElement).value;
       const total = document.getElementById('summary-total')?.innerText || '0';
@@ -1562,7 +1564,7 @@ const checkoutStrings = {
           },
           items: Object.values(cart).map((item) => ({
             productId: item.id,
-            productName: item.name,
+            productName: item.selectedColor ? `${item.name} (${item.selectedColor})` : item.name,
             quantity: Number(item.quantity),
             priceAtPurchase: Number(item.price),
           })),

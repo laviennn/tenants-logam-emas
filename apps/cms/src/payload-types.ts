@@ -177,7 +177,7 @@ export interface Tenant {
   /**
    * Pilih layout utama untuk website ini
    */
-  theme_layout?: ('default' | 'luxury') | null;
+  theme_layout?: ('default' | 'luxury' | 'luxury-branded') | null;
   /**
    * Warna utama brand. Contoh: #D4AF37
    */
@@ -204,11 +204,28 @@ export interface Tenant {
    */
   productTitleColor?: string | null;
   productPriceColor?: string | null;
-  fontFamily?: ('Inter' | 'Poppins' | 'Roboto' | 'Outfit' | 'Plus Jakarta Sans' | 'Nunito') | null;
+  fontFamily?: ('Inter' | 'Poppins' | 'Roboto' | 'Outfit' | 'Plus Jakarta Sans' | 'Nunito' | 'Fjalla One') | null;
   /**
    * Warna untuk tombol di modal success & form upload bukti.
    */
   successButtonColor?: string | null;
+  /**
+   * Upload maksimal 3 gambar untuk slider hero di halaman utama.
+   */
+  heroSlider?:
+    | {
+        image: number | Media;
+        /**
+         * Teks yang akan muncul di atas gambar slider.
+         */
+        title?: string | null;
+        /**
+         * Warna teks judul slide. Default: #FFFFFF (Putih).
+         */
+        textColor?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * URL untuk trigger rebuild Vercel saat konten berubah.
    */
@@ -264,48 +281,6 @@ export interface Tenant {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  /**
-   * Owner dapat mengakses semua tenant. Admin hanya bisa akses data tenant-nya.
-   */
-  roles: ('owner' | 'admin' | 'editor' | 'customer')[];
-  /**
-   * Tenant yang dimiliki user ini. Owner tidak perlu isi field ini.
-   */
-  tenant?: (number | null) | Tenant;
-  /**
-   * Data Know Your Customer untuk fitur tabungan emas.
-   */
-  kyc?: {
-    kycType?: ('IC' | 'Passport') | null;
-    kycNumber?: string | null;
-    bankName?: string | null;
-    bankAccountNumber?: string | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
@@ -352,6 +327,48 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  /**
+   * Owner dapat mengakses semua tenant. Admin hanya bisa akses data tenant-nya.
+   */
+  roles: ('owner' | 'admin' | 'editor' | 'customer')[];
+  /**
+   * Tenant yang dimiliki user ini. Owner tidak perlu isi field ini.
+   */
+  tenant?: (number | null) | Tenant;
+  /**
+   * Data Know Your Customer untuk fitur tabungan emas.
+   */
+  kyc?: {
+    kycType?: ('IC' | 'Passport') | null;
+    kycNumber?: string | null;
+    bankName?: string | null;
+    bankAccountNumber?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories".
  */
 export interface Category {
@@ -361,7 +378,19 @@ export interface Category {
    */
   tenant?: (number | null) | Tenant;
   name: string;
+  /**
+   * Pilih kategori induk jika ini adalah sub-kategori.
+   */
+  parent?: (number | null) | Category;
   image?: (number | null) | Media;
+  /**
+   * Aktifkan untuk menampilkan kategori ini di Homepage (Maksimal 3 kategori akan ditampilkan).
+   */
+  showOnHomepage?: boolean | null;
+  /**
+   * Jika diaktifkan, kategori tidak akan muncul di Navbar. (Hanya berlaku untuk Kategori Utama. Sub-kategori tetap tampil jika parent-nya tampil)
+   */
+  hideFromNavbar?: boolean | null;
   /**
    * Urutan tampilan (kecil ke besar)
    */
@@ -387,11 +416,32 @@ export interface Product {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Masukkan pilihan warna untuk produk ini. Khusus untuk tema Luxury (Branded Goods).
+   */
+  colors?:
+    | {
+        name: string;
+        id?: string | null;
+      }[]
+    | null;
   description?: string | null;
   stock: number;
   price: number;
+  /**
+   * Persentase diskon. Jika diisi bersama Spread Price, Harga Akhir = (Harga Dasar * (1 - Diskon/100)) - Spread Price. (Khusus Luxury Branded Goods)
+   */
+  discountPercent?: number | null;
+  /**
+   * Potongan/penambahan nilai tetap setelah diskon dihitung. (Khusus Luxury Branded Goods)
+   */
+  spreadPrice?: number | null;
   strikePrice?: number | null;
   isFeatured?: boolean | null;
+  /**
+   * Jika diaktifkan, produk ini akan muncul di Homepage. Jika tidak, hanya di halaman Products. (Khusus Luxury Branded Goods)
+   */
+  showOnHomepage?: boolean | null;
   category: number | Category;
   soldCount?: number | null;
   rating?: number | null;
@@ -581,6 +631,10 @@ export interface Copywriting {
    * Pilih dan urutkan produk yang akan tampil di bagian Unggulan di halaman depan.
    */
   featuredProducts?: (number | Product)[] | null;
+  /**
+   * Gambar statis ini akan menjadi background dengan efek parallax di homepage untuk tema Luxury Branded Goods.
+   */
+  luxuryParallaxImage?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
 }
@@ -934,6 +988,14 @@ export interface TenantsSelect<T extends boolean = true> {
   productPriceColor?: T;
   fontFamily?: T;
   successButtonColor?: T;
+  heroSlider?:
+    | T
+    | {
+        image?: T;
+        title?: T;
+        textColor?: T;
+        id?: T;
+      };
   vercelDeployHookUrl?: T;
   cloudflareDeployHookUrl?: T;
   enableGoldSavings?: T;
@@ -1038,7 +1100,10 @@ export interface MediaSelect<T extends boolean = true> {
 export interface CategoriesSelect<T extends boolean = true> {
   tenant?: T;
   name?: T;
+  parent?: T;
   image?: T;
+  showOnHomepage?: T;
+  hideFromNavbar?: T;
   sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1057,11 +1122,20 @@ export interface ProductsSelect<T extends boolean = true> {
         image?: T;
         id?: T;
       };
+  colors?:
+    | T
+    | {
+        name?: T;
+        id?: T;
+      };
   description?: T;
   stock?: T;
   price?: T;
+  discountPercent?: T;
+  spreadPrice?: T;
   strikePrice?: T;
   isFeatured?: T;
+  showOnHomepage?: T;
   category?: T;
   soldCount?: T;
   rating?: T;
@@ -1175,6 +1249,7 @@ export interface CopywritingSelect<T extends boolean = true> {
         id?: T;
       };
   featuredProducts?: T;
+  luxuryParallaxImage?: T;
   updatedAt?: T;
   createdAt?: T;
 }

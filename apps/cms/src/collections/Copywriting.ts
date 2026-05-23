@@ -158,6 +158,15 @@ export const Copywriting: CollectionConfig = {
                   'Pilih dan urutkan produk yang akan tampil di bagian Unggulan di halaman depan.',
               },
             },
+            {
+              name: 'luxuryParallaxImage',
+              type: 'upload',
+              relationTo: 'media',
+              label: 'Gambar Parallax (Khusus Tema Luxury Branded Goods)',
+              admin: {
+                description: 'Gambar statis ini akan menjadi background dengan efek parallax di homepage untuk tema Luxury Branded Goods.',
+              },
+            },
           ],
         },
       ],

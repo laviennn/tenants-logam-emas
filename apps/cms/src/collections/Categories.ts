@@ -40,10 +40,37 @@ export const Categories: CollectionConfig = {
       localized: true,
     },
     {
+      name: 'parent',
+      type: 'relationship',
+      relationTo: 'categories',
+      required: false,
+      admin: {
+        description: 'Pilih kategori induk jika ini adalah sub-kategori.',
+      },
+    },
+    {
       name: 'image',
       type: 'upload',
       relationTo: 'media',
       required: false,
+    },
+    {
+      name: 'showOnHomepage',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Tampilkan di Homepage',
+      admin: {
+        description: 'Aktifkan untuk menampilkan kategori ini di Homepage (Maksimal 3 kategori akan ditampilkan).',
+      },
+    },
+    {
+      name: 'hideFromNavbar',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Sembunyikan Kategori Ini dari Navbar',
+      admin: {
+        description: 'Jika diaktifkan, kategori tidak akan muncul di Navbar. (Hanya berlaku untuk Kategori Utama. Sub-kategori tetap tampil jika parent-nya tampil)',
+      },
     },
     {
       name: 'sortOrder',

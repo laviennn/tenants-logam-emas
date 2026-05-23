@@ -15,6 +15,8 @@ export type CartItem = {
   price: number;
   quantity: number;
   image: string;
+  selectedColor?: string;
+  cartItemId?: string;
 };
 
 // State is persisted to localStorage under key 'shopping-cart'
@@ -27,16 +29,20 @@ export const cartStore = persistentAtom<Record<string, CartItem>>(
   }
 );
 
-export function addToCart(item: Omit<CartItem, 'quantity'>, quantity: number = 1) {
+export function addToCart(item: Omit<CartItem, 'quantity' | 'cartItemId'>, quantity: number = 1) {
   const currentCart = cartStore.get();
-  const existingItem = currentCart[item.id];
+  
+  // Create a composite key based on ID and color
+  const compositeKey = item.selectedColor ? `${item.id}-${item.selectedColor}` : item.id;
+  
+  const existingItem = currentCart[compositeKey];
   const safePrice = Number(item.price) || 0;
   const safeQtyToAdd = Number(quantity) || 1;
 
   if (existingItem) {
     cartStore.set({
       ...currentCart,
-      [item.id]: {
+      [compositeKey]: {
         ...existingItem,
         price: safePrice,
         quantity: (Number(existingItem.quantity) || 0) + safeQtyToAdd,
@@ -45,8 +51,9 @@ export function addToCart(item: Omit<CartItem, 'quantity'>, quantity: number = 1
   } else {
     cartStore.set({
       ...currentCart,
-      [item.id]: {
+      [compositeKey]: {
         ...item,
+        cartItemId: compositeKey,
         price: safePrice,
         quantity: safeQtyToAdd,
       }
