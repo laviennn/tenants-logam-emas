@@ -1,6 +1,7 @@
 ---
 import ProductDetail from '../../../components/pages/ProductDetail.astro';
 import { resolveTenant, getDefaultLocale } from '../../../lib/cms';
+import { hasCache, getCachedReviews } from '../../../lib/cache';
 
 export async function getStaticPaths() {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
@@ -16,13 +17,14 @@ export async function getStaticPaths() {
   console.log(`[Astro Build] Resolved Hostname: ${hostname}`);
   console.log(`[Astro Build] Resolved Tenant: ${tenant?.name || 'None'} (ID: ${tenantId || 'None'})`);
   
-  // Non-default locales that get a URL prefix (exclude the default locale which is handled by /products/[id].astro)
   const locales = ['en', 'my'];
   const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
   
   console.log(`[Astro Build] Fetching products for all locales...`);
   
-  // Fetch products per locale so each route gets correct localized data
+  const useCache = tenant?.theme_layout === 'luxury-branded' && hasCache();
+  const allReviews = useCache ? getCachedReviews() || [] : [];
+  
   const paths = (
     await Promise.all(
       locales.map(async (lang) => {
@@ -30,10 +32,33 @@ export async function getStaticPaths() {
         if (!res.ok) return [];
         const data = await res.json();
         const products: any[] = data.docs || [];
-        return products.map((product: any) => ({
-          params: { lang, id: product.id.toString() },
-          props: { product, lang },
-        }));
+        
+        return products.map((product: any) => {
+          let prefetchedReviews = undefined;
+          let prefetchedRelated = undefined;
+          
+          if (useCache) {
+            const categoryId = product.category?.id || product.category;
+            prefetchedRelated = products
+              .filter(ap => (ap.category?.id || ap.category) === categoryId && ap.id !== product.id)
+              .slice(0, 4);
+            
+            prefetchedReviews = allReviews
+              .filter(r => (r.product?.id || r.product) === product.id)
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .slice(0, 100);
+          }
+          
+          return {
+            params: { lang, id: product.id.toString() },
+            props: { 
+              product, 
+              lang,
+              prefetchedReviews,
+              prefetchedRelated
+            },
+          };
+        });
       })
     )
   ).flat();
@@ -42,7 +67,7 @@ export async function getStaticPaths() {
 }
 
 const { id, lang } = { ...Astro.params, ...Astro.props };
-let { product } = Astro.props;
+let { product, prefetchedReviews, prefetchedRelated } = Astro.props;
 
 // Live fallback for dev mode: when product is not in getStaticPaths cache
 // (e.g. newly created after server start) — fetch it live with correct locale
@@ -58,6 +83,11 @@ if (!product && id) {
 
 if (!product) return Astro.redirect('/404');
 ---
-<ProductDetail product={product} lang={lang as any} />
+<ProductDetail 
+  product={product} 
+  lang={lang as any} 
+  prefetchedReviews={prefetchedReviews}
+  prefetchedRelated={prefetchedRelated}
+/>
 
 

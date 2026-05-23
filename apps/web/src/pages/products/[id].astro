@@ -1,6 +1,7 @@
 ---
 import ProductDetail from '../../components/pages/ProductDetail.astro';
 import { resolveTenant, getDefaultLocale } from '../../lib/cms';
+import { hasCache, getCachedProducts, getCachedReviews } from '../../lib/cache';
 
 export async function getStaticPaths() {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
@@ -16,22 +17,52 @@ export async function getStaticPaths() {
     
     console.log(`[Astro Build] SITE_URL: ${SITE_URL}`);
     console.log(`[Astro Build] Resolved Tenant: ${tenant?.name || 'None'} (ID: ${tenantId || 'None'})`);
-    console.log(`[Astro Build] Fetching products with filter: ${tenantFilter || 'None'}`);
     
-    const res = await fetch(`${CMS_URL}/api/products?limit=1000${tenantFilter}&locale=${getDefaultLocale()}`);
-    
-    if (!res.ok) {
-      const text = await res.text();
-      console.error(`[Astro Build] Failed to fetch products. Status: ${res.status}. Body: ${text.slice(0, 100)}`);
-      return [];
+    let allProducts: any[] = [];
+    let allReviews: any[] = [];
+    let useCache = false;
+
+    if (tenant?.theme_layout === 'luxury-branded' && hasCache()) {
+      console.log(`[Astro Build] Using local JSON cache for luxury-branded tenant.`);
+      allProducts = getCachedProducts() || [];
+      allReviews = getCachedReviews() || [];
+      useCache = true;
+    } else {
+      console.log(`[Astro Build] Fetching products with filter: ${tenantFilter || 'None'}`);
+      const res = await fetch(`${CMS_URL}/api/products?limit=1000${tenantFilter}&locale=${getDefaultLocale()}`);
+      if (!res.ok) {
+        console.error(`[Astro Build] Failed to fetch products. Status: ${res.status}`);
+        return [];
+      }
+      const data = await res.json();
+      allProducts = data.docs || [];
     }
 
-    const data = await res.json();
-    const docs = data.docs || [];
-    return docs.map((p: any) => ({
-      params: { id: p.id.toString() },
-      props: { product: p },
-    }));
+    return allProducts.map((p: any) => {
+      let prefetchedReviews = undefined;
+      let prefetchedRelated = undefined;
+
+      if (useCache) {
+        const categoryId = p.category?.id || p.category;
+        prefetchedRelated = allProducts
+          .filter(ap => (ap.category?.id || ap.category) === categoryId && ap.id !== p.id)
+          .slice(0, 4);
+        
+        prefetchedReviews = allReviews
+          .filter(r => (r.product?.id || r.product) === p.id)
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 100);
+      }
+
+      return {
+        params: { id: p.id.toString() },
+        props: { 
+          product: p,
+          prefetchedReviews,
+          prefetchedRelated
+        },
+      };
+    });
   } catch (error) {
     console.error(`[Astro Build] Error in getStaticPaths (products):`, error);
     return [];
@@ -39,7 +70,7 @@ export async function getStaticPaths() {
 }
 
 const { id } = Astro.params;
-let { product } = Astro.props;
+let { product, prefetchedReviews, prefetchedRelated } = Astro.props;
 
 // Di localhost (mode server), Astro.props akan kosong. Kita ambil data secara Live.
 if (!product && id) {
@@ -54,4 +85,9 @@ if (!product) return Astro.redirect('/404');
 
 const defaultLang = getDefaultLocale() as 'id' | 'en' | 'my';
 ---
-<ProductDetail product={product} lang={defaultLang} />
+<ProductDetail 
+  product={product} 
+  lang={defaultLang} 
+  prefetchedReviews={prefetchedReviews}
+  prefetchedRelated={prefetchedRelated}
+/>

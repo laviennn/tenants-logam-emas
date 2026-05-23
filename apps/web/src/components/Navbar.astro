@@ -35,6 +35,8 @@ if (tenant?.enableGoldSavings) {
 
 const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register';
 
+import { hasCache, getCachedCategories } from '../lib/cache';
+
 // Luxury Branded Theme Logic
 const isBrandedTheme = tenant?.theme_layout === 'luxury-branded';
 let brandedCategories: any[] = [];
@@ -45,12 +47,16 @@ if (isBrandedTheme && tenantId) {
   const trackIdx = navLinks.findIndex((n) => n.key === 'nav.track');
   if (trackIdx > -1) navLinks.splice(trackIdx, 1);
 
-  const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
-  const catRes = await fetch(`${CMS_URL}/api/categories?where[tenant][equals]=${tenantId}&limit=100&locale=all`, { cache: 'no-store' })
-    .catch(() => null);
-  if (catRes?.ok) {
-    const data = await catRes.json();
-    brandedCategories = data.docs || [];
+  if (hasCache()) {
+    brandedCategories = getCachedCategories() || [];
+  } else {
+    const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+    const catRes = await fetch(`${CMS_URL}/api/categories?where[tenant][equals]=${tenantId}&limit=100&locale=all`, { cache: 'no-store' })
+      .catch(() => null);
+    if (catRes?.ok) {
+      const data = await catRes.json();
+      brandedCategories = data.docs || [];
+    }
   }
 }
 
