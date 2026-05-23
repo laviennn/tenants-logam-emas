@@ -12,6 +12,8 @@ interface Props {
   image: string;
   price: number;
   strikePrice?: number;
+  discountPercent?: number;
+  spreadPrice?: number;
   soldCount?: number;
   rating?: number;
   showWhatsAppBuyButton?: boolean;
@@ -25,6 +27,8 @@ const {
   image,
   price,
   strikePrice,
+  discountPercent: propDiscountPercent = 0,
+  spreadPrice: propSpreadPrice = 0,
   soldCount = 0,
   rating = 5,
   showWhatsAppBuyButton = false,
@@ -32,12 +36,30 @@ const {
   brandName = 'Admin',
 } = Astro.props;
 
-// Format price using dynamic region-aware utility
-const formattedPrice = formatCurrency(price);
+const discountPercent = propDiscountPercent || 0;
+const spreadPrice = propSpreadPrice || 0;
 
-const discountPercent = strikePrice
-  ? Math.round(((strikePrice - price) / strikePrice) * 100)
-  : 0;
+let finalPrice = price;
+let hasDiscount = false;
+let displayedDiscount = 0;
+
+if (discountPercent !== 0 || spreadPrice !== 0) {
+  hasDiscount = true;
+  let discounted = price * (1 - (discountPercent / 100));
+  finalPrice = discounted + spreadPrice;
+  if (finalPrice < 0) finalPrice = 0;
+  
+  if (price > 0 && finalPrice < price) {
+    displayedDiscount = Math.round(((price - finalPrice) / price) * 100);
+  }
+} else if (strikePrice && strikePrice > price) {
+  hasDiscount = true;
+  finalPrice = price;
+  displayedDiscount = Math.round(((strikePrice - price) / strikePrice) * 100);
+}
+
+const originalPrice = hasDiscount ? (discountPercent !== 0 || spreadPrice !== 0 ? price : strikePrice) : null;
+const formattedPrice = formatCurrency(finalPrice);
 ---
 
 <div
@@ -51,9 +73,9 @@ const discountPercent = strikePrice
 
   <!-- Discount Badge -->
   {
-    discountPercent > 0 && (
+    displayedDiscount > 0 && (
       <div class='absolute top-3 left-3 z-20 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-sm pointer-events-none'>
-        -{discountPercent}%
+        -{displayedDiscount}%
       </div>
     )
   }
@@ -101,9 +123,9 @@ const discountPercent = strikePrice
     <!-- Price -->
     <div class='flex flex-wrap items-center gap-2 mb-4'>
       {
-        strikePrice && (
+        originalPrice && (
           <span class='text-xs text-gray-400 line-through decoration-gray-400'>
-            {formatCurrency(strikePrice)}
+            {formatCurrency(originalPrice)}
           </span>
         )
       }
@@ -117,7 +139,7 @@ const discountPercent = strikePrice
       <!-- Add to Cart -->
       <button
         type='button'
-        data-product={JSON.stringify({ id, name, price, image })}
+        data-product={JSON.stringify({ id, name, price: finalPrice, image })}
         class='btn-add-cart w-full flex items-center justify-center gap-1.5 py-2 px-2 sm:px-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs sm:text-sm font-bold transition-all whitespace-nowrap'>
         <svg
           class='w-4 h-4'
@@ -137,7 +159,7 @@ const discountPercent = strikePrice
       <!-- Buy Now -->
       <button
         type='button'
-        data-product={JSON.stringify({ id, name, price, image })}
+        data-product={JSON.stringify({ id, name, price: finalPrice, image })}
         class='btn-buy-now w-full flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-xl bg-cart-button hover:opacity-90 text-white text-xs sm:text-sm font-bold transition-all shadow-sm whitespace-nowrap'>
         <svg
           class='w-4 h-4'

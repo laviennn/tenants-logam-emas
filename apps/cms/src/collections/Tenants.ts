@@ -82,6 +82,7 @@ export const Tenants: CollectionConfig = {
               options: [
                 { label: 'Default', value: 'default' },
                 { label: 'Luxury (Premium)', value: 'luxury' },
+                { label: 'Luxury (Branded Goods)', value: 'luxury-branded' },
               ],
               admin: { description: 'Pilih layout utama untuk website ini' },
             },
@@ -166,6 +167,7 @@ export const Tenants: CollectionConfig = {
                 { label: 'Outfit', value: 'Outfit' },
                 { label: 'Plus Jakarta Sans', value: 'Plus Jakarta Sans' },
                 { label: 'Nunito', value: 'Nunito' },
+                { label: 'Fjalla One', value: 'Fjalla One' },
               ],
             },
             {
@@ -174,6 +176,42 @@ export const Tenants: CollectionConfig = {
               label: 'Warna Button Success & Form (Hex)',
               defaultValue: '#25D366',
               admin: { description: 'Warna untuk tombol di modal success & form upload bukti.' },
+            },
+            {
+              name: 'heroSlider',
+              type: 'array',
+              label: 'Hero Slider (Khusus Branded Goods)',
+              maxRows: 3,
+              admin: {
+                description: 'Upload maksimal 3 gambar untuk slider hero di halaman utama.',
+                condition: (data) => data.theme_layout === 'luxury-branded',
+              },
+              fields: [
+                {
+                  name: 'image',
+                  type: 'upload',
+                  relationTo: 'media',
+                  required: true,
+                  label: 'Gambar Slide',
+                },
+                {
+                  name: 'title',
+                  type: 'text',
+                  label: 'Judul/Teks Slide (Opsional)',
+                  admin: {
+                    description: 'Teks yang akan muncul di atas gambar slider.',
+                  },
+                },
+                {
+                  name: 'textColor',
+                  type: 'text',
+                  label: 'Warna Teks (Hex)',
+                  defaultValue: '#FFFFFF',
+                  admin: {
+                    description: 'Warna teks judul slide. Default: #FFFFFF (Putih).',
+                  },
+                },
+              ],
             },
           ],
         },

@@ -48,3 +48,9 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Custom scraper scripts
+/scrape-bbasiastore.ts
+/test-scrape-test.ts
+/test-scrape-test.js
+/temp-images/

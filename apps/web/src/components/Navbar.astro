@@ -34,16 +34,40 @@ if (tenant?.enableGoldSavings) {
 }
 
 const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register';
+
+// Luxury Branded Theme Logic
+const isBrandedTheme = tenant?.theme_layout === 'luxury-branded';
+let brandedCategories: any[] = [];
+if (isBrandedTheme && tenantId) {
+  // Remove "Products" and "Track Order" for Luxury Branded theme
+  const productsIdx = navLinks.findIndex((n) => n.key === 'nav.products');
+  if (productsIdx > -1) navLinks.splice(productsIdx, 1);
+  const trackIdx = navLinks.findIndex((n) => n.key === 'nav.track');
+  if (trackIdx > -1) navLinks.splice(trackIdx, 1);
+
+  const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
+  const catRes = await fetch(`${CMS_URL}/api/categories?where[tenant][equals]=${tenantId}&limit=100&locale=all`, { cache: 'no-store' })
+    .catch(() => null);
+  if (catRes?.ok) {
+    const data = await catRes.json();
+    brandedCategories = data.docs || [];
+  }
+}
+
+const mainCategories = brandedCategories.filter((c: any) => !c.parent && !c.hideFromNavbar);
+const childCategories = brandedCategories.filter((c: any) => c.parent);
+
+const getName = (name: any, l: string) => typeof name === 'string' ? name : (name?.[l] || name?.id || name?.en || name?.my || '');
 ---
 
-<nav class='bg-navbar-bg dark:bg-navbar-bg shadow-md sticky top-0 z-50'>
+<nav class='bg-navbar-bg dark:bg-background-dark shadow-md sticky top-0 z-50 transition-colors duration-300'>
   <div class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-    <div class='flex justify-between items-center h-16 md:h-20'>
+    <div class='flex justify-between items-center min-h-[4rem] md:min-h-[5rem] py-2'>
       <!-- Left: Hamburger + Logo -->
-      <div class='flex items-center h-full lg:w-1/4'>
+      <div class='flex items-center h-full w-auto shrink-0 mr-4 lg:mr-8'>
         <button
           id='mobile-menu-btn'
-          class='md:hidden p-2 mr-2 text-gray-900 dark:text-gray-900 hover:text-white focus:outline-none relative z-50 cursor-pointer'
+          class='md:hidden p-2 mr-2 text-gray-900 dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-lg focus:outline-none relative z-50 cursor-pointer transition-colors'
           aria-label='Toggle menu'
           onclick="
             const menu = document.getElementById('mobile-menu');
@@ -86,7 +110,7 @@ const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register
                 decoding='async'
               />
             ) : (
-              <span class='text-xl md:text-2xl font-black text-gray-900'>
+              <span class='text-xl md:text-2xl font-black text-gray-900 dark:text-white'>
                 {siteSettings?.brandName ? (
                   siteSettings.brandName
                 ) : tenantName ? (
@@ -104,26 +128,52 @@ const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register
       </div>
 
       <!-- Desktop Menu -->
-      <div class='hidden md:flex flex-1 justify-center space-x-4 lg:space-x-6'>
-        {
-          navLinks.map((link) => (
-            <a
-              href={localizePath(link.href, lang)}
-              data-i18n={link.key}
-              class='text-gray-900 dark:text-gray-900 px-2 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10'>
-              {t(link.key as any)}
-            </a>
-          ))
-        }
+      <div class='hidden md:flex flex-1 justify-start min-w-0'>
+        <div class='flex flex-wrap items-center gap-x-4 lg:gap-x-6 gap-y-2 px-2 py-1'>
+          {
+            navLinks.map((link) => (
+              <a
+                href={localizePath(link.href, lang)}
+                data-i18n={link.key}
+                class='text-gray-900 dark:text-white px-2 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10 dark:hover:bg-white/10'>
+                {t(link.key as any)}
+              </a>
+            ))
+          }
+        {isBrandedTheme && mainCategories.length > 0 && mainCategories.map((mainCat: any) => {
+          const children = childCategories.filter((c: any) => typeof c.parent === 'object' ? c.parent.id === mainCat.id : c.parent === mainCat.id);
+          const hasChildren = children.length > 0;
+          return (
+            <div class="relative group">
+              <a href={`/products?category=${mainCat.id}`} class="flex items-center gap-1 text-gray-900 dark:text-white px-2 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10 dark:hover:bg-white/10 capitalize">
+                {getName(mainCat.name, lang) || mainCat.id}
+                {hasChildren && <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>}
+              </a>
+              {hasChildren && (
+                <div class="absolute left-0 top-full pt-2 w-48 hidden group-hover:block z-50">
+                  <div class="absolute inset-x-0 -top-2 h-2"></div>
+                  <div class="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 shadow-xl py-2 flex flex-col">
+                    {children.map((child: any) => (
+                      <a href={`/products?category=${child.id}`} class="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-colors capitalize">
+                        {getName(child.name, lang) || child.id}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+        </div>
       </div>
 
       <!-- Right Section: Cart, Dark Mode, Auth, Lang -->
       <div
-        class='flex items-center justify-end space-x-2 md:space-x-4 lg:w-1/4'>
+        class='flex items-center justify-end space-x-2 md:space-x-4 w-auto shrink-0 ml-4 lg:ml-8'>
         <!-- Cart -->
         <a
           href='/cart'
-          class='relative text-gray-900 dark:text-gray-900 p-2 hover:bg-black/10 rounded-lg transition-colors'>
+          class='relative text-gray-900 dark:text-white p-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors'>
           <svg
             xmlns='http://www.w3.org/2000/svg'
             class='h-6 h-6'
@@ -149,7 +199,7 @@ const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register
         <button
           id='theme-toggle'
           type='button'
-          class='text-gray-900 dark:text-gray-900 hover:bg-black/10 rounded-lg text-sm p-2'>
+          class='text-gray-900 dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-lg text-sm p-2 transition-colors'>
           <svg
             id='theme-toggle-dark-icon'
             class='hidden w-5 h-5'
@@ -183,7 +233,7 @@ const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register
             <a
               href={localizePath('/login', lang)}
               data-i18n='nav.login'
-              class='text-gray-900 dark:text-gray-900 font-black hover:opacity-75 transition-opacity'
+              class='text-gray-900 dark:text-white font-black hover:opacity-75 transition-opacity'
               >{t('nav.login')}</a
             >
             <a
@@ -199,7 +249,7 @@ const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register
             id='profile-dropdown-container'
             class='relative group hidden'>
             <button
-              class='flex items-center text-gray-900 dark:text-gray-900 hover:bg-black/10 p-2 rounded-lg focus:outline-none transition-colors'>
+              class='flex items-center text-gray-900 dark:text-white hover:bg-black/10 dark:hover:bg-white/10 p-2 rounded-lg focus:outline-none transition-colors'>
               <svg
                 class='w-6 h-6'
                 fill='none'
@@ -274,7 +324,7 @@ const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register
         <!-- Language Dropdown -->
         <div class='relative group'>
           <button
-            class='flex items-center gap-2 text-gray-900 dark:text-gray-900 hover:bg-black/10 rounded-lg font-black p-2 text-sm md:text-base transition-colors'>
+            class='flex items-center gap-2 text-gray-900 dark:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-lg font-black p-2 text-sm md:text-base transition-colors'>
             <span
               id='current-lang-flag'
               class='text-lg'>
@@ -324,25 +374,41 @@ const registerUrl = tenant?.enableGoldSavings ? '/savings/register' : '/register
   <!-- Mobile Menu (Fluid Animation via max-height) -->
   <div
     id='mobile-menu'
-    class='md:hidden overflow-hidden transition-[max-height] duration-300 ease-in-out max-h-0 bg-navbar-bg dark:bg-navbar-bg border-t border-black/10'>
+    class='md:hidden overflow-hidden transition-[max-height] duration-300 ease-in-out max-h-0 bg-navbar-bg dark:bg-background-dark border-t border-black/10 dark:border-white/10'>
     <div class='px-4 py-4 space-y-3'>
       {
         navLinks.map((link) => (
           <a
             href={localizePath(link.href, lang)}
             data-i18n={link.key}
-            class='block text-gray-900 dark:text-gray-900 font-black px-2 py-2 rounded-lg hover:bg-black/5'>
+            class='block text-gray-900 dark:text-white font-black px-2 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors'>
             {t(link.key as any)}
           </a>
         ))
       }
+      
+      {isBrandedTheme && mainCategories.length > 0 && mainCategories.map((mainCat: any) => {
+        const children = childCategories.filter((c: any) => typeof c.parent === 'object' ? c.parent.id === mainCat.id : c.parent === mainCat.id);
+        return (
+          <div class="flex flex-col px-2 py-1">
+            <a href={`/products?category=${mainCat.id}`} class="block text-gray-900 dark:text-white font-black py-2 capitalize">{getName(mainCat.name, lang) || mainCat.id}</a>
+            {children.length > 0 && (
+              <div class="flex flex-col pl-4 space-y-2 border-l-2 border-gray-100 dark:border-gray-800 mt-1 mb-2">
+                {children.map((child: any) => (
+                  <a href={`/products?category=${child.id}`} class="text-sm text-gray-600 dark:text-gray-400 capitalize hover:text-gray-900 dark:hover:text-white transition-colors">{getName(child.name, lang) || child.id}</a>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
       <div
         id='mobile-auth-buttons'
         class='border-t border-gray-200 dark:border-gray-700 pt-3 flex flex-col space-y-2'>
         <a
           href={localizePath('/login', lang)}
           data-i18n='nav.login'
-          class='block text-gray-900 dark:text-gray-900 font-black px-2 py-2'
+          class='block text-gray-900 dark:text-white font-black px-2 py-2'
           >{t('nav.login')}</a
         >
         <a
