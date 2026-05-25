@@ -46,7 +46,7 @@ async function run() {
     // Fetch all needed resources in bulk
     const [productsRes, categoriesRes, reviewsRes] = await Promise.all([
       fetch(`${CMS_URL}/api/products?limit=1000${tenantFilter}`),
-      fetch(`${CMS_URL}/api/categories?limit=100${tenantFilter}`),
+      fetch(`${CMS_URL}/api/categories?limit=100${tenantFilter}&locale=all`),
       fetch(`${CMS_URL}/api/reviews?limit=10000${tenantFilter}`)
     ]);
     

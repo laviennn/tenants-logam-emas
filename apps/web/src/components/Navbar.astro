@@ -65,6 +65,14 @@ const mainCategories = brandedCategories.filter((c: any) => !c.parent && !c.hide
 const childCategories = brandedCategories.filter((c: any) => c.parent);
 
 const getName = (name: any, l: string) => typeof name === 'string' ? name : (name?.[l] || name?.id || name?.en || name?.my || '');
+
+const getCatUrl = (cat: any, langCode: string) => {
+  if (cat.customUrl) {
+    if (cat.customUrl.startsWith('http')) return cat.customUrl;
+    return localizePath(cat.customUrl, langCode);
+  }
+  return localizePath(`/products?category=${cat.id}`, langCode);
+};
 ---
 
 <nav class='bg-navbar-bg dark:bg-background-dark shadow-md sticky top-0 z-50 transition-colors duration-300'>
@@ -147,12 +155,19 @@ const getName = (name: any, l: string) => typeof name === 'string' ? name : (nam
               </a>
             ))
           }
+        {isBrandedTheme && (
+          <a
+            href={localizePath('/products', lang)}
+            class='text-gray-900 dark:text-white px-2 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10 dark:hover:bg-white/10'>
+            Shop All
+          </a>
+        )}
         {isBrandedTheme && mainCategories.length > 0 && mainCategories.map((mainCat: any) => {
           const children = childCategories.filter((c: any) => typeof c.parent === 'object' ? c.parent.id === mainCat.id : c.parent === mainCat.id);
           const hasChildren = children.length > 0;
           return (
             <div class="relative group">
-              <a href={`/products?category=${mainCat.id}`} class="flex items-center gap-1 text-gray-900 dark:text-white px-2 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10 dark:hover:bg-white/10 capitalize">
+              <a href={getCatUrl(mainCat, lang)} class="flex items-center gap-1 text-gray-900 dark:text-white px-2 py-2 rounded-md text-sm font-black transition-all hover:bg-black/10 dark:hover:bg-white/10 capitalize">
                 {getName(mainCat.name, lang) || mainCat.id}
                 {hasChildren && <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>}
               </a>
@@ -161,7 +176,7 @@ const getName = (name: any, l: string) => typeof name === 'string' ? name : (nam
                   <div class="absolute inset-x-0 -top-2 h-2"></div>
                   <div class="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 shadow-xl py-2 flex flex-col">
                     {children.map((child: any) => (
-                      <a href={`/products?category=${child.id}`} class="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-colors capitalize">
+                      <a href={getCatUrl(child, lang)} class="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-colors capitalize">
                         {getName(child.name, lang) || child.id}
                       </a>
                     ))}
@@ -396,15 +411,22 @@ const getName = (name: any, l: string) => typeof name === 'string' ? name : (nam
         ))
       }
       
+      {isBrandedTheme && (
+        <a
+          href={localizePath('/products', lang)}
+          class='block text-gray-900 dark:text-white font-black px-2 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors'>
+          Shop All
+        </a>
+      )}
       {isBrandedTheme && mainCategories.length > 0 && mainCategories.map((mainCat: any) => {
         const children = childCategories.filter((c: any) => typeof c.parent === 'object' ? c.parent.id === mainCat.id : c.parent === mainCat.id);
         return (
           <div class="flex flex-col px-2 py-1">
-            <a href={`/products?category=${mainCat.id}`} class="block text-gray-900 dark:text-white font-black py-2 capitalize">{getName(mainCat.name, lang) || mainCat.id}</a>
+            <a href={getCatUrl(mainCat, lang)} class="block text-gray-900 dark:text-white font-black py-2 capitalize">{getName(mainCat.name, lang) || mainCat.id}</a>
             {children.length > 0 && (
               <div class="flex flex-col pl-4 space-y-2 border-l-2 border-gray-100 dark:border-gray-800 mt-1 mb-2">
                 {children.map((child: any) => (
-                  <a href={`/products?category=${child.id}`} class="text-sm text-gray-600 dark:text-gray-400 capitalize hover:text-gray-900 dark:hover:text-white transition-colors">{getName(child.name, lang) || child.id}</a>
+                  <a href={getCatUrl(child, lang)} class="text-sm text-gray-600 dark:text-gray-400 capitalize hover:text-gray-900 dark:hover:text-white transition-colors">{getName(child.name, lang) || child.id}</a>
                 ))}
               </div>
             )}

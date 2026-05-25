@@ -45,6 +45,7 @@ const optimizedHero = await getImage({ src: emasHero });
 const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
 const defaultLocale = getDefaultLocale();
 const homepageProductFilter = isBrandedTheme ? '&where[showOnHomepage][equals]=true' : '';
+const productLimit = isBrandedTheme ? 20 : 8;
 
 const [siteSettings, goldPriceData, copywriting, categoriesData, latestProductsData] =
   await Promise.all([
@@ -54,7 +55,7 @@ const [siteSettings, goldPriceData, copywriting, categoriesData, latestProductsD
     fetch(`${CMS_URL}/api/categories?sort=sortOrder,name&limit=10${tenantFilter}&locale=${defaultLocale}`, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { docs: [] })
       .catch(() => ({ docs: [] })),
-    fetch(`${CMS_URL}/api/products?sort=sortOrder,-createdAt&limit=8${tenantFilter}${homepageProductFilter}&locale=${defaultLocale}`, { cache: 'no-store' })
+    fetch(`${CMS_URL}/api/products?sort=sortOrder,-createdAt&limit=${productLimit}${tenantFilter}${homepageProductFilter}&locale=${defaultLocale}`, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { docs: [] })
       .catch(() => ({ docs: [] })),
   ]);
@@ -84,6 +85,14 @@ if (copywriting?.featuredProducts?.length > 0) {
 }
 
 const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, size);
+
+const getCatUrl = (cat: any, langCode: string) => {
+  if (cat.customUrl) {
+    if (cat.customUrl.startsWith('http')) return cat.customUrl;
+    return localizePath(cat.customUrl, langCode);
+  }
+  return localizePath(`/products?category=${cat.id}`, langCode);
+};
 ---
 
 <BaseLayout title={t('nav.home') as string} tenantId={tenantId} tenant={tenant} siteSettings={siteSettings}>
@@ -295,7 +304,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
       {isBrandedTheme ? (
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6">
           {categories.filter((c: any) => c.showOnHomepage).slice(0, 3).map((cat: any, index: number) => (
-            <a href={localizePath(`/products?category=${cat.id}`, lang)} class={`group block relative overflow-hidden aspect-square border border-gray-100 dark:border-gray-800 ${index === 2 ? 'col-span-2 md:col-span-1 aspect-[2/1] md:aspect-square' : ''}`}>
+            <a href={getCatUrl(cat, lang)} class={`group block relative overflow-hidden aspect-square border border-gray-100 dark:border-gray-800 ${index === 2 ? 'col-span-2 md:col-span-1 aspect-[2/1] md:aspect-square' : ''}`}>
               {cat.image?.url ? (
                 <Image 
                   src={_getImageUrl(cat.image, 'large')} 
@@ -317,7 +326,7 @@ const _getImageUrl = (image: any, size: string = 'card') => getImageUrl(image, s
       ) : (
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {categories.map((cat: any) => (
-          <a href={localizePath(`/products?category=${cat.id}`, lang)} class="group">
+          <a href={getCatUrl(cat, lang)} class="group">
             <div class="relative rounded-2xl overflow-hidden bg-primary aspect-[4/3] mb-3 shadow-md border border-gray-100 dark:border-gray-800">
               {cat.image?.url ? (
                 <Image 
