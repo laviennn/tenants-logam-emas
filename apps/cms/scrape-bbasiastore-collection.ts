@@ -271,11 +271,11 @@ async function scrapeAndSeed() {
     }
 
     // 4. Download and upload images (only if product is new)
-    let mainImageId = '';
-    let galleryImageIds: { image: string }[] = [];
+    let mainImageId: any = '';
+    let galleryImageIds: any[] = [];
 
     if (!isExisting) {
-      const uploadedMediaIds: string[] = [];
+      const uploadedMediaIds: any[] = [];
       for (let j = 0; j < galleryUrls.length; j++) {
         const imgUrl = galleryUrls[j];
         const filename = imgUrl.split('/').pop()?.split('?')[0] || `image-${Date.now()}-${j}.jpg`;
@@ -297,7 +297,7 @@ async function scrapeAndSeed() {
             filePath: tempPath,
             overrideAccess: true,
           });
-          uploadedMediaIds.push(media.id as string);
+          uploadedMediaIds.push(media.id);
         } catch (uploadErr) {
           console.error(`   ❌ Failed to upload image ${filename} to Payload CMS:`, uploadErr);
         } finally {
@@ -320,7 +320,7 @@ async function scrapeAndSeed() {
     // 5. Category resolution / creation
     const catCandidates = getCategoryCandidates(name);
     console.log(`   📁 Resolving Category candidates:`, catCandidates);
-    let categoryId = '';
+    let categoryId: any = undefined;
 
     // Check in all locales and all candidate names
     outerLoop:
@@ -340,7 +340,7 @@ async function scrapeAndSeed() {
         });
 
         if (existingCats.docs.length > 0) {
-          categoryId = existingCats.docs[0].id as string;
+          categoryId = existingCats.docs[0].id;
           console.log(`   ✅ Category exists (matched "${candidate}" in locale "${loc}"): ID ${categoryId}`);
           break outerLoop;
         }
@@ -369,7 +369,7 @@ async function scrapeAndSeed() {
         locale: 'id',
         overrideAccess: true,
       });
-      categoryId = newCat.id as string;
+      categoryId = newCat.id;
 
       // Update for en and my
       await payload.update({
