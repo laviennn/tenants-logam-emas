@@ -395,6 +395,14 @@ export interface Category {
    * Urutan tampilan (kecil ke besar)
    */
   sortOrder?: number | null;
+  /**
+   * Jika diisi, klik pada kategori ini akan mengarah ke URL ini (contoh: /products). Path akan otomatis disesuaikan dengan bahasa (contoh: /en/products).
+   */
+  customUrl?: string | null;
+  /**
+   * Jika diaktifkan, kategori ini tidak akan muncul sebagai filter di halaman /products.
+   */
+  hideFromProductsPage?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1105,6 +1113,8 @@ export interface CategoriesSelect<T extends boolean = true> {
   showOnHomepage?: T;
   hideFromNavbar?: T;
   sortOrder?: T;
+  customUrl?: T;
+  hideFromProductsPage?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -32,7 +32,7 @@ const [categoriesRes, productsRes] = await Promise.all([
 const categoriesData = categoriesRes.ok ? await categoriesRes.json() : { docs: [] };
 const productsData = productsRes.ok ? await productsRes.json() : { docs: [] };
 
-const categories = categoriesData.docs || [];
+const categories = (categoriesData.docs || []).filter((cat: any) => !cat.hideFromProductsPage);
 
 const allProducts = (productsData.docs || []).map((p: any) => ({
   id: p.id,
@@ -141,8 +141,11 @@ const regionCode = import.meta.env.PUBLIC_TENANT_REGION === 'MY' ? 'MY' : 'ID';
   const waConfigEl = document.getElementById('wa-config');
   const waConfig = waConfigEl ? JSON.parse(waConfigEl.textContent || '{}') : { showWhatsAppBuyButton: false, whatsappNumber: '', brandName: 'Admin' };
 
+  const themeConfigEl = document.getElementById('theme-config');
+  const isBrandedTheme = themeConfigEl ? JSON.parse(themeConfigEl.textContent || '{}').isBrandedTheme : false;
+
   let currentLang = document.documentElement.lang || 'id';
-  const ITEMS_PER_PAGE = 8;
+  const ITEMS_PER_PAGE = isBrandedTheme ? 50 : 8;
   let currentCategory = '';
   let currentSort = 'price-asc';
   let currentPage = 1;

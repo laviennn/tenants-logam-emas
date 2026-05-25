@@ -80,5 +80,23 @@ export const Categories: CollectionConfig = {
         description: 'Urutan tampilan (kecil ke besar)',
       },
     },
+    {
+      name: 'customUrl',
+      type: 'text',
+      required: false,
+      label: 'Custom URL',
+      admin: {
+        description: 'Jika diisi, klik pada kategori ini akan mengarah ke URL ini (contoh: /products). Path akan otomatis disesuaikan dengan bahasa (contoh: /en/products).',
+      },
+    },
+    {
+      name: 'hideFromProductsPage',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Sembunyikan dari Halaman Products',
+      admin: {
+        description: 'Jika diaktifkan, kategori ini tidak akan muncul sebagai filter di halaman /products.',
+      },
+    },
   ],
 }

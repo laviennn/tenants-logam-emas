@@ -1,0 +1,529 @@
+// File: apps/cms/scrape-bbasiastore-collection.ts
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import * as cheerio from 'cheerio';
+import { getPayload } from 'payload';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+const TARGET_TENANT_ID = 10; // sejahtera.id
+const BASE_URL = 'https://www.bbasiastore.com';
+const DEFAULT_TARGET_URL = 'https://www.bbasiastore.com/collections/coach';
+const TARGET_URL = process.argv[2] || DEFAULT_TARGET_URL;
+const TEMP_DIR = path.resolve(__dirname, 'temp-images');
+
+// Helper to download image
+async function downloadImage(url: string, destPath: string): Promise<boolean> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.warn(`[Image Download] Failed to fetch image: ${url} (Status: ${res.status})`);
+      return false;
+    }
+    const buffer = Buffer.from(await res.arrayBuffer());
+    await fs.promises.writeFile(destPath, buffer);
+    return true;
+  } catch (err) {
+    console.error(`[Image Download] Error downloading image from ${url}:`, err);
+    return false;
+  }
+}
+
+// Helper to clean HTML to plain text with newlines
+function cleanDescription(html: string): string {
+  if (!html) return '';
+  const $ = cheerio.load(html);
+
+  // Replace br tags with newlines
+  $('br').replaceWith('\n');
+
+  // Append newlines to block elements
+  $('p, div, li, h1, h2, h3, h4, h5, h6, tr, ul, ol').each(function () {
+    $(this).append('\n');
+  });
+
+  let text = $.text();
+  text = text.replace(/\r/g, '\n');
+
+  const lines = text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+
+  return lines.join('\n\n');
+}
+
+// Helper to derive Category name candidates
+function getCategoryCandidates(productName: string): string[] {
+  const words = productName.trim().split(/\s+/);
+  if (words.length >= 2) {
+    const firstTwo = `${words[0]} ${words[1]}`.toLowerCase();
+    if (firstTwo === 'tory burch' || firstTwo === 'torry burch' || firstTwo === 'torry buch' || firstTwo === 'tory buch') {
+      return ['Torry Buch', 'Torry Burch', 'Tory Burch', 'Tory Buch', 'Tory'];
+    }
+    if (firstTwo === 'michael kors') {
+      return ['Michael Kors', 'Michael'];
+    }
+    if (firstTwo === 'kate spade') {
+      return ['Kate Spade', 'Kate'];
+    }
+    if (firstTwo === 'marc jacobs') {
+      return ['Marc Jacobs', 'Marc'];
+    }
+  }
+
+  const firstWord = words[0] || 'Branded';
+  const capitalized = firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
+  return [capitalized];
+}
+
+async function scrapeAndSeed() {
+  console.log('🚀 Initializing Payload CMS programmatic instance...');
+  const { default: configPromise } = await import('./src/payload.config');
+  const payload = await getPayload({ config: configPromise });
+
+  // Ensure temp directory exists
+  if (!fs.existsSync(TEMP_DIR)) {
+    fs.mkdirSync(TEMP_DIR, { recursive: true });
+  }
+
+  console.log(`🌐 Fetching bbasiastore collection/page: ${TARGET_URL}`);
+  const homeRes = await fetch(TARGET_URL);
+  const homeHtml = await homeRes.text();
+  const $ = cheerio.load(homeHtml);
+
+  const productCards = $('.product_grid-item');
+  console.log(`🔍 Found ${productCards.length} product cards on page.`);
+
+  let importedCount = 0;
+  let skippedCount = 0;
+
+  for (let i = 0; i < productCards.length; i++) {
+    const card = $(productCards[i]);
+    const name = card.find('.grid-link__title').text().trim();
+    if (!name) continue;
+
+    const lowerName = name.toLowerCase();
+
+    // 1. Idempotency Check
+    const existingProducts = await payload.find({
+      collection: 'products',
+      where: {
+        and: [
+          { name: { equals: name } },
+          { tenant: { equals: TARGET_TENANT_ID } }
+        ]
+      },
+      overrideAccess: true,
+      depth: 0,
+    });
+
+    const isExisting = existingProducts.docs.length > 0;
+    const existingProduct = isExisting ? existingProducts.docs[0] : null;
+
+    // Filter Longchamp
+    if (lowerName.includes('longchamp')) {
+      console.log(`\n----------------------------------------`);
+      console.log(`[${i + 1}/${productCards.length}] Skipping product: "${name}" (Longchamp is ignored)`);
+      if (isExisting && existingProduct) {
+        console.log(`   🗑️ Deleting existing Longchamp product: "${name}" (ID: ${existingProduct.id}) from DB...`);
+        await payload.delete({
+          collection: 'products',
+          id: existingProduct.id,
+          overrideAccess: true,
+        });
+      }
+      continue;
+    }
+
+    const isTargetBrand =
+      lowerName.startsWith('michael kors') ||
+      lowerName.startsWith('tory burch') ||
+      lowerName.startsWith('torry burch') ||
+      lowerName.startsWith('torry buch') ||
+      lowerName.startsWith('tory buch') ||
+      lowerName.startsWith('coach') ||
+      lowerName.startsWith('kate spade');
+
+    if (!isTargetBrand) {
+      console.log(`\n----------------------------------------`);
+      console.log(`[${i + 1}/${productCards.length}] Skipping product: "${name}" (not in target brand list)`);
+      if (isExisting && existingProduct) {
+        console.log(`   🗑️ Deleting existing non-target brand product: "${name}" (ID: ${existingProduct.id}) from DB...`);
+        await payload.delete({
+          collection: 'products',
+          id: existingProduct.id,
+          overrideAccess: true,
+        });
+      }
+      continue;
+    }
+
+    // 2. Extract details (Prices)
+    const salePriceAttr = card.find('.grid-link__meta > span.money').first().attr('data-ori-price');
+    const salePrice = salePriceAttr ? parseFloat(salePriceAttr.replace(/,/g, '')) : 0;
+
+    const origPriceElement = card.find('s.grid-link__sale_price span.money');
+    const origPrice = origPriceElement.length > 0
+      ? parseFloat(origPriceElement.attr('data-ori-price')?.replace(/,/g, '') || '0')
+      : salePrice;
+
+    console.log(`\n----------------------------------------`);
+    console.log(`[${i + 1}/${productCards.length}] Processing product: "${name}"`);
+    console.log(`   Scraped Prices -> Sale Price: RM ${salePrice}, Original Price: RM ${origPrice}`);
+
+    if (salePrice < 500) {
+      console.log(`   ⚠️ Skipping product: "${name}" because price (RM ${salePrice}) is less than RM 500.`);
+      if (isExisting && existingProduct) {
+        console.log(`   🗑️ Deleting existing product < RM 500: "${name}" (ID: ${existingProduct.id}) from DB...`);
+        await payload.delete({
+          collection: 'products',
+          id: existingProduct.id,
+          overrideAccess: true,
+        });
+      }
+      continue;
+    }
+
+    // Get detail link
+    let detailLink = card.find('a.grid-link__image-centered').attr('href') || card.find('a.product-meta_link').attr('href');
+    if (!detailLink) {
+      console.warn(`   ⚠️ Detail link not found for product "${name}". Skipping.`);
+      continue;
+    }
+    if (!detailLink.startsWith('http')) {
+      detailLink = BASE_URL + detailLink;
+    }
+
+    // 3. Visit detail page for variants, gallery, description
+    console.log(`   🔗 Fetching product detail page: ${detailLink}`);
+    let detailHtml = '';
+    try {
+      const detailRes = await fetch(detailLink);
+      detailHtml = await detailRes.text();
+    } catch (err) {
+      console.error(`   ❌ Failed to fetch detail page:`, err);
+      continue;
+    }
+
+    const $detail = cheerio.load(detailHtml);
+
+    // Extract Description
+    const descHtml = $detail('.product-description').html() || '';
+    const description = cleanDescription(descHtml);
+    console.log(`   Extracted Description length: ${description.length} characters.`);
+
+    // Extract Variant Colors
+    const colors: { name: string }[] = [];
+    $detail('#productSelect option').each((_, option) => {
+      const optionText = $detail(option).text().trim();
+      if (optionText) {
+        const parts = optionText.split(' - ');
+        if (parts.length > 0) {
+          const colorName = parts[0].trim();
+          if (colorName && colorName.toLowerCase() !== 'default title' && !colors.some(c => c.name === colorName)) {
+            colors.push({ name: colorName });
+          }
+        }
+      }
+    });
+    console.log(`   Extracted Colors:`, colors.map(c => c.name));
+
+    // Extract Gallery Image URLs (excluding duplicates)
+    const galleryUrlsSet = new Set<string>();
+
+    // Add primary featured image URL
+    const mainImgUrl = card.find('img.product-featured_image').attr('src') || card.find('img.product-secondary_image').attr('src');
+    if (mainImgUrl) {
+      galleryUrlsSet.add(mainImgUrl);
+    }
+
+    // Extract other images from gallery list
+    $detail('ul.gallery li.gallery__item').each((_, li) => {
+      const imgUrl = $detail(li).attr('data-mfp-src');
+      if (imgUrl) galleryUrlsSet.add(imgUrl);
+    });
+
+    // Extract other images from slides
+    $detail('.slides li').each((_, li) => {
+      const imgUrl = $detail(li).attr('data-thumb');
+      if (imgUrl) galleryUrlsSet.add(imgUrl);
+      const imgUrl2 = $detail(li).find('div.slide-img').attr('href');
+      if (imgUrl2) galleryUrlsSet.add(imgUrl2);
+    });
+
+    // Standardize urls to be fully qualified
+    const galleryUrls = Array.from(galleryUrlsSet).map(url => {
+      if (url.startsWith('//')) return 'https:' + url;
+      return url;
+    });
+
+    console.log(`   Extracted ${galleryUrls.length} unique image URLs.`);
+
+    if (galleryUrls.length === 0) {
+      console.warn(`   ⚠️ No images found for product "${name}". Skipping.`);
+      continue;
+    }
+
+    // 4. Download and upload images (only if product is new)
+    let mainImageId = '';
+    let galleryImageIds: { image: string }[] = [];
+
+    if (!isExisting) {
+      const uploadedMediaIds: string[] = [];
+      for (let j = 0; j < galleryUrls.length; j++) {
+        const imgUrl = galleryUrls[j];
+        const filename = imgUrl.split('/').pop()?.split('?')[0] || `image-${Date.now()}-${j}.jpg`;
+        const tempPath = path.resolve(TEMP_DIR, filename);
+
+        console.log(`   📥 Downloading [${j + 1}/${galleryUrls.length}] image: ${imgUrl}`);
+        const success = await downloadImage(imgUrl, tempPath);
+        if (!success) continue;
+
+        // Upload to Payload CMS
+        console.log(`   📤 Uploading media: ${filename}`);
+        try {
+          const media = await payload.create({
+            collection: 'media',
+            data: {
+              alt: `${name} Image ${j + 1}`,
+              tenant: TARGET_TENANT_ID,
+            },
+            filePath: tempPath,
+            overrideAccess: true,
+          });
+          uploadedMediaIds.push(media.id as string);
+        } catch (uploadErr) {
+          console.error(`   ❌ Failed to upload image ${filename} to Payload CMS:`, uploadErr);
+        } finally {
+          // Clean up temp file
+          if (fs.existsSync(tempPath)) {
+            fs.unlinkSync(tempPath);
+          }
+        }
+      }
+
+      if (uploadedMediaIds.length === 0) {
+        console.warn(`   ⚠️ No media was successfully uploaded for "${name}". Skipping product creation.`);
+        continue;
+      }
+
+      mainImageId = uploadedMediaIds[0];
+      galleryImageIds = uploadedMediaIds.slice(1).map(id => ({ image: id }));
+    }
+
+    // 5. Category resolution / creation
+    const catCandidates = getCategoryCandidates(name);
+    console.log(`   📁 Resolving Category candidates:`, catCandidates);
+    let categoryId = '';
+
+    // Check in all locales and all candidate names
+    outerLoop:
+    for (const loc of ['my', 'id', 'en'] as const) {
+      for (const candidate of catCandidates) {
+        const existingCats = await payload.find({
+          collection: 'categories',
+          where: {
+            and: [
+              { name: { equals: candidate } },
+              { tenant: { equals: TARGET_TENANT_ID } }
+            ]
+          },
+          locale: loc,
+          overrideAccess: true,
+          depth: 0,
+        });
+
+        if (existingCats.docs.length > 0) {
+          categoryId = existingCats.docs[0].id as string;
+          console.log(`   ✅ Category exists (matched "${candidate}" in locale "${loc}"): ID ${categoryId}`);
+          break outerLoop;
+        }
+      }
+    }
+
+    if (categoryId) {
+      // Ensure name is updated/populated in all locales
+      const resolvedName = catCandidates[0]; // preferred name, e.g. "Torry Buch"
+      for (const loc of ['id', 'en', 'my'] as const) {
+        await payload.update({
+          collection: 'categories',
+          id: categoryId,
+          data: { name: resolvedName },
+          locale: loc,
+          overrideAccess: true,
+        });
+      }
+    } else {
+      const primaryCatName = catCandidates[0];
+      console.log(`   ➕ Creating new Category: "${primaryCatName}"`);
+      // Create Category localized
+      const newCat = await payload.create({
+        collection: 'categories',
+        data: { name: primaryCatName, tenant: TARGET_TENANT_ID },
+        locale: 'id',
+        overrideAccess: true,
+      });
+      categoryId = newCat.id as string;
+
+      // Update for en and my
+      await payload.update({
+        collection: 'categories',
+        id: categoryId,
+        data: { name: primaryCatName },
+        locale: 'en',
+        overrideAccess: true,
+      });
+      await payload.update({
+        collection: 'categories',
+        id: categoryId,
+        data: { name: primaryCatName },
+        locale: 'my',
+        overrideAccess: true,
+      });
+      console.log(`   ✅ Category created: ID ${categoryId}`);
+    }
+
+    // 6. Pricing Mapping
+    let priceValue = origPrice;
+    let spreadPriceValue: number | undefined = undefined;
+    let discountPercentValue: number | undefined = undefined;
+
+    if (salePrice < origPrice && origPrice > 0) {
+      spreadPriceValue = -300;
+      discountPercentValue = (1 - (salePrice + 200) / priceValue) * 100;
+
+      // Safety check for discount percent boundaries
+      if (discountPercentValue < 0) {
+        discountPercentValue = 0;
+      } else if (discountPercentValue > 100) {
+        discountPercentValue = 100;
+      }
+
+      // Round to 2 decimal places
+      discountPercentValue = Math.round(discountPercentValue * 100) / 100;
+    } else {
+      // No sale
+      priceValue = salePrice;
+    }
+
+    console.log(`   Pricing Output -> price: ${priceValue}, discountPercent: ${discountPercentValue}, spreadPrice: ${spreadPriceValue}`);
+
+    // 7. Create or Update Product
+    if (isExisting && existingProduct) {
+      await payload.update({
+        collection: 'products',
+        id: existingProduct.id,
+        data: {
+          name: name,
+          description: description,
+          price: priceValue,
+          discountPercent: discountPercentValue,
+          spreadPrice: spreadPriceValue,
+          colors: colors,
+          category: categoryId,
+        },
+        locale: 'id',
+        overrideAccess: true,
+      });
+
+      // Update product locales for 'en' and 'my'
+      await payload.update({
+        collection: 'products',
+        id: existingProduct.id,
+        data: {
+          name: name,
+          description: description,
+        },
+        locale: 'en',
+        overrideAccess: true,
+      });
+
+      await payload.update({
+        collection: 'products',
+        id: existingProduct.id,
+        data: {
+          name: name,
+          description: description,
+        },
+        locale: 'my',
+        overrideAccess: true,
+      });
+
+      console.log(`   ✅ Product updated successfully: ID ${existingProduct.id}`);
+      importedCount++;
+    } else {
+      console.log(`   ➕ Creating Product document in Payload...`);
+      const newProduct = await payload.create({
+        collection: 'products',
+        data: {
+          name: name,
+          description: description,
+          price: priceValue,
+          discountPercent: discountPercentValue,
+          spreadPrice: spreadPriceValue,
+          stock: 10,
+          showOnHomepage: true,
+          isFeatured: false,
+          tenant: TARGET_TENANT_ID,
+          category: categoryId,
+          image: mainImageId,
+          gallery: galleryImageIds,
+          colors: colors,
+        },
+        locale: 'id',
+        overrideAccess: true,
+      });
+
+      // Update product locales for 'en' and 'my'
+      await payload.update({
+        collection: 'products',
+        id: newProduct.id,
+        data: {
+          name: name,
+          description: description,
+        },
+        locale: 'en',
+        overrideAccess: true,
+      });
+
+      await payload.update({
+        collection: 'products',
+        id: newProduct.id,
+        data: {
+          name: name,
+          description: description,
+        },
+        locale: 'my',
+        overrideAccess: true,
+      });
+
+      console.log(`   ✅ Product created successfully: ID ${newProduct.id}`);
+      importedCount++;
+    }
+  }
+
+  // Final clean up
+  if (fs.existsSync(TEMP_DIR)) {
+    fs.rmdirSync(TEMP_DIR);
+  }
+
+  console.log(`\n========================================`);
+  console.log(`🏁 Scraping and seeding complete!`);
+  console.log(`   Target page: ${TARGET_URL}`);
+  console.log(`   Imported products: ${importedCount}`);
+  console.log(`   Skipped (already exists): ${skippedCount}`);
+  console.log(`========================================`);
+
+  process.exit(0);
+}
+
+scrapeAndSeed().catch(err => {
+  console.error('Fatal Scraper Error:', err);
+  process.exit(1);
+});
