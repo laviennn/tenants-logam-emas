@@ -354,7 +354,7 @@ const originalPrice = hasDiscount ? (discountPercent !== 0 || spreadPrice !== 0 
 
   {isBrandedTheme && (
     <!-- Authenticity Info Modal -->
-    <div id="authenticity-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+    <div id="authenticity-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300 hidden">
       <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-2xl transform scale-95 transition-all duration-300 pointer-events-auto" id="authenticity-modal-content">
         <div class="flex justify-between items-start mb-6">
           <h3 class="text-xl font-black text-gray-900 dark:text-white uppercase tracking-wider">100% Authentic</h3>
@@ -381,155 +381,183 @@ const originalPrice = hasDiscount ? (discountPercent !== 0 || spreadPrice !== 0 
       </div>
     </div>
   )}
-</BaseLayout>
 
-<script is:inline define:vars={{ product, mainImageUrl, finalPrice }}>
-  // Basic logic for gallery and qty
-  const mainImageEl = document.getElementById('main-image');
-  document.querySelectorAll('.gallery-thumb').forEach(thumb => {
-    thumb.addEventListener('click', () => {
-      mainImageEl.src = thumb.dataset.large;
-      document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('border-primary'));
-      thumb.classList.add('border-primary');
-    });
-  });
-
-  const qtyInput = document.getElementById('qty-input');
-  const qtyMinus = document.getElementById('qty-minus');
-  const qtyPlus = document.getElementById('qty-plus');
-
-  if (qtyMinus && qtyInput) {
-    qtyMinus.addEventListener('click', (e) => {
-      e.preventDefault();
-      let currentVal = parseInt(qtyInput.value, 10);
-      if (isNaN(currentVal) || currentVal <= 1) {
-        qtyInput.value = '1';
-      } else {
-        qtyInput.value = (currentVal - 1).toString();
-      }
-    });
-  }
-
-  if (qtyPlus && qtyInput) {
-    qtyPlus.addEventListener('click', (e) => {
-      e.preventDefault();
-      let currentVal = parseInt(qtyInput.value, 10);
-      if (isNaN(currentVal)) {
-        qtyInput.value = '1';
-        return;
-      }
-      const maxStock = parseInt(qtyInput.getAttribute('max'), 10) || (product && product.stock) || 999;
-      if (currentVal < maxStock) {
-        qtyInput.value = (currentVal + 1).toString();
-      }
-    });
-  }
-
-  // Handle color selection
-  let selectedColor = product.colors && product.colors.length > 0 ? product.colors[0].name : null;
-  document.querySelectorAll('.color-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.color-btn').forEach(b => {
-        b.classList.remove('border-gray-900', 'dark:border-white', 'text-gray-900', 'dark:text-white', 'bg-gray-50', 'dark:bg-gray-800', 'selected');
-        b.classList.add('border-gray-200', 'dark:border-gray-700', 'text-gray-500');
+  <script is:inline define:vars={{ product, mainImageUrl, finalPrice }}>
+    // Basic logic for gallery and qty
+    const mainImageEl = document.getElementById('main-image');
+    document.querySelectorAll('.gallery-thumb').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        mainImageEl.src = thumb.dataset.large;
+        document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('border-primary'));
+        thumb.classList.add('border-primary');
       });
-      const target = e.currentTarget;
-      target.classList.remove('border-gray-200', 'dark:border-gray-700', 'text-gray-500');
-      target.classList.add('border-gray-900', 'dark:border-white', 'text-gray-900', 'dark:text-white', 'bg-gray-50', 'dark:bg-gray-800', 'selected');
-      selectedColor = target.innerText;
     });
-  });
 
-  document.getElementById('btn-add-cart')?.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('add-to-cart-qty', { detail: { ...product, price: finalPrice, image: mainImageUrl, quantity: parseInt(qtyInput.value), selectedColor } }));
-  });
-  document.getElementById('btn-buy-now')?.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('buy-now-qty', { detail: { ...product, price: finalPrice, image: mainImageUrl, quantity: parseInt(qtyInput.value), selectedColor } }));
-  });
+    const qtyInput = document.getElementById('qty-input');
+    const qtyMinus = document.getElementById('qty-minus');
+    const qtyPlus = document.getElementById('qty-plus');
 
-  // Authenticity Modal Logic
-  const trigger = document.getElementById('authentic-info-trigger');
-  const modal = document.getElementById('authenticity-modal');
-  const modalClose = document.getElementById('authenticity-modal-close');
-  const modalContent = document.getElementById('authenticity-modal-content');
+    console.log('[Qty Selector Init]', {
+      qtyInput: qtyInput,
+      qtyMinus: qtyMinus,
+      qtyPlus: qtyPlus,
+      productStock: product?.stock,
+      inputMax: qtyInput?.getAttribute('max')
+    });
 
-  let isModalLocked = false;
-  let hoverTimeout;
-
-  function showModal(isClick = false) {
-    if (!modal || !modalContent) return;
-    modal.classList.remove('opacity-0');
-    modal.classList.add('opacity-100');
-    modalContent.classList.remove('scale-95');
-    modalContent.classList.add('scale-100');
-    
-    if (isClick || isModalLocked) {
-      modal.classList.remove('pointer-events-none');
-      modal.classList.add('pointer-events-auto');
+    if (qtyMinus && qtyInput) {
+      qtyMinus.addEventListener('click', (e) => {
+        e.preventDefault();
+        let currentVal = parseInt(qtyInput.value, 10);
+        console.log('[Qty Minus Clicked]', { currentVal });
+        if (isNaN(currentVal) || currentVal <= 1) {
+          qtyInput.value = '1';
+        } else {
+          qtyInput.value = (currentVal - 1).toString();
+        }
+        console.log('[Qty Minus Set Value]', { newVal: qtyInput.value });
+      });
     } else {
-      modal.classList.remove('pointer-events-auto');
-      modal.classList.add('pointer-events-none');
+      console.warn('[Qty Selector] qtyMinus or qtyInput not found for minus handler');
     }
-  }
 
-  function hideModal() {
-    if (!modal || !modalContent || isModalLocked) return;
-    modal.classList.remove('opacity-100', 'pointer-events-auto');
-    modal.classList.add('opacity-0', 'pointer-events-none');
-    modalContent.classList.remove('scale-100');
-    modalContent.classList.add('scale-95');
-  }
+    if (qtyPlus && qtyInput) {
+      qtyPlus.addEventListener('click', (e) => {
+        e.preventDefault();
+        let currentVal = parseInt(qtyInput.value, 10);
+        const maxStock = parseInt(qtyInput.getAttribute('max'), 10) || (product && product.stock) || 999;
+        console.log('[Qty Plus Clicked]', { currentVal, maxStock });
+        if (isNaN(currentVal)) {
+          qtyInput.value = '1';
+          return;
+        }
+        if (currentVal < maxStock) {
+          qtyInput.value = (currentVal + 1).toString();
+        }
+        console.log('[Qty Plus Set Value]', { newVal: qtyInput.value });
+      });
+    } else {
+      console.warn('[Qty Selector] qtyPlus or qtyInput not found for plus handler');
+    }
 
-  function forceHideModal() {
-    if (!modal || !modalContent) return;
-    isModalLocked = false;
-    modal.classList.remove('opacity-100', 'pointer-events-auto');
-    modal.classList.add('opacity-0', 'pointer-events-none');
-    modalContent.classList.remove('scale-100');
-    modalContent.classList.add('scale-95');
-  }
+    // Handle color selection
+    let selectedColor = product.colors && product.colors.length > 0 ? product.colors[0].name : null;
+    document.querySelectorAll('.color-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.color-btn').forEach(b => {
+          b.classList.remove('border-gray-900', 'dark:border-white', 'text-gray-900', 'dark:text-white', 'bg-gray-50', 'dark:bg-gray-800', 'selected');
+          b.classList.add('border-gray-200', 'dark:border-gray-700', 'text-gray-500');
+        });
+        const target = e.currentTarget;
+        target.classList.remove('border-gray-200', 'dark:border-gray-700', 'text-gray-500');
+        target.classList.add('border-gray-900', 'dark:border-white', 'text-gray-900', 'dark:text-white', 'bg-gray-50', 'dark:bg-gray-800', 'selected');
+        selectedColor = target.innerText;
+      });
+    });
 
-  trigger?.addEventListener('mouseenter', () => {
-    clearTimeout(hoverTimeout);
-    showModal(false);
-  });
+    document.getElementById('btn-add-cart')?.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('add-to-cart-qty', { detail: { ...product, price: finalPrice, image: mainImageUrl, quantity: parseInt(qtyInput.value), selectedColor } }));
+    });
+    document.getElementById('btn-buy-now')?.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('buy-now-qty', { detail: { ...product, price: finalPrice, image: mainImageUrl, quantity: parseInt(qtyInput.value), selectedColor } }));
+    });
 
-  trigger?.addEventListener('mouseleave', () => {
-    hoverTimeout = setTimeout(() => {
-      hideModal();
-    }, 200);
-  });
+    // Authenticity Modal Logic
+    const trigger = document.getElementById('authentic-info-trigger');
+    const modal = document.getElementById('authenticity-modal');
+    const modalClose = document.getElementById('authenticity-modal-close');
+    const modalContent = document.getElementById('authenticity-modal-content');
 
-  modalContent?.addEventListener('mouseenter', () => {
-    clearTimeout(hoverTimeout);
-  });
+    let isModalLocked = false;
+    let hoverTimeout;
 
-  modalContent?.addEventListener('mouseleave', () => {
-    hoverTimeout = setTimeout(() => {
-      hideModal();
-    }, 200);
-  });
+    function showModal(isClick = false) {
+      if (!modal || !modalContent) return;
+      modal.classList.remove('hidden');
+      modal.offsetWidth; // Force reflow
+      modal.classList.remove('opacity-0');
+      modal.classList.add('opacity-100');
+      modalContent.classList.remove('scale-95');
+      modalContent.classList.add('scale-100');
+      
+      if (isClick || isModalLocked) {
+        modal.classList.remove('pointer-events-none');
+        modal.classList.add('pointer-events-auto');
+      } else {
+        modal.classList.remove('pointer-events-auto');
+        modal.classList.add('pointer-events-none');
+      }
+    }
 
-  trigger?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    isModalLocked = true;
-    showModal(true);
-  });
+    function hideModal() {
+      if (!modal || !modalContent || isModalLocked) return;
+      modal.classList.remove('opacity-100', 'pointer-events-auto');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modalContent.classList.remove('scale-100');
+      modalContent.classList.add('scale-95');
+      setTimeout(() => {
+        if (modal.classList.contains('opacity-0')) {
+          modal.classList.add('hidden');
+        }
+      }, 300);
+    }
 
-  modalClose?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    forceHideModal();
-  });
+    function forceHideModal() {
+      if (!modal || !modalContent) return;
+      isModalLocked = false;
+      modal.classList.remove('opacity-100', 'pointer-events-auto');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modalContent.classList.remove('scale-100');
+      modalContent.classList.add('scale-95');
+      setTimeout(() => {
+        if (modal.classList.contains('opacity-0')) {
+          modal.classList.add('hidden');
+        }
+      }, 300);
+    }
 
-  modal?.addEventListener('click', (e) => {
-    if (e.target === modal) {
+    trigger?.addEventListener('mouseenter', () => {
+      clearTimeout(hoverTimeout);
+      showModal(false);
+    });
+
+    trigger?.addEventListener('mouseleave', () => {
+      hoverTimeout = setTimeout(() => {
+        hideModal();
+      }, 200);
+    });
+
+    modalContent?.addEventListener('mouseenter', () => {
+      clearTimeout(hoverTimeout);
+    });
+
+    modalContent?.addEventListener('mouseleave', () => {
+      hoverTimeout = setTimeout(() => {
+        hideModal();
+      }, 200);
+    });
+
+    trigger?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      isModalLocked = true;
+      showModal(true);
+    });
+
+    modalClose?.addEventListener('click', (e) => {
+      e.stopPropagation();
       forceHideModal();
-    }
-  });
-</script>
+    });
 
-<script>
-  import { addToCart } from '../../lib/cart';
-  window.addEventListener('add-to-cart-qty', (e: any) => { addToCart(e.detail, e.detail.quantity); });
-  window.addEventListener('buy-now-qty', (e: any) => { addToCart(e.detail, e.detail.quantity); window.location.href = '/checkout'; });
-</script>
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        forceHideModal();
+      }
+    });
+  </script>
+
+  <script>
+    import { addToCart } from '../../lib/cart';
+    window.addEventListener('add-to-cart-qty', (e: any) => { addToCart(e.detail, e.detail.quantity); });
+    window.addEventListener('buy-now-qty', (e: any) => { addToCart(e.detail, e.detail.quantity); window.location.href = '/checkout'; });
+  </script>
+</BaseLayout>
