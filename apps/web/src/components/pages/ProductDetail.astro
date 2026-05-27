@@ -167,9 +167,9 @@ const originalPrice = hasDiscount ? (discountPercent !== 0 || spreadPrice !== 0 
               <div class='mb-8'>
                 <span class="text-sm font-bold text-gray-700 dark:text-gray-300 block mb-2 uppercase tracking-widest">Quantity</span>
                 <div class='inline-flex items-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark'>
-                  <button id='qty-minus' class='px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-lg font-bold'>-</button>
+                  <button type="button" id='qty-minus' class='px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-lg font-bold'>-</button>
                   <input id='qty-input' type='number' value='1' min='1' max={product.stock} class='w-16 text-center border-x border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none font-bold text-gray-900 dark:text-white' />
-                  <button id='qty-plus' class='px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-lg font-bold'>+</button>
+                  <button type="button" id='qty-plus' class='px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-lg font-bold'>+</button>
                 </div>
               </div>
 
@@ -224,9 +224,9 @@ const originalPrice = hasDiscount ? (discountPercent !== 0 || spreadPrice !== 0 
               <div class='flex items-center gap-4 mb-8'>
                 <span class='text-sm font-bold text-gray-700 dark:text-gray-300'>{t('product.quantity')}:</span>
                 <div class='flex items-center border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-surface-dark'>
-                  <button id='qty-minus' class='px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-xl font-bold'>-</button>
+                  <button type="button" id='qty-minus' class='px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-xl font-bold'>-</button>
                   <input id='qty-input' type='number' value='1' min='1' max={product.stock} class='w-16 text-center border-x border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none font-bold text-gray-900 dark:text-white' />
-                  <button id='qty-plus' class='px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-xl font-bold'>+</button>
+                  <button type="button" id='qty-plus' class='px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-xl font-bold'>+</button>
                 </div>
               </div>
 
@@ -395,8 +395,35 @@ const originalPrice = hasDiscount ? (discountPercent !== 0 || spreadPrice !== 0 
   });
 
   const qtyInput = document.getElementById('qty-input');
-  document.getElementById('qty-minus')?.addEventListener('click', () => { if (qtyInput.value > 1) qtyInput.value--; });
-  document.getElementById('qty-plus')?.addEventListener('click', () => { if (qtyInput.value < product.stock) qtyInput.value++; });
+  const qtyMinus = document.getElementById('qty-minus');
+  const qtyPlus = document.getElementById('qty-plus');
+
+  if (qtyMinus && qtyInput) {
+    qtyMinus.addEventListener('click', (e) => {
+      e.preventDefault();
+      let currentVal = parseInt(qtyInput.value, 10);
+      if (isNaN(currentVal) || currentVal <= 1) {
+        qtyInput.value = '1';
+      } else {
+        qtyInput.value = (currentVal - 1).toString();
+      }
+    });
+  }
+
+  if (qtyPlus && qtyInput) {
+    qtyPlus.addEventListener('click', (e) => {
+      e.preventDefault();
+      let currentVal = parseInt(qtyInput.value, 10);
+      if (isNaN(currentVal)) {
+        qtyInput.value = '1';
+        return;
+      }
+      const maxStock = parseInt(qtyInput.getAttribute('max'), 10) || (product && product.stock) || 999;
+      if (currentVal < maxStock) {
+        qtyInput.value = (currentVal + 1).toString();
+      }
+    });
+  }
 
   // Handle color selection
   let selectedColor = product.colors && product.colors.length > 0 ? product.colors[0].name : null;
