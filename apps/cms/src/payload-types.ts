@@ -255,6 +255,26 @@ export interface Tenant {
    */
   showWhatsAppBuyButton?: boolean | null;
   /**
+   * Jika diaktifkan, tampilan produk di halaman /products untuk perangkat mobile akan menjadi 2 kolom. Default adalah 1 kolom.
+   */
+  enableTwoColumnGridMobile?: boolean | null;
+  /**
+   * Jika diaktifkan, akan menampilkan text/pengumuman diatas navbar.
+   */
+  enableAnnouncement?: boolean | null;
+  /**
+   * Text yang akan ditampilkan di baris pengumuman. Contoh: Gratis Ongkir Seluruh Indonesia
+   */
+  announcementText?: string | null;
+  /**
+   * Link tujuan saat text pengumuman diklik. Contoh: /products atau link eksternal.
+   */
+  announcementLink?: string | null;
+  /**
+   * Jika dinonaktifkan, ulasan pelanggan (bintang, total ulasan, list review) di halaman detail produk akan disembunyikan. Default aktif.
+   */
+  enableCustomerReviews?: boolean | null;
+  /**
    * Judul halaman panduan tabungan emas.
    */
   guideTitle?: string | null;
@@ -1011,6 +1031,11 @@ export interface TenantsSelect<T extends boolean = true> {
   savingsMemberIdPrefix?: T;
   savingsGoldSymbol?: T;
   showWhatsAppBuyButton?: T;
+  enableTwoColumnGridMobile?: T;
+  enableAnnouncement?: T;
+  announcementText?: T;
+  announcementLink?: T;
+  enableCustomerReviews?: T;
   guideTitle?: T;
   guideContent?: T;
   updatedAt?: T;

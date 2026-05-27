@@ -277,6 +277,51 @@ export const Tenants: CollectionConfig = {
                 description: 'Aktifkan tombol "Beli via WA" pada setiap kartu produk di beranda dan halaman produk.',
               },
             },
+            {
+              name: 'enableTwoColumnGridMobile',
+              type: 'checkbox',
+              defaultValue: false,
+              label: 'Tampilan 2 Kolom di Mobile (Halaman Produk)',
+              admin: {
+                description: 'Jika diaktifkan, tampilan produk di halaman /products untuk perangkat mobile akan menjadi 2 kolom. Default adalah 1 kolom.',
+              },
+            },
+            {
+              name: 'enableAnnouncement',
+              type: 'checkbox',
+              defaultValue: false,
+              label: 'Aktifkan Text diatas Navbar (Announcement Bar)',
+              admin: {
+                description: 'Jika diaktifkan, akan menampilkan text/pengumuman diatas navbar.',
+              },
+            },
+            {
+              name: 'announcementText',
+              type: 'text',
+              label: 'Text Pengumuman',
+              admin: {
+                description: 'Text yang akan ditampilkan di baris pengumuman. Contoh: Gratis Ongkir Seluruh Indonesia',
+                condition: (data) => data.enableAnnouncement === true,
+              },
+            },
+            {
+              name: 'announcementLink',
+              type: 'text',
+              label: 'Link Pengumuman (Opsional)',
+              admin: {
+                description: 'Link tujuan saat text pengumuman diklik. Contoh: /products atau link eksternal.',
+                condition: (data) => data.enableAnnouncement === true,
+              },
+            },
+            {
+              name: 'enableCustomerReviews',
+              type: 'checkbox',
+              defaultValue: true,
+              label: 'Aktifkan Ulasan Pelanggan (Customer Reviews)',
+              admin: {
+                description: 'Jika dinonaktifkan, ulasan pelanggan (bintang, total ulasan, list review) di halaman detail produk akan disembunyikan. Default aktif.',
+              },
+            },
           ],
         },
         {

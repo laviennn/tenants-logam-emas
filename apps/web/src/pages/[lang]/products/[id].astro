@@ -76,9 +76,10 @@ if (!product && id) {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
   // Prefer the explicit URL lang, fallback to region default
   const locale = (lang as string) || getDefaultLocale();
-  const res = await fetch(`${CMS_URL}/api/products/${id}?locale=${locale}`);
+  const res = await fetch(`${CMS_URL}/api/products?where[id][equals]=${id}&locale=${locale}`);
   if (res.ok) {
-    product = await res.json();
+    const data = await res.json();
+    product = data.docs?.[0] || null;
   }
 }
 

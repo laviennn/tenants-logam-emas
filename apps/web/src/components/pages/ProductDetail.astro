@@ -24,6 +24,7 @@ const siteSettings = tenantId ? await getSiteSettings(tenantId, lang) : null;
 const tenantFilter = tenantId ? `&where[tenant][equals]=${tenantId}` : '';
 const defaultLocale = getDefaultLocale();
 const isBrandedTheme = tenant?.theme_layout === 'luxury-branded';
+const enableCustomerReviews = tenant?.enableCustomerReviews !== false;
 
 const id = product.id;
 
@@ -188,13 +189,17 @@ const originalPrice = hasDiscount ? (discountPercent !== 0 || spreadPrice !== 0 
               </div>
               <h1 class='text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-4 leading-tight'>{product.name}</h1>
               <div class='flex items-center gap-4 mb-6'>
-                <div class='flex text-yellow-400'>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <svg class={`w-5 h-5 ${i < Math.floor(product.rating || 5) ? 'fill-current' : 'text-gray-300 dark:text-gray-700'}`} viewBox='0 0 20 20'><path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' /></svg>
-                  ))}
-                </div>
-                <span class='text-sm text-gray-500 font-bold'>{(product.rating || 5).toFixed(1)} / 5.0</span>
-                <span class='w-1 h-1 bg-gray-300 rounded-full'></span>
+                {enableCustomerReviews && (
+                  <>
+                    <div class='flex text-yellow-400'>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <svg class={`w-5 h-5 ${i < Math.floor(product.rating || 5) ? 'fill-current' : 'text-gray-300 dark:text-gray-700'}`} viewBox='0 0 20 20'><path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' /></svg>
+                      ))}
+                    </div>
+                    <span class='text-sm text-gray-500 font-bold'>{(product.rating || 5).toFixed(1)} / 5.0</span>
+                    <span class='w-1 h-1 bg-gray-300 rounded-full'></span>
+                  </>
+                )}
                 <span class='text-sm text-gray-500 font-medium'>{product.soldCount || 0} {t('product.sold')}</span>
               </div>
 
@@ -235,6 +240,47 @@ const originalPrice = hasDiscount ? (discountPercent !== 0 || spreadPrice !== 0 
               </div>
             </>
           )}
+
+          {isBrandedTheme && (
+            <!-- Trust Badges Section -->
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-6 mt-6 space-y-4">
+              <!-- Free Shipping Badge -->
+              <div class="flex items-center gap-3">
+                <div class="text-gray-900 dark:text-white flex-shrink-0">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2 8h4M0 12h6M2 16h4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 18H8a2 2 0 01-2-2V7a2 2 0 012-2h9a2 2 0 012 2v9a2 2 0 01-2 2h-1" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9h3l2 3v4a2 2 0 01-2 2h-3" />
+                    <circle cx="10" cy="18" r="2" stroke="currentColor" fill="none" stroke-width="2" />
+                    <circle cx="19" cy="18" r="2" stroke="currentColor" fill="none" stroke-width="2" />
+                  </svg>
+                </div>
+                <span class="text-[#0f5b3f] dark:text-[#10b981] font-bold text-base">Free Shipping</span>
+              </div>
+
+              <!-- 100% Authentic Badge -->
+              <div class="flex items-start gap-3">
+                <div class="text-gray-900 dark:text-white flex-shrink-0 mt-0.5">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" stroke-width="2.5" />
+                  </svg>
+                </div>
+                <div class="flex flex-col">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-[#0f5b3f] dark:text-[#10b981] font-bold text-base">100% Authentic</span>
+                    <button type="button" id="authentic-info-trigger" class="focus:outline-none flex-shrink-0" aria-label="Authenticity info">
+                      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="#b9bec9" class="fill-[#b9bec9] dark:fill-gray-600 transition-colors" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                  <span class="text-gray-400 dark:text-gray-500 text-sm font-medium">or your money back 💎</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -249,60 +295,92 @@ const originalPrice = hasDiscount ? (discountPercent !== 0 || spreadPrice !== 0 
               {product.description ? <div class='whitespace-pre-line'>{product.description}</div> : <p>No description available.</p>}
             </div>
           </div>
-          <div>
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-10 border-b border-gray-100 dark:border-gray-800">
-              <div>
-                <h2 class='text-3xl font-black text-gray-900 dark:text-white mb-2 flex items-center gap-3'>
-                  <span data-i18n="product.reviews">{t('product.reviews')}</span>
-                </h2>
-                <div class="flex items-center gap-4">
-                  <div class="flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-900/30 px-3 py-1.5 rounded-xl border border-yellow-100 dark:border-yellow-800">
-                    <span class="text-xl font-black text-yellow-700 dark:text-yellow-400">{averageRating}</span>
-                    <div class="flex text-yellow-400">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <svg class={`w-4 h-4 ${i < starCount ? 'fill-current' : 'text-gray-200 dark:text-gray-700'}`} viewBox='0 0 20 20'><path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' /></svg>
-                      ))}
-                    </div>
-                  </div>
-                  <span class="text-sm font-bold text-gray-500 uppercase tracking-widest">{totalReviews} Ulasan Pelanggan</span>
-                </div>
-              </div>
-            </div>
-
-            <div class='space-y-6'>
-              {reviews.length > 0 ? reviews.map((rev: any) => (
-                <div class='bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-800'>
-                  <div class='flex justify-between items-start mb-4'>
-                    <div>
-                      <p class='font-bold text-gray-900 dark:text-white'>{rev.userName}</p>
-                      <div class='flex text-yellow-400 mt-1'>
+          {enableCustomerReviews && (
+            <div>
+              <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-10 border-b border-gray-100 dark:border-gray-800">
+                <div>
+                  <h2 class='text-3xl font-black text-gray-900 dark:text-white mb-2 flex items-center gap-3'>
+                    <span data-i18n="product.reviews">{t('product.reviews')}</span>
+                  </h2>
+                  <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-900/30 px-3 py-1.5 rounded-xl border border-yellow-100 dark:border-yellow-800">
+                      <span class="text-xl font-black text-yellow-700 dark:text-yellow-400">{averageRating}</span>
+                      <div class="flex text-yellow-400">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <svg class={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-current' : 'text-gray-300'}`} viewBox='0 0 20 20'><path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' /></svg>
+                          <svg class={`w-4 h-4 ${i < starCount ? 'fill-current' : 'text-gray-200 dark:text-gray-700'}`} viewBox='0 0 20 20'><path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' /></svg>
                         ))}
                       </div>
                     </div>
-                    <span class='text-xs text-gray-400'>{new Date(rev.createdAt).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US')}</span>
+                    <span class="text-sm font-bold text-gray-500 uppercase tracking-widest">{totalReviews} Ulasan Pelanggan</span>
                   </div>
-                  <p class='text-gray-600 dark:text-gray-400 text-sm italic'>"{rev.comment}"</p>
-                  
-                  {rev.image && (
-                    <div class='mt-5 max-w-sm rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900'>
-                      <img
-                        src={_getImageUrl(rev.image)}
-                        alt={`Review by ${rev.userName}`}
-                        class='w-full h-auto block'
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
                 </div>
-              )) : <p class='text-gray-400 italic text-center py-8 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-2xl'>{t('product.no_reviews') || 'Belum ada ulasan.'}</p>}
+              </div>
+
+              <div class='space-y-6'>
+                {reviews.length > 0 ? reviews.map((rev: any) => (
+                  <div class='bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-800'>
+                    <div class='flex justify-between items-start mb-4'>
+                      <div>
+                        <p class='font-bold text-gray-900 dark:text-white'>{rev.userName}</p>
+                        <div class='flex text-yellow-400 mt-1'>
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <svg class={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-current' : 'text-gray-300'}`} viewBox='0 0 20 20'><path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' /></svg>
+                          ))}
+                        </div>
+                      </div>
+                      <span class='text-xs text-gray-400'>{new Date(rev.createdAt).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US')}</span>
+                    </div>
+                    <p class='text-gray-600 dark:text-gray-400 text-sm italic'>"{rev.comment}"</p>
+                    
+                    {rev.image && (
+                      <div class='mt-5 max-w-sm rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900'>
+                        <img
+                          src={_getImageUrl(rev.image)}
+                          alt={`Review by ${rev.userName}`}
+                          class='w-full h-auto block'
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )) : <p class='text-gray-400 italic text-center py-8 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-2xl'>{t('product.no_reviews') || 'Belum ada ulasan.'}</p>}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
   </div>
+
+  {isBrandedTheme && (
+    <!-- Authenticity Info Modal -->
+    <div id="authenticity-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-2xl transform scale-95 transition-all duration-300 pointer-events-auto" id="authenticity-modal-content">
+        <div class="flex justify-between items-start mb-6">
+          <h3 class="text-xl font-black text-gray-900 dark:text-white uppercase tracking-wider">100% Authentic</h3>
+          <button type="button" id="authenticity-modal-close" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 focus:outline-none">
+            <span>Close</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div class="space-y-4 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+          <p class="font-extrabold text-gray-900 dark:text-white text-base">Curated with Respect 💎</p>
+          <p>
+            At <strong class="text-gray-900 dark:text-white font-bold">Lux Brand Store</strong>, we honor every designer’s craftsmanship and rights. Our trained team checks each item through several steps so that you can feel confident and informed about your purchase.
+          </p>
+          <p>
+            We look closely at the leather, stitching, lining, hardware engravings, serial numbers, date codes, and hologram stickers. We also assess design proportions, brand markings, and craftsmanship to confirm that each item meets the original luxury standards. We guarantee every product is 100% authentic, or you get your money back.
+          </p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800 pt-4">
+            Lux Brand Store operates independently and is not affiliated with the brands featured. All trademarks and logos are used solely for identification and remain the property of their respective owners.
+          </p>
+        </div>
+      </div>
+    </div>
+  )}
 </BaseLayout>
 
 <script is:inline define:vars={{ product, mainImageUrl, finalPrice }}>
@@ -340,6 +418,86 @@ const originalPrice = hasDiscount ? (discountPercent !== 0 || spreadPrice !== 0 
   });
   document.getElementById('btn-buy-now')?.addEventListener('click', () => {
     window.dispatchEvent(new CustomEvent('buy-now-qty', { detail: { ...product, price: finalPrice, image: mainImageUrl, quantity: parseInt(qtyInput.value), selectedColor } }));
+  });
+
+  // Authenticity Modal Logic
+  const trigger = document.getElementById('authentic-info-trigger');
+  const modal = document.getElementById('authenticity-modal');
+  const modalClose = document.getElementById('authenticity-modal-close');
+  const modalContent = document.getElementById('authenticity-modal-content');
+
+  let isModalLocked = false;
+  let hoverTimeout;
+
+  function showModal(isClick = false) {
+    if (!modal || !modalContent) return;
+    modal.classList.remove('opacity-0');
+    modal.classList.add('opacity-100');
+    modalContent.classList.remove('scale-95');
+    modalContent.classList.add('scale-100');
+    
+    if (isClick || isModalLocked) {
+      modal.classList.remove('pointer-events-none');
+      modal.classList.add('pointer-events-auto');
+    } else {
+      modal.classList.remove('pointer-events-auto');
+      modal.classList.add('pointer-events-none');
+    }
+  }
+
+  function hideModal() {
+    if (!modal || !modalContent || isModalLocked) return;
+    modal.classList.remove('opacity-100', 'pointer-events-auto');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    modalContent.classList.remove('scale-100');
+    modalContent.classList.add('scale-95');
+  }
+
+  function forceHideModal() {
+    if (!modal || !modalContent) return;
+    isModalLocked = false;
+    modal.classList.remove('opacity-100', 'pointer-events-auto');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    modalContent.classList.remove('scale-100');
+    modalContent.classList.add('scale-95');
+  }
+
+  trigger?.addEventListener('mouseenter', () => {
+    clearTimeout(hoverTimeout);
+    showModal(false);
+  });
+
+  trigger?.addEventListener('mouseleave', () => {
+    hoverTimeout = setTimeout(() => {
+      hideModal();
+    }, 200);
+  });
+
+  modalContent?.addEventListener('mouseenter', () => {
+    clearTimeout(hoverTimeout);
+  });
+
+  modalContent?.addEventListener('mouseleave', () => {
+    hoverTimeout = setTimeout(() => {
+      hideModal();
+    }, 200);
+  });
+
+  trigger?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isModalLocked = true;
+    showModal(true);
+  });
+
+  modalClose?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    forceHideModal();
+  });
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      forceHideModal();
+    }
   });
 </script>
 

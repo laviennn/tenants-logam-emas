@@ -75,6 +75,32 @@ const getCatUrl = (cat: any, langCode: string) => {
 };
 ---
 
+{tenant?.enableAnnouncement && (
+  <div id="announcement-bar" class="bg-gray-950 text-white py-2 px-4 relative flex items-center justify-center text-[10px] sm:text-xs font-semibold tracking-wide border-b border-white/10 select-none z-50">
+    <div class="text-center w-full max-w-7xl mx-auto flex items-center justify-center pr-8 pl-8">
+      {tenant.announcementLink ? (
+        <a href={tenant.announcementLink.startsWith('http') ? tenant.announcementLink : localizePath(tenant.announcementLink, lang)} class="hover:opacity-90 inline-flex items-center gap-1 group transition-all">
+          <span>{tenant.announcementText || 'Gratis Ongkir Seluruh Indonesia'}</span>
+          <span class="group-hover:translate-x-1 transition-transform inline-block">→</span>
+        </a>
+      ) : (
+        <span>{tenant.announcementText || 'Gratis Ongkir Seluruh Indonesia'}</span>
+      )}
+    </div>
+    <button id="close-announcement" class="absolute right-4 text-white/50 hover:text-white transition-colors cursor-pointer p-1" aria-label="Close announcement" onclick="document.getElementById('announcement-bar').style.display = 'none'; sessionStorage.setItem('announcement-closed', 'true');">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+  </div>
+)}
+
+<script is:inline>
+  // Prevent flash of closed announcement bar
+  if (sessionStorage.getItem('announcement-closed') === 'true') {
+    const bar = document.getElementById('announcement-bar');
+    if (bar) bar.style.display = 'none';
+  }
+</script>
+
 <nav class='bg-navbar-bg dark:bg-background-dark shadow-md sticky top-0 z-50 transition-colors duration-300'>
   <div class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
     <div class='flex justify-between items-center min-h-[4rem] md:min-h-[5rem] py-2'>
