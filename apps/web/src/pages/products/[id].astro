@@ -75,9 +75,10 @@ let { product, prefetchedReviews, prefetchedRelated } = Astro.props;
 // Di localhost (mode server), Astro.props akan kosong. Kita ambil data secara Live.
 if (!product && id) {
   const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000';
-  const res = await fetch(`${CMS_URL}/api/products/${id}?locale=${getDefaultLocale()}`);
+  const res = await fetch(`${CMS_URL}/api/products?where[id][equals]=${id}&locale=${getDefaultLocale()}`);
   if (res.ok) {
-    product = await res.json();
+    const data = await res.json();
+    product = data.docs?.[0] || null;
   }
 }
 
